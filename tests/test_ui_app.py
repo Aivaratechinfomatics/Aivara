@@ -138,3 +138,21 @@ def test_full_app_render_feedback_dataset():
     at.run()
     assert not at.exception, f"AppTest raised unexpected exception(s): {[str(e) for e in at.exception]}"
 
+
+def test_run_pipeline_direct_execution():
+    from app import run_pipeline
+    import streamlit as st
+
+    df = pd.DataFrame({
+        "order_id": [1, 2, 3],
+        "sales": [100.0, 200.0, 300.0],
+        "category": ["A", "B", "C"],
+    })
+    st.session_state["cleaned_df"] = df
+    st.session_state["classifications"] = {c.name: c for c in classify_columns(df)}
+    res = run_pipeline()
+    assert res is not None
+    assert "executive_takeaways" in res
+    assert len(res["executive_takeaways"]) > 0
+
+

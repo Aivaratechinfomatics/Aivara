@@ -11,6 +11,7 @@ import math
 import re
 from datetime import datetime, timezone
 
+import pandas as pd
 import streamlit as st
 
 import config
@@ -86,7 +87,7 @@ def run_pipeline() -> dict:
     """Runs ingestion-classified data through analytics once per session
     state change, caching the result in st.session_state so every tab reads
     consistent numbers and export reuses exactly what was shown on screen."""
-    df = st.session_state["dataset"]
+    df = st.session_state.get("dataset") if "dataset" in st.session_state else st.session_state.get("cleaned_df")
     classifications = st.session_state["classifications"]
 
     profile = profile_dataset(df, classifications)
