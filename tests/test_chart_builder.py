@@ -212,10 +212,56 @@ def test_chart_uses_humanized_axis_labels():
     assert fig.layout.yaxis.title.text == "Revenue"
 
 
+def test_chart_treemap():
+    df = _make_df()
+    fig = build_chart_figure(df, "Treemap", x_col="category", y_col="revenue", color_col="region")
+    assert isinstance(fig, go.Figure)
+
+
+def test_chart_sunburst():
+    df = _make_df()
+    fig = build_chart_figure(df, "Sunburst", x_col="category", y_col="revenue", color_col="region")
+    assert isinstance(fig, go.Figure)
+
+
+def test_chart_waterfall():
+    df = _make_df()
+    fig = build_chart_figure(df, "Waterfall", x_col="category", y_col="revenue")
+    assert isinstance(fig, go.Figure)
+
+
+def test_chart_funnel():
+    df = _make_df()
+    fig = build_chart_figure(df, "Funnel", x_col="category", y_col="revenue")
+    assert isinstance(fig, go.Figure)
+
+
+def test_chart_dual_axis():
+    df = _make_df()
+    fig = build_chart_figure(df, "Dual-Axis (Line + Bar)", x_col="region", y_col="revenue", color_col="cost")
+    assert isinstance(fig, go.Figure)
+
+
+def test_chart_bubble():
+    df = _make_df()
+    fig = build_chart_figure(df, "Bubble", x_col="revenue", y_col="cost", color_col="revenue")
+    assert isinstance(fig, go.Figure)
+
+
+def test_suggest_best_chart():
+    from ui.chart_builder import suggest_best_chart
+    df = _make_df()
+    assert suggest_best_chart(df, "date", "revenue") == "Line"
+    assert suggest_best_chart(df, "revenue", "cost") == "Scatter"
+    assert suggest_best_chart(df, "region", "revenue") in ("Donut", "Bar")
+
+
 def test_all_chart_types_covered():
     """Ensure CHART_TYPES list matches what we test above (no new type silently untested)."""
     expected = {
-        "Line", "Area", "Bar", "Horizontal Bar", "Scatter",
-        "Pie", "Donut", "Box", "Histogram", "Heatmap", "Timeline (Gantt)",
+        "Line", "Area", "Bar", "Horizontal Bar", "Scatter", "Bubble",
+        "Dual-Axis (Line + Bar)", "Pie", "Donut", "Treemap", "Sunburst",
+        "Waterfall", "Funnel", "Box", "Histogram", "Heatmap", "Timeline (Gantt)",
     }
     assert set(CHART_TYPES) == expected
+

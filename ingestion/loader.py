@@ -225,14 +225,63 @@ def _find_best_header_row(rows: list[list[str]], max_scan: int = 25) -> tuple[in
     return best_row, is_header
 
 
-def _sanitize_dataframe_columns_and_cleanup(df: pd.DataFrame) -> pd.DataFrame:
+_SUMMARY_ROW_PATTERN = re.compile(
+    r"^\s*(total|grand\s+total|subtotal|sub-total|average|avg|sum|overall|notes?|source:|confidential)\b",
+    re.I,
+)
+
+
+def _prune_trailing_summary_rows(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
+    """Detects and prunes trailing summary rows (e.g. 'Total', 'Grand Total', 'Average')
+    that often appear at the bottom of exported business spreadsheets.
+    Scanning is restricted to the bottom 6 rows."""
+    if df.empty or len(df) <= 2:
+        return df, []
+
+    notes = []
+    rows_to_drop = []
+    # Scan from bottom up, at most 6 rows
+    n_scan = min(6, len(df))
+    tail_indices = list(df.index[-n_scan:])
+    tail_indices.reverse()  # start from absolute bottom
+
+    for idx in tail_indices:
+        row = df.loc[idx]
+        non_null = row.dropna()
+        if non_null.empty:
+            rows_to_drop.append(idx)
+            continue
+        is_summary = False
+        summary_word = ""
+        for val in non_null:
+            if isinstance(val, str) and _SUMMARY_ROW_PATTERN.search(val.strip()):
+                is_summary = True
+                summary_word = val.strip()
+                break
+        if is_summary:
+            rows_to_drop.append(idx)
+            notes.append(f"Pruned trailing summary/footer row '{summary_word}' to protect aggregation accuracy.")
+        else:
+            # If we hit a normal data row, stop pruning upwards
+            break
+
+    if rows_to_drop:
+        df = df.drop(index=rows_to_drop)
+
+    return df, notes
+
+
+def _sanitize_dataframe_columns_and_cleanup(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     """Cleans up DataFrame after loading:
     1. Sanitizes column headers (strips internal newlines, multi-spaces, trims).
     2. Drops fully-empty rows and columns.
     3. Drops unnamed spacer columns that have >85% nulls.
+    4. Prunes trailing summary/footer rows.
     """
     if df.empty:
-        return df
+        return df, []
+
+    notes: list[str] = []
 
     # Drop completely empty rows and columns
     df = df.dropna(how="all").dropna(axis=1, how="all")
@@ -253,7 +302,11 @@ def _sanitize_dataframe_columns_and_cleanup(df: pd.DataFrame) -> pd.DataFrame:
     if cols_to_drop:
         df = df.drop(columns=cols_to_drop)
 
-    return df
+    # Prune trailing summary/total rows
+    df, prune_notes = _prune_trailing_summary_rows(df)
+    notes.extend(prune_notes)
+
+    return df, notes
 
 
 def load_csv(file_bytes: bytes, filename: str = "uploaded.csv") -> LoadResult:
@@ -330,7 +383,8 @@ def load_csv(file_bytes: bytes, filename: str = "uploaded.csv") -> LoadResult:
             if skipped_bad_lines > 0:
                 notes.append(f"{skipped_bad_lines} row(s) skipped: malformed (wrong column count).")
 
-            df = _sanitize_dataframe_columns_and_cleanup(df)
+            df, cleanup_notes = _sanitize_dataframe_columns_and_cleanup(df)
+            notes.extend(cleanup_notes)
 
             if len(df) > MAX_ROWS_FULL_PROCESSING:
                 notes.append(
@@ -368,10 +422,22 @@ def load_excel(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
         sheet_names = excel_file.sheet_names
         sheet_to_load = sheet_names[0] if sheet_names else 0
         if len(sheet_names) > 1:
+            best_sheet = sheet_names[0]
+            best_density = -1
+            for s in sheet_names:
+                try:
+                    preview = pd.read_excel(excel_file, sheet_name=s, nrows=20, header=None)
+                    density = int(preview.notna().sum().sum())
+                    if density > best_density:
+                        best_density = density
+                        best_sheet = s
+                except Exception:
+                    pass
+            sheet_to_load = best_sheet
             notes.append(
                 f"Workbook has {len(sheet_names)} sheets ({', '.join(sheet_names[:3])}"
                 + (f" and {len(sheet_names) - 3} more" if len(sheet_names) > 3 else "")
-                + f"); loaded '{sheet_to_load}'."
+                + f"); auto-selected richest data sheet '{sheet_to_load}'."
             )
 
         df_raw = pd.read_excel(excel_file, sheet_name=sheet_to_load, header=None)
@@ -399,7 +465,8 @@ def load_excel(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
             header_arg = None
             notes.append("No explicit header row detected — generated column names instead.")
 
-        df = _sanitize_dataframe_columns_and_cleanup(df)
+        df, cleanup_notes = _sanitize_dataframe_columns_and_cleanup(df)
+        notes.extend(cleanup_notes)
 
         if len(df) > MAX_ROWS_FULL_PROCESSING:
             notes.append(

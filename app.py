@@ -21,10 +21,28 @@ from analytics.profiler import (
     PROFILE_PROJECT,
     PROFILE_SNAPSHOT,
     PROFILE_TIMESERIES,
+    DOMAIN_COMMERCE,
+    DOMAIN_FEEDBACK,
+    DOMAIN_FINANCE,
+    DOMAIN_INVENTORY,
+    DOMAIN_PROJECT,
+    DOMAIN_SNAPSHOT,
+    DOMAIN_TIMESERIES,
+    DOMAIN_WORKFORCE,
     DatasetProfile,
     profile_dataset,
 )
 from analytics.snapshot import compute_project_analytics, compute_snapshot_analytics
+from analytics.stats import (
+    compute_correlation_matrix,
+    extract_key_drivers,
+    compute_concentration_index,
+    generate_executive_takeaways,
+)
+from analytics.domains.commerce import compute_commerce_analytics
+from analytics.domains.finance import compute_finance_analytics
+from analytics.domains.workforce import compute_workforce_analytics
+from analytics.domains.feedback import compute_feedback_analytics
 from analytics.trend import build_trend_series, period_label, split_current_prior
 from export.pptx_builder import DeckInputs, KPITileData, ViewExportData, build_deck
 from ingestion.classifier import ROLE_DATE, ROLE_DIMENSION, ROLE_METRIC
@@ -48,6 +66,13 @@ from ui.snapshot_view import (
     render_snapshot_executive_view,
     render_snapshot_outliers_view,
 )
+from ui.domain_views import (
+    render_commerce_view,
+    render_finance_view,
+    render_workforce_view,
+    render_feedback_view,
+)
+from ui.stats_view import render_stats_view
 from ui.upload_page import render_upload_page
 
 st.set_page_config(page_title=config.APP_TITLE, layout="wide")
@@ -170,11 +195,41 @@ def run_pipeline() -> dict:
                 kpi, dim_driver, risk_signals if name == primary_metric else None, label
             )
 
+    # Compute domain analytics when applicable
+    commerce_res = None
+    finance_res = None
+    workforce_res = None
+    feedback_res = None
+
+    if profile.domain_type == DOMAIN_COMMERCE:
+        commerce_res = compute_commerce_analytics(df)
+    elif profile.domain_type == DOMAIN_FINANCE:
+        finance_res = compute_finance_analytics(df)
+    elif profile.domain_type == DOMAIN_WORKFORCE:
+        workforce_res = compute_workforce_analytics(df)
+    elif profile.domain_type == DOMAIN_FEEDBACK:
+        feedback_res = compute_feedback_analytics(df)
+
+    # Statistical discovery and boardroom executive takeaways
+    corr_df = compute_correlation_matrix(df, metric_cols)
+    corr_drivers = extract_key_drivers(corr_df, primary_metric=profile.primary_metric)
+    conc = None
+    if profile.primary_metric and profile.primary_metric in df.columns and pd.api.types.is_numeric_dtype(df[profile.primary_metric]):
+        conc = compute_concentration_index(df[profile.primary_metric])
+    executive_takeaways = generate_executive_takeaways(df, profile, corr_drivers, conc)
+
     return {
         "df": df,
         "profile": profile,
         "snapshot_res": snapshot_res,
         "project_res": project_res,
+        "commerce_res": commerce_res,
+        "finance_res": finance_res,
+        "workforce_res": workforce_res,
+        "feedback_res": feedback_res,
+        "executive_takeaways": executive_takeaways,
+        "corr_drivers": corr_drivers,
+        "concentration": conc,
         "date_col": profile.primary_date_col,
         "metric_cols": metric_cols,
         "dimension_cols": dimension_cols,
@@ -309,7 +364,54 @@ def render_export_button(pipeline_result: dict) -> None:
                 ),
             ]
 
-        raw_risks = pipeline_result.get("risk_signals", [])
+        # Append domain-specific slides if figures are available
+        if figures.get("Commerce_products") is not None:
+            views.append(
+                ViewExportData(
+                    view_name="Product Sales Performance",
+                    kpi_tiles=[],
+                    trend_figure=figures.get("Commerce_products"),
+                )
+            )
+        if figures.get("Finance_waterfall") is not None:
+            views.append(
+                ViewExportData(
+                    view_name="Budget Variance Waterfall",
+                    kpi_tiles=[],
+                    trend_figure=figures.get("Finance_waterfall"),
+                )
+            )
+        if figures.get("Workforce_headcount") is not None:
+            views.append(
+                ViewExportData(
+                    view_name="Staffing Distribution",
+                    kpi_tiles=[],
+                    trend_figure=figures.get("Workforce_headcount"),
+                )
+            )
+        if figures.get("Feedback_nps") is not None:
+            views.append(
+                ViewExportData(
+                    view_name="NPS & Sentiment Distribution",
+                    kpi_tiles=[],
+                    trend_figure=figures.get("Feedback_nps"),
+                )
+            )
+        if figures.get("Stats_correlation") is not None:
+            views.append(
+                ViewExportData(
+                    view_name="Metric Correlation Matrix",
+                    kpi_tiles=[],
+                    trend_figure=figures.get("Stats_correlation"),
+                )
+            )
+
+        raw_risks = list(pipeline_result.get("risk_signals", []))
+        if pipeline_result.get("concentration") and pipeline_result["concentration"].risk_level in ("High", "Extreme"):
+            raw_risks.append({
+                "description": pipeline_result["concentration"].narrative,
+                "severity": "high",
+            })
         risk_dicts = [
             {"description": s["description"], "severity": s.get("severity", "medium")}
             if isinstance(s, dict)
@@ -352,24 +454,73 @@ def main() -> None:
     pipeline_result = run_pipeline()
     profile = pipeline_result["profile"]
 
-    if profile.profile_type == PROFILE_SNAPSHOT:
-        tabs = st.tabs(["Executive Summary", "Rankings & Breakdown", "Composition", "Charts", "Risk & Outliers"])
+    # ------------------ Boardroom Executive Takeaways Banner ------------------
+    takeaways = pipeline_result.get("executive_takeaways", [])
+    if takeaways:
+        with st.expander("🎯 Boardroom Executive Takeaways", expanded=True):
+            for t in takeaways:
+                st.markdown(f"- {t}")
+
+    # ------------------ Dynamic Tab Routing by Domain & Profile ---------------
+    if profile.domain_type == DOMAIN_COMMERCE and pipeline_result.get("commerce_res"):
+        tabs = st.tabs(["Executive Summary", "Orders & Customers", "Correlations & Drivers", "Charts", "Risk & Outliers"])
         with tabs[0]:
             render_snapshot_executive_view(
-                pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid
+                pipeline_result["df"], pipeline_result.get("snapshot_res") or {}, profile, model, allow_paid=allow_paid
             )
         with tabs[1]:
-            render_snapshot_breakdown_view(
-                pipeline_result["df"], pipeline_result["snapshot_res"], profile
-            )
+            render_commerce_view(pipeline_result["df"], pipeline_result["commerce_res"], profile)
         with tabs[2]:
-            render_snapshot_composition_view(
-                pipeline_result["df"], pipeline_result["snapshot_res"], profile
-            )
+            render_stats_view(pipeline_result["df"], profile)
         with tabs[3]:
             render_chart_explorer(pipeline_result["df"])
         with tabs[4]:
-            render_snapshot_outliers_view(pipeline_result["snapshot_res"])
+            render_snapshot_outliers_view(pipeline_result.get("snapshot_res") or {})
+
+    elif profile.domain_type == DOMAIN_FINANCE and pipeline_result.get("finance_res"):
+        tabs = st.tabs(["Executive Summary", "P&L & Budget Variance", "Correlations & Drivers", "Charts", "Risk & Outliers"])
+        with tabs[0]:
+            render_snapshot_executive_view(
+                pipeline_result["df"], pipeline_result.get("snapshot_res") or {}, profile, model, allow_paid=allow_paid
+            )
+        with tabs[1]:
+            render_finance_view(pipeline_result["df"], pipeline_result["finance_res"], profile)
+        with tabs[2]:
+            render_stats_view(pipeline_result["df"], profile)
+        with tabs[3]:
+            render_chart_explorer(pipeline_result["df"])
+        with tabs[4]:
+            render_snapshot_outliers_view(pipeline_result.get("snapshot_res") or {})
+
+    elif profile.domain_type == DOMAIN_WORKFORCE and pipeline_result.get("workforce_res"):
+        tabs = st.tabs(["Executive Summary", "Workforce & Compensation", "Correlations & Drivers", "Charts", "Risk & Outliers"])
+        with tabs[0]:
+            render_snapshot_executive_view(
+                pipeline_result["df"], pipeline_result.get("snapshot_res") or {}, profile, model, allow_paid=allow_paid
+            )
+        with tabs[1]:
+            render_workforce_view(pipeline_result["df"], pipeline_result["workforce_res"], profile)
+        with tabs[2]:
+            render_stats_view(pipeline_result["df"], profile)
+        with tabs[3]:
+            render_chart_explorer(pipeline_result["df"])
+        with tabs[4]:
+            render_snapshot_outliers_view(pipeline_result.get("snapshot_res") or {})
+
+    elif profile.domain_type == DOMAIN_FEEDBACK and pipeline_result.get("feedback_res"):
+        tabs = st.tabs(["Executive Summary", "Survey, NPS & Support", "Correlations & Drivers", "Charts", "Risk & Outliers"])
+        with tabs[0]:
+            render_snapshot_executive_view(
+                pipeline_result["df"], pipeline_result.get("snapshot_res") or {}, profile, model, allow_paid=allow_paid
+            )
+        with tabs[1]:
+            render_feedback_view(pipeline_result["df"], pipeline_result["feedback_res"], profile)
+        with tabs[2]:
+            render_stats_view(pipeline_result["df"], profile)
+        with tabs[3]:
+            render_chart_explorer(pipeline_result["df"])
+        with tabs[4]:
+            render_snapshot_outliers_view(pipeline_result.get("snapshot_res") or {})
 
     elif profile.profile_type == PROFILE_PROJECT:
         tabs = st.tabs(["Portfolio Overview", "Timeline (Gantt)", "Team & Workload", "Charts", "At-Risk Tasks"])
@@ -389,6 +540,27 @@ def main() -> None:
             render_chart_explorer(pipeline_result["df"])
         with tabs[4]:
             render_project_at_risk_view(pipeline_result["project_res"])
+
+    elif profile.profile_type == PROFILE_SNAPSHOT:
+        tabs = st.tabs(["Executive Summary", "Rankings & Breakdown", "Composition", "Correlations & Drivers", "Charts", "Risk & Outliers"])
+        with tabs[0]:
+            render_snapshot_executive_view(
+                pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid
+            )
+        with tabs[1]:
+            render_snapshot_breakdown_view(
+                pipeline_result["df"], pipeline_result["snapshot_res"], profile
+            )
+        with tabs[2]:
+            render_snapshot_composition_view(
+                pipeline_result["df"], pipeline_result["snapshot_res"], profile
+            )
+        with tabs[3]:
+            render_stats_view(pipeline_result["df"], profile)
+        with tabs[4]:
+            render_chart_explorer(pipeline_result["df"])
+        with tabs[5]:
+            render_snapshot_outliers_view(pipeline_result["snapshot_res"])
 
     else:
         tabs = st.tabs(config.APP_TABS)

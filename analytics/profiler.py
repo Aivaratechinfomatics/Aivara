@@ -29,11 +29,27 @@ PROFILE_TIMESERIES = "timeseries"
 PROFILE_PROJECT = "project"
 PROFILE_SNAPSHOT = "snapshot"
 
+DOMAIN_COMMERCE = "commerce"
+DOMAIN_FINANCE = "finance"
+DOMAIN_WORKFORCE = "workforce"
+DOMAIN_FEEDBACK = "feedback"
+DOMAIN_INVENTORY = "inventory"
+DOMAIN_PROJECT = "project"
+DOMAIN_TIMESERIES = "timeseries"
+DOMAIN_SNAPSHOT = "snapshot"
+
 _START_DATE_PATTERN = re.compile(r"(start|begin|open|create|launch)", re.I)
 _END_DATE_PATTERN = re.compile(r"(end|due|finish|close|target|deadline|complete)", re.I)
 _DURATION_PATTERN = re.compile(r"(day|days|duration|hour|hours|week|weeks|time_spent)", re.I)
 _PROJECT_ENTITY_PATTERN = re.compile(r"(task|project|ticket|issue|milestone|feature|deliverable)", re.I)
 _ITEM_ENTITY_PATTERN = re.compile(r"(product|item|sku|service|customer|client|employee|account|name|title)", re.I)
+
+_COMMERCE_ORDER_PATTERN = re.compile(r"(order[_\s]?id|invoice|receipt|transaction)", re.I)
+_COMMERCE_KEYWORD_PATTERN = re.compile(r"(cart|basket|checkout|discount|shipping|refund|customer[_\s]?id)", re.I)
+_FINANCE_KEYWORD_PATTERN = re.compile(r"(budget|actual|variance|cogs|opex|ebitda|gross[_\s]?profit|operating[_\s]?income)", re.I)
+_WORKFORCE_KEYWORD_PATTERN = re.compile(r"(salary|compensation|headcount|emp[_\s]?id|employee|hire[_\s]?date|tenure|attrition|turnover|job[_\s]?title)", re.I)
+_FEEDBACK_KEYWORD_PATTERN = re.compile(r"(rating|score|nps|csat|satisfaction|stars|feedback|ticket[_\s]?id|resolution[_\s]?time)", re.I)
+_INVENTORY_KEYWORD_PATTERN = re.compile(r"(stock|reorder|on[_\s]?hand|inventory|warehouse|sku|lead[_\s]?time|safety[_\s]?stock)", re.I)
 
 
 @dataclass
@@ -53,6 +69,58 @@ class DatasetProfile:
     n_rows: int
     n_cols: int
     summary_label: str
+    domain_type: str = DOMAIN_SNAPSHOT
+
+
+def _detect_domain_type(
+    df: pd.DataFrame,
+    dim_cols: list[str],
+    metric_cols: list[str],
+    date_cols: list[str],
+    profile_type: str,
+) -> str:
+    all_col_names = " ".join([str(c) for c in df.columns])
+
+    # Check Project first
+    if profile_type == PROFILE_PROJECT:
+        return DOMAIN_PROJECT
+
+    # Check Finance
+    has_budget = any(re.search(r"\bbudget\b", c, re.I) for c in metric_cols)
+    has_actual = any(re.search(r"\bactual\b", c, re.I) for c in metric_cols)
+    has_variance = any(re.search(r"\bvariance\b", c, re.I) for c in metric_cols)
+    if (has_budget and has_actual) or has_variance or len(re.findall(_FINANCE_KEYWORD_PATTERN, all_col_names)) >= 2:
+        return DOMAIN_FINANCE
+
+    # Check Commerce
+    has_order = any(_COMMERCE_ORDER_PATTERN.search(c) for c in df.columns)
+    has_commerce_kw = bool(_COMMERCE_KEYWORD_PATTERN.search(all_col_names))
+    has_sales_qty = any(re.search(r"(sales|revenue|price|total)", c, re.I) for c in metric_cols) and any(re.search(r"(qty|quantity|units)", c, re.I) for c in metric_cols)
+    if has_order or (has_commerce_kw and has_sales_qty):
+        return DOMAIN_COMMERCE
+
+    # Check Workforce
+    has_salary = any(re.search(r"(salary|comp|compensation|base[_\s]?pay|wages)", c, re.I) for c in metric_cols)
+    has_dept = any(re.search(r"(dept|department|division)", c, re.I) for c in dim_cols)
+    has_emp = any(re.search(r"(emp|employee|staff)", c, re.I) for c in df.columns)
+    if (has_salary and has_dept) or (has_emp and has_dept):
+        return DOMAIN_WORKFORCE
+
+    # Check Feedback / Survey
+    has_rating = any(re.search(r"(rating|score|nps|csat|stars)", c, re.I) for c in metric_cols)
+    has_feedback_kw = bool(_FEEDBACK_KEYWORD_PATTERN.search(all_col_names))
+    if has_rating and has_feedback_kw:
+        return DOMAIN_FEEDBACK
+
+    # Check Inventory
+    has_stock = any(re.search(r"(stock|inventory|on[_\s]?hand|reorder)", c, re.I) for c in metric_cols)
+    if has_stock and any(_INVENTORY_KEYWORD_PATTERN.search(c) for c in df.columns):
+        return DOMAIN_INVENTORY
+
+    if profile_type == PROFILE_TIMESERIES:
+        return DOMAIN_TIMESERIES
+
+    return DOMAIN_SNAPSHOT
 
 
 def profile_dataset(
@@ -131,9 +199,21 @@ def profile_dataset(
         primary_metric = metric_cols[0]
         secondary_metrics = metric_cols[1:4]
 
+    domain_type = _detect_domain_type(df, dim_cols, metric_cols, date_cols, profile_type)
+
     # Summary label
-    if profile_type == PROFILE_PROJECT:
+    if domain_type == DOMAIN_PROJECT:
         summary_label = f"Project & Task Portfolio ({n_rows} tasks across {len(date_cols)} timeline milestones)"
+    elif domain_type == DOMAIN_COMMERCE:
+        summary_label = f"E-Commerce & Orders Analytics ({n_rows} orders/items across {len(metric_cols)} metrics)"
+    elif domain_type == DOMAIN_FINANCE:
+        summary_label = f"Financial & Budget Analytics ({n_rows} line items)"
+    elif domain_type == DOMAIN_WORKFORCE:
+        summary_label = f"HR & Workforce Analytics ({n_rows} employees across {len(grouping_dimensions)} departments)"
+    elif domain_type == DOMAIN_FEEDBACK:
+        summary_label = f"Survey & Feedback Analytics ({n_rows} responses)"
+    elif domain_type == DOMAIN_INVENTORY:
+        summary_label = f"Inventory & Logistics Snapshot ({n_rows} SKUs)"
     elif profile_type == PROFILE_SNAPSHOT:
         entity_desc = entity_dimension or "items"
         summary_label = f"Snapshot Analytics ({n_rows} {entity_desc} across {len(metric_cols)} metrics)"
@@ -156,4 +236,6 @@ def profile_dataset(
         n_rows=n_rows,
         n_cols=n_cols,
         summary_label=summary_label,
+        domain_type=domain_type,
     )
+

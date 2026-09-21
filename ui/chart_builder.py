@@ -28,8 +28,14 @@ CHART_TYPES = [
     "Bar",
     "Horizontal Bar",
     "Scatter",
+    "Bubble",
+    "Dual-Axis (Line + Bar)",
     "Pie",
     "Donut",
+    "Treemap",
+    "Sunburst",
+    "Waterfall",
+    "Funnel",
     "Box",
     "Histogram",
     "Heatmap",
@@ -37,7 +43,9 @@ CHART_TYPES = [
 ]
 
 # Chart types that require BOTH an X and a Y column
-_NEEDS_XY = {"Line", "Area", "Bar", "Horizontal Bar", "Scatter", "Box"}
+_NEEDS_XY = {"Line", "Area", "Bar", "Horizontal Bar", "Scatter", "Box", "Bubble", "Waterfall", "Funnel", "Dual-Axis (Line + Bar)"}
+# Hierarchical charts
+_HIERARCHY = {"Treemap", "Sunburst"}
 # Chart types that only need a single value column (+ optional label col)
 _SINGLE_VAR = {"Histogram"}
 # Chart types that use label + value (no time axis)
@@ -45,6 +53,8 @@ _LABEL_VALUE = {"Pie", "Donut"}
 # Heatmap is its own special case
 _HEATMAP = {"Heatmap"}
 _TIMELINE = {"Timeline (Gantt)"}
+_DUAL_AXIS = {"Dual-Axis (Line + Bar)"}
+_BUBBLE = {"Bubble"}
 
 
 # ----------------------------------------------------------------------- util
@@ -277,6 +287,120 @@ def build_chart_figure(
             )
             fig.update_yaxes(autorange="reversed")
 
+        elif chart_type in ("Treemap", "Sunburst"):
+            if not x_col or not y_col:
+                return None
+            path_cols = ([color_col] if color_col and color_col != x_col and color_col in df.columns else []) + [x_col]
+            plot_df = _aggregate(path_cols)
+            if y_col in plot_df.columns:
+                plot_df = plot_df[plot_df[y_col] > 0]
+            if plot_df.empty:
+                return None
+            if chart_type == "Treemap":
+                fig = px.treemap(
+                    plot_df,
+                    path=path_cols,
+                    values=y_col,
+                    title=f"{h_y} by {h_x}",
+                )
+            else:
+                fig = px.sunburst(
+                    plot_df,
+                    path=path_cols,
+                    values=y_col,
+                    title=f"{h_y} by {h_x}",
+                )
+
+        elif chart_type == "Waterfall":
+            if not x_col or not y_col:
+                return None
+            plot_df = _aggregate([x_col]).head(14)
+            fig = go.Figure(
+                go.Waterfall(
+                    name=h_y,
+                    orientation="v",
+                    measure=["relative"] * len(plot_df),
+                    x=plot_df[x_col].astype(str),
+                    textposition="outside",
+                    text=[f"{v:,.1f}" for v in plot_df[y_col]],
+                    y=plot_df[y_col],
+                    connector={"line": {"color": "rgb(63, 63, 63)"}},
+                )
+            )
+            fig.update_layout(title=f"Waterfall Walk of {h_y} across {h_x}")
+
+        elif chart_type == "Funnel":
+            if not x_col or not y_col:
+                return None
+            plot_df = _aggregate([x_col]).sort_values(by=y_col, ascending=False).head(10)
+            fig = px.funnel(
+                plot_df,
+                x=y_col,
+                y=x_col,
+                labels={x_col: h_x, y_col: h_y},
+                title=f"Funnel Progression of {h_y} across {h_x}",
+            )
+
+        elif chart_type == "Dual-Axis (Line + Bar)":
+            if not x_col or not y_col:
+                return None
+            sec_y = color_col if (color_col and color_col in df.columns and pd.api.types.is_numeric_dtype(df[color_col])) else None
+            agg_dict = {y_col: "sum"}
+            if sec_y and sec_y != y_col:
+                agg_dict[sec_y] = "mean"
+            plot_df = df.groupby(x_col).agg(agg_dict).reset_index().head(25)
+            fig = go.Figure()
+            fig.add_trace(
+                go.Bar(
+                    x=plot_df[x_col],
+                    y=plot_df[y_col],
+                    name=h_y,
+                    yaxis="y1",
+                    marker_color="#1a73e8",
+                )
+            )
+            if sec_y and sec_y != y_col:
+                h_sec = humanize_col(sec_y)
+                fig.add_trace(
+                    go.Scatter(
+                        x=plot_df[x_col],
+                        y=plot_df[sec_y],
+                        name=h_sec,
+                        yaxis="y2",
+                        mode="lines+markers",
+                        line=dict(color="#ea4335", width=3),
+                    )
+                )
+                fig.update_layout(
+                    yaxis2=dict(
+                        title=h_sec,
+                        overlaying="y",
+                        side="right",
+                        showgrid=False,
+                    )
+                )
+            fig.update_layout(
+                title=f"{h_y}" + (f" and {humanize_col(sec_y)}" if sec_y else "") + f" by {h_x}",
+                yaxis=dict(title=h_y),
+                legend=dict(x=0.01, y=0.99),
+            )
+
+        elif chart_type == "Bubble":
+            if not x_col or not y_col:
+                return None
+            size_c = color_col if (color_col and color_col in df.columns and pd.api.types.is_numeric_dtype(df[color_col])) else None
+            scatter_df = df.dropna(subset=[x_col, y_col])
+            if size_c:
+                scatter_df = scatter_df[scatter_df[size_c] > 0]
+            fig = px.scatter(
+                scatter_df,
+                x=x_col,
+                y=y_col,
+                size=size_c,
+                labels={x_col: h_x, y_col: h_y, (size_c or ""): humanize_col(size_c or "")},
+                title=f"{h_y} vs {h_x}" + (f" (size: {humanize_col(size_c)})" if size_c else ""),
+            )
+
         else:
             return None
 
@@ -293,6 +417,23 @@ def build_chart_figure(
     except Exception as exc:  # noqa: BLE001 — never crash the dashboard
         st.warning(f"Could not render chart: {exc}")
         return None
+
+
+def suggest_best_chart(df: pd.DataFrame, x_col: str | None, y_col: str | None) -> str:
+    """Intelligently recommends the best chart type based on column semantics."""
+    if not x_col or not y_col:
+        return "Bar"
+    if x_col in df.columns and pd.api.types.is_datetime64_any_dtype(df[x_col]):
+        return "Line"
+    if x_col in df.columns and y_col in df.columns:
+        if pd.api.types.is_numeric_dtype(df[x_col]) and pd.api.types.is_numeric_dtype(df[y_col]):
+            return "Scatter"
+        n_unq = df[x_col].dropna().nunique()
+        if n_unq <= 5:
+            return "Donut"
+        elif n_unq > 12:
+            return "Horizontal Bar"
+    return "Bar"
 
 
 # ------------------------------------------------------------------ UI widget
@@ -430,6 +571,93 @@ def render_chart_explorer(df: pd.DataFrame, key_prefix: str = "chartexp") -> Non
                 format_func=humanize_col,
             )
 
+    elif chart_type in _HIERARCHY:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            x_col = st.selectbox(
+                "Sub-category / Item column",
+                all_cols,
+                index=0,
+                key=f"{key_prefix}_x_col",
+                format_func=humanize_col,
+            )
+        with c2:
+            y_col = st.selectbox(
+                "Size / Value column",
+                num_cols if num_cols else all_cols,
+                index=0,
+                key=f"{key_prefix}_y_col",
+                format_func=humanize_col,
+            )
+        with c3:
+            parent_opts = ["(none)"] + [c for c in all_cols if c not in (x_col, y_col)]
+            color_sel = st.selectbox(
+                "Parent Category column (hierarchy)",
+                parent_opts,
+                index=0,
+                key=f"{key_prefix}_color_col",
+                format_func=lambda c: humanize_col(c) if c != "(none)" else "None",
+            )
+            color_col = color_sel if color_sel != "(none)" else None
+
+    elif chart_type in _DUAL_AXIS:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            x_col = st.selectbox(
+                "X axis (category / time)",
+                all_cols,
+                index=0,
+                key=f"{key_prefix}_x_col",
+                format_func=humanize_col,
+            )
+        with c2:
+            y_col = st.selectbox(
+                "Primary Metric (Bar, left axis)",
+                num_cols if num_cols else all_cols,
+                index=0,
+                key=f"{key_prefix}_y_col",
+                format_func=humanize_col,
+            )
+        with c3:
+            sec_opts = ["(none)"] + [c for c in num_cols if c != y_col]
+            sec_sel = st.selectbox(
+                "Secondary Metric (Line, right axis)",
+                sec_opts,
+                index=1 if len(sec_opts) > 1 else 0,
+                key=f"{key_prefix}_color_col",
+                format_func=lambda c: humanize_col(c) if c != "(none)" else "None",
+            )
+            color_col = sec_sel if sec_sel != "(none)" else None
+
+    elif chart_type in _BUBBLE:
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            x_col = st.selectbox(
+                "X axis (metric)",
+                num_cols if num_cols else all_cols,
+                index=0,
+                key=f"{key_prefix}_x_col",
+                format_func=humanize_col,
+            )
+        with c2:
+            y_col = st.selectbox(
+                "Y axis (metric)",
+                num_cols if num_cols else all_cols,
+                index=1 if len(num_cols) > 1 else 0,
+                key=f"{key_prefix}_y_col",
+                format_func=humanize_col,
+            )
+        with c3:
+            size_opts = ["(none)"] + [c for c in num_cols if c not in (x_col, y_col)]
+            size_sel = st.selectbox(
+                "Bubble Size metric",
+                size_opts,
+                index=1 if len(size_opts) > 1 else 0,
+                key=f"{key_prefix}_color_col",
+                format_func=lambda c: humanize_col(c) if c != "(none)" else "None",
+            )
+            color_col = size_sel if size_sel != "(none)" else None
+
     else:
         # Standard XY charts
         c1, c2, c3 = st.columns(3)
@@ -473,6 +701,11 @@ def render_chart_explorer(df: pd.DataFrame, key_prefix: str = "chartexp") -> Non
                 format_func=lambda c: humanize_col(c) if c != "(none)" else "None",
             )
             color_col = color_sel if color_sel != "(none)" else None
+
+    # --- Recommendation hint ----------------------------------------------
+    rec_type = suggest_best_chart(df, x_col, y_col)
+    if chart_type != rec_type and x_col and y_col and chart_type not in _HEATMAP | _SINGLE_VAR:
+        st.caption(f"💡 *Chart Intelligence: A **{rec_type}** chart may provide optimal clarity for `{humanize_col(x_col)}` & `{humanize_col(y_col)}`.*")
 
     # --- Render the figure ------------------------------------------------
     st.divider()

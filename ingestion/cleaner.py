@@ -187,3 +187,64 @@ def clean_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
         )
 
     return df, report
+
+
+_DATE_COL_HEADER_PATTERN = re.compile(
+    r"^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|\d{4}[-_/]\d{1,2}|q[1-4]\b|\b(19\d\d|20\d\d)\b)",
+    re.I,
+)
+
+
+def detect_wide_matrix(df: pd.DataFrame) -> tuple[bool, list[str], list[str]]:
+    """Detects whether df is a wide cross-tabulation/matrix table where columns
+    are dates or periods (e.g. 'Jan 2024', 'Feb 2024' or '2021', '2022', '2023').
+    Returns (is_wide, id_columns, date_columns)."""
+    if df.empty or df.shape[1] < 4:
+        return False, [], []
+
+    date_cols = []
+    id_cols = []
+
+    for col in df.columns:
+        if col == "_is_duplicate":
+            continue
+        col_str = str(col).strip()
+        if _DATE_COL_HEADER_PATTERN.search(col_str):
+            date_cols.append(col)
+        else:
+            try:
+                parsed = pd.to_datetime(col_str, errors="raise")
+                date_cols.append(col)
+                continue
+            except Exception:
+                pass
+            id_cols.append(col)
+
+    if len(date_cols) >= 3 and len(id_cols) >= 1 and (len(date_cols) / max(1, df.shape[1] - 1)) >= 0.4:
+        numeric_count = sum(pd.api.types.is_numeric_dtype(df[c]) for c in date_cols)
+        if numeric_count >= len(date_cols) * 0.6:
+            return True, id_cols, date_cols
+
+    return False, [], []
+
+
+def unpivot_matrix_table(
+    df: pd.DataFrame,
+    id_cols: list[str],
+    date_cols: list[str],
+    var_name: str = "period",
+    value_name: str = "value",
+) -> pd.DataFrame:
+    """Transforms a wide matrix table into canonical long format."""
+    id_vars = [c for c in id_cols if c in df.columns and c != "_is_duplicate"]
+    val_vars = [c for c in date_cols if c in df.columns]
+    melted = pd.melt(
+        df,
+        id_vars=id_vars,
+        value_vars=val_vars,
+        var_name=var_name,
+        value_name=value_name,
+    )
+    melted[value_name] = pd.to_numeric(melted[value_name], errors="coerce")
+    return melted
+
