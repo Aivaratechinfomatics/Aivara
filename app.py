@@ -466,9 +466,10 @@ def main() -> None:
     if profile.domain_type == DOMAIN_COMMERCE and pipeline_result.get("commerce_res"):
         tabs = st.tabs(["Executive Summary", "Orders & Customers", "Correlations & Drivers", "Charts", "Risk & Outliers"])
         with tabs[0]:
-            render_snapshot_executive_view(
-                pipeline_result["df"], pipeline_result.get("snapshot_res") or {}, profile, model, allow_paid=allow_paid
-            )
+            if profile.profile_type == PROFILE_SNAPSHOT:
+                render_snapshot_executive_view(pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid)
+            else:
+                render_executive_view(pipeline_result, model, allow_paid=allow_paid)
         with tabs[1]:
             render_commerce_view(pipeline_result["df"], pipeline_result["commerce_res"], profile)
         with tabs[2]:
@@ -476,14 +477,18 @@ def main() -> None:
         with tabs[3]:
             render_chart_explorer(pipeline_result["df"])
         with tabs[4]:
-            render_snapshot_outliers_view(pipeline_result.get("snapshot_res") or {})
+            if profile.profile_type == PROFILE_SNAPSHOT:
+                render_snapshot_outliers_view(pipeline_result["snapshot_res"])
+            else:
+                render_risk_view(pipeline_result.get("risk_signals", []), pipeline_result.get("trend"))
 
     elif profile.domain_type == DOMAIN_FINANCE and pipeline_result.get("finance_res"):
         tabs = st.tabs(["Executive Summary", "P&L & Budget Variance", "Correlations & Drivers", "Charts", "Risk & Outliers"])
         with tabs[0]:
-            render_snapshot_executive_view(
-                pipeline_result["df"], pipeline_result.get("snapshot_res") or {}, profile, model, allow_paid=allow_paid
-            )
+            if profile.profile_type == PROFILE_SNAPSHOT:
+                render_snapshot_executive_view(pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid)
+            else:
+                render_executive_view(pipeline_result, model, allow_paid=allow_paid)
         with tabs[1]:
             render_finance_view(pipeline_result["df"], pipeline_result["finance_res"], profile)
         with tabs[2]:
@@ -491,14 +496,18 @@ def main() -> None:
         with tabs[3]:
             render_chart_explorer(pipeline_result["df"])
         with tabs[4]:
-            render_snapshot_outliers_view(pipeline_result.get("snapshot_res") or {})
+            if profile.profile_type == PROFILE_SNAPSHOT:
+                render_snapshot_outliers_view(pipeline_result["snapshot_res"])
+            else:
+                render_risk_view(pipeline_result.get("risk_signals", []), pipeline_result.get("trend"))
 
     elif profile.domain_type == DOMAIN_WORKFORCE and pipeline_result.get("workforce_res"):
         tabs = st.tabs(["Executive Summary", "Workforce & Compensation", "Correlations & Drivers", "Charts", "Risk & Outliers"])
         with tabs[0]:
-            render_snapshot_executive_view(
-                pipeline_result["df"], pipeline_result.get("snapshot_res") or {}, profile, model, allow_paid=allow_paid
-            )
+            if profile.profile_type == PROFILE_SNAPSHOT:
+                render_snapshot_executive_view(pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid)
+            else:
+                render_executive_view(pipeline_result, model, allow_paid=allow_paid)
         with tabs[1]:
             render_workforce_view(pipeline_result["df"], pipeline_result["workforce_res"], profile)
         with tabs[2]:
@@ -506,14 +515,18 @@ def main() -> None:
         with tabs[3]:
             render_chart_explorer(pipeline_result["df"])
         with tabs[4]:
-            render_snapshot_outliers_view(pipeline_result.get("snapshot_res") or {})
+            if profile.profile_type == PROFILE_SNAPSHOT:
+                render_snapshot_outliers_view(pipeline_result["snapshot_res"])
+            else:
+                render_risk_view(pipeline_result.get("risk_signals", []), pipeline_result.get("trend"))
 
     elif profile.domain_type == DOMAIN_FEEDBACK and pipeline_result.get("feedback_res"):
         tabs = st.tabs(["Executive Summary", "Survey, NPS & Support", "Correlations & Drivers", "Charts", "Risk & Outliers"])
         with tabs[0]:
-            render_snapshot_executive_view(
-                pipeline_result["df"], pipeline_result.get("snapshot_res") or {}, profile, model, allow_paid=allow_paid
-            )
+            if profile.profile_type == PROFILE_SNAPSHOT:
+                render_snapshot_executive_view(pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid)
+            else:
+                render_executive_view(pipeline_result, model, allow_paid=allow_paid)
         with tabs[1]:
             render_feedback_view(pipeline_result["df"], pipeline_result["feedback_res"], profile)
         with tabs[2]:
@@ -521,7 +534,10 @@ def main() -> None:
         with tabs[3]:
             render_chart_explorer(pipeline_result["df"])
         with tabs[4]:
-            render_snapshot_outliers_view(pipeline_result.get("snapshot_res") or {})
+            if profile.profile_type == PROFILE_SNAPSHOT:
+                render_snapshot_outliers_view(pipeline_result["snapshot_res"])
+            else:
+                render_risk_view(pipeline_result.get("risk_signals", []), pipeline_result.get("trend"))
 
     elif profile.profile_type == PROFILE_PROJECT:
         tabs = st.tabs(["Portfolio Overview", "Timeline (Gantt)", "Team & Workload", "Charts", "At-Risk Tasks"])
