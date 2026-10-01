@@ -81,7 +81,7 @@ def test_no_risk_slide_when_no_signals():
 
     prs = Presentation()
     slide_count_before = len(prs.slides)
-    build_risk_signals_slide(prs, [])
+    build_risk_signals_slide(prs, [], slide_number=1, total_slides=1)
     assert len(prs.slides) == slide_count_before
 
 
@@ -114,7 +114,7 @@ def test_export_snapshot_and_project_profiles():
     buf_snap = build_deck(snapshot_inputs)
     assert buf_snap.getbuffer().nbytes > 0
     prs_snap = Presentation(buf_snap)
-    assert len(prs_snap.slides) >= 5  # Title, Exec Summary, View 1, View 2, Risk, Closing
+    assert len(prs_snap.slides) >= 7  # Cover, TOC, Exec, View 1, View 2, Risk, Closing
 
     # Test project deck build
     project_views = [
@@ -138,5 +138,5 @@ def test_export_snapshot_and_project_profiles():
     buf_proj = build_deck(project_inputs)
     assert buf_proj.getbuffer().nbytes > 0
     prs_proj = Presentation(buf_proj)
-    assert len(prs_proj.slides) >= 5
+    assert len(prs_proj.slides) >= 7  # Cover, TOC, Exec, View 1, View 2, Risk, Closing
 
