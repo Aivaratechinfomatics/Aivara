@@ -480,7 +480,7 @@ def main() -> None:
             if profile.profile_type == PROFILE_SNAPSHOT:
                 render_snapshot_outliers_view(pipeline_result["snapshot_res"])
             else:
-                render_risk_view(pipeline_result.get("risk_signals", []), pipeline_result.get("trend"))
+                render_risk_view(pipeline_result)
 
     elif profile.domain_type == DOMAIN_FINANCE and pipeline_result.get("finance_res"):
         tabs = st.tabs(["Executive Summary", "P&L & Budget Variance", "Correlations & Drivers", "Charts", "Risk & Outliers"])
@@ -499,7 +499,7 @@ def main() -> None:
             if profile.profile_type == PROFILE_SNAPSHOT:
                 render_snapshot_outliers_view(pipeline_result["snapshot_res"])
             else:
-                render_risk_view(pipeline_result.get("risk_signals", []), pipeline_result.get("trend"))
+                render_risk_view(pipeline_result)
 
     elif profile.domain_type == DOMAIN_WORKFORCE and pipeline_result.get("workforce_res"):
         tabs = st.tabs(["Executive Summary", "Workforce & Compensation", "Correlations & Drivers", "Charts", "Risk & Outliers"])
@@ -518,7 +518,7 @@ def main() -> None:
             if profile.profile_type == PROFILE_SNAPSHOT:
                 render_snapshot_outliers_view(pipeline_result["snapshot_res"])
             else:
-                render_risk_view(pipeline_result.get("risk_signals", []), pipeline_result.get("trend"))
+                render_risk_view(pipeline_result)
 
     elif profile.domain_type == DOMAIN_FEEDBACK and pipeline_result.get("feedback_res"):
         tabs = st.tabs(["Executive Summary", "Survey, NPS & Support", "Correlations & Drivers", "Charts", "Risk & Outliers"])
@@ -537,7 +537,7 @@ def main() -> None:
             if profile.profile_type == PROFILE_SNAPSHOT:
                 render_snapshot_outliers_view(pipeline_result["snapshot_res"])
             else:
-                render_risk_view(pipeline_result.get("risk_signals", []), pipeline_result.get("trend"))
+                render_risk_view(pipeline_result)
 
     elif profile.profile_type == PROFILE_PROJECT:
         tabs = st.tabs(["Portfolio Overview", "Timeline (Gantt)", "Team & Workload", "Charts", "At-Risk Tasks"])
