@@ -28,7 +28,9 @@ htmlcov/
 Account
 cpanel_deploy*
 run_dispatch.bat
-screenshots/
+/screenshots/
+!docs/assets/
+!docs/assets/**
 scripts/*
 !scripts/smoke_container.py
 !scripts/bench.py
