@@ -1,7 +1,6 @@
 """
-ui/upload_page.py — upload flow: CSV upload -> load -> clean -> classify ->
-show inferred schema with manual override controls -> stash results in
-session state for the dashboard views to consume.
+ui/upload_page.py — Handles CSV/Excel uploading, type inference review,
+and manual schema overrides.
 """
 
 from __future__ import annotations
@@ -28,24 +27,25 @@ ALL_ROLES = [ROLE_DATE, ROLE_METRIC, ROLE_DIMENSION, ROLE_ID, ROLE_TEXT]
 
 
 def reset_dataset_state() -> None:
-    """Clears all session-state caches, loaded dataframes, classifications,
-    export figures, pptx deck buffers, and view insights so a new dataset
-    operates with a completely clean slate."""
+    """Clears all dataset-derived keys from session state so a new upload
+    gets a completely clean slate."""
     keys_to_clear = [
         "dataset",
         "cleaned_df",
         "classifications",
+        "overrides",
+        "pipeline_result",
+        "dataset_name",
         "_uploaded_filename",
         "_uploaded_file_hash",
-        "dataset_name",
-        "schema_confirmed",
-        "overrides",
         "_export_figures",
+        "_export_figure_blobs",
         "_pptx_buffer",
-        "_view_insights",
+        "schema_confirmed",
         "_load_notes",
         "_clean_messages",
         "_clean_report",
+        "_view_insights",
     ]
     for k in keys_to_clear:
         st.session_state.pop(k, None)
@@ -55,6 +55,31 @@ def reset_dataset_state() -> None:
 def render_upload_page() -> bool:
     """Renders the upload UI. Returns True once a dataset is loaded and
     classified and ready for the dashboard tabs to use."""
+    is_confirmed = bool(st.session_state.get("schema_confirmed"))
+    df = st.session_state.get("dataset")
+
+    # If dataset is already confirmed, hide the upload and schema sections from
+    # the main area so the dashboard, scorecards, and charts appear at the top.
+    if is_confirmed and df is not None:
+        if st.sidebar.button("📂 Load New Dataset", key="btn_load_new_dataset"):
+            reset_dataset_state()
+            st.session_state["schema_confirmed"] = False
+            st.rerun()
+
+        with st.sidebar.expander("ℹ️ Ingestion & Schema Details", expanded=False):
+            st.write(f"**File:** `{st.session_state.get('dataset_name')}`")
+            st.write(f"**Rows:** {len(df):,}")
+            st.write(f"**Columns:** {len(df.columns)}")
+            for col_name, c in st.session_state.get("classifications", {}).items():
+                st.caption(f"`{col_name}`: {c.role}")
+
+        dataset_name = st.session_state.get("dataset_name", "Uploaded Dataset")
+        st.caption(
+            f"📁 Active Dataset: **{dataset_name}** ({len(df):,} rows, {len(df.columns)} columns)"
+        )
+        return True
+
+    # If not confirmed yet, render the full upload form and schema review gate
     st.header("Upload your data")
     st.caption(
         "Your raw data never leaves this server — only small, aggregated "
@@ -63,7 +88,7 @@ def render_upload_page() -> bool:
 
     uploaded = st.file_uploader("Upload a CSV or Excel file", type=["csv", "xlsx", "xls"])
     if uploaded is None:
-        return "dataset" in st.session_state
+        return "dataset" in st.session_state and is_confirmed
 
     file_bytes = uploaded.getvalue()
     file_hash = hashlib.sha256(file_bytes).hexdigest()
@@ -126,9 +151,7 @@ def render_upload_page() -> bool:
             for msg in clean_messages:
                 st.caption(f"🧹 {msg}")
 
-    is_confirmed = bool(st.session_state.get("schema_confirmed"))
-
-    with st.expander("⚙️ Detected Schema & Column Roles", expanded=not is_confirmed):
+    with st.expander("⚙️ Detected Schema & Column Roles", expanded=True):
         st.caption("Review and override any column's role below, then continue to the dashboard.")
 
         overrides = st.session_state.get("overrides", {})
@@ -164,4 +187,4 @@ def render_upload_page() -> bool:
     with st.expander("Preview raw data"):
         st.dataframe(df.head(50))
 
-    return is_confirmed
+    return False

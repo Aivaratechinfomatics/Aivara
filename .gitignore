@@ -35,6 +35,7 @@ scripts/*
 !scripts/uat_verify.py
 !scripts/record_demo_video.py
 !scripts/transcode_video.py
+!scripts/slide_viewer.html
 demo_output/
 send_new_offers.py
 send_offers_and_whatsapp.bat

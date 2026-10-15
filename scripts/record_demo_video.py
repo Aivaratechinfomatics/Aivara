@@ -8,20 +8,23 @@ and conducts a guided, live walkthrough of every system capability:
 - Auto-header detection skipping leading title rows
 - Ingestion Data Quality Audit panel
 - Semantic column classification and schema review gate
+- Elevated Dashboard: upload controls hide upon confirmation so takeaways & charts load at top
 - Executive scorecard with period-over-period delta badges
 - Interactive Plotly trend chart with hover tooltips
 - Boardroom Executive Takeaways
 - Domain-specific views (Feedback/CSAT & Sentiment analytics)
 - Key Drivers decomposition & Pearson correlation matrix heatmap
 - Statistical risk signals & temporal rolling-baseline anomalies
-- Archetype switching to Inventory Snapshot
-- Branded 16:9 widescreen PowerPoint deck generation & download
+- Branded 16:9 widescreen PowerPoint deck generation (.pptx download)
+- Full slide deck presentation showcase (Slides 1 through 8 in 1080p slide viewer)
+- Archetype switching to Inventory Snapshot via sidebar "Load New Dataset"
 - Privacy settings, API key masking, and daily budget monitor
 """
 
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -37,6 +40,8 @@ OUTPUT_DIR = Path("demo_output").resolve()
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 SCREENSHOTS_DIR = OUTPUT_DIR / "screenshots"
 SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+SLIDES_DIR = OUTPUT_DIR / "slides"
+SLIDES_DIR.mkdir(parents=True, exist_ok=True)
 
 DOWNLOADS_DIR = Path(os.path.expanduser("~/Downloads"))
 CALL_CENTER_FILE = DOWNLOADS_DIR / "Call-Center-Sentiment-Sample-Data.xlsx"
@@ -84,68 +89,98 @@ def smooth_scroll(page: Page, y_offset: int, steps: int = 6) -> None:
     """Smoothly scroll the page to simulate natural operator browsing."""
     current_y = page.evaluate("window.scrollY")
     diff = y_offset - current_y
-    step_diff = diff / steps
-    for i in range(steps):
-        page.evaluate(f"window.scrollTo(0, {current_y + (i + 1) * step_diff})")
-        time.sleep(0.08)
+    for i in range(1, steps + 1):
+        target = current_y + (diff * (i / steps))
+        page.evaluate(f"window.scrollTo({{top: {target}, behavior: 'smooth'}})")
+        time.sleep(0.12)
 
 
-def wait_for_server(url: str, timeout: float = 30.0) -> bool:
-    """Wait for the Streamlit web server to become healthy."""
-    import urllib.request
+def export_pptx_slides(pptx_path: Path, output_dir: Path) -> list[Path]:
+    """Converts a PowerPoint presentation into high-definition images using COM automation."""
+    output_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        import win32com.client
 
-    start = time.time()
-    while time.time() - start < timeout:
+        abs_pptx = str(pptx_path.resolve())
+        abs_out = str(output_dir.resolve())
+        ppt_app = win32com.client.Dispatch("PowerPoint.Application")
         try:
-            with urllib.request.urlopen(f"{url}/_stcore/health", timeout=2.0) as resp:
-                if resp.status == 200:
-                    return True
-        except Exception:
-            time.sleep(0.8)
-    return False
+            pres = ppt_app.Presentations.Open(abs_pptx, WithWindow=False)
+            pres.SaveAs(abs_out, 17)  # 17 = ppSaveAsJPG
+            pres.Close()
+        finally:
+            try:
+                ppt_app.Quit()
+            except Exception:
+                pass
+    except Exception as exc:
+        print(f"⚠️ COM PowerPoint export warning: {exc}")
+
+    return sorted(output_dir.glob("Slide*.JPG"))
 
 
-def run_recording() -> Path:
-    print("=" * 70)
-    print("        AIVARA v1.0.0 — AUTOMATED LIVE DEMO VIDEO DIRECTOR           ")
-    print("=" * 70)
-
-    # 1. Start Streamlit server in headless mode
-    print("🚀 Launching Streamlit application server on port 8501...")
+def start_streamlit_server() -> subprocess.Popen:
+    """Spawns Streamlit headless on localhost:8501."""
     cmd = [
         sys.executable,
         "-m",
         "streamlit",
         "run",
         "app.py",
-        "--server.port=8501",
         "--server.headless=true",
+        "--server.port=8501",
         "--browser.gatherUsageStats=false",
     ]
-    env = os.environ.copy()
-    env["AIVARA_ENV"] = "prod"
-    env["AIVARA_LLM_REDACT_LABELS"] = "true"
-
-    server_proc = subprocess.Popen(
+    proc = subprocess.Popen(
         cmd,
-        cwd=Path(__file__).parent.parent,
-        env=env,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
     )
+    return proc
+
+
+def wait_for_server(url: str = "http://localhost:8501", timeout_sec: int = 25) -> bool:
+    """Polls server URL until HTTP 200 is returned."""
+    import urllib.request
+
+    start = time.time()
+    while time.time() - start < timeout_sec:
+        try:
+            with urllib.request.urlopen(url, timeout=1.5) as resp:
+                if resp.status == 200:
+                    return True
+        except Exception:
+            time.sleep(0.5)
+    return False
+
+
+def run_recording() -> Path:
+    print("=" * 70)
+    print("🚀 Starting Aivara v1.0.0 High-Definition Demo Video Recording")
+    print("=" * 70)
+
+    # 1. Start Streamlit Server
+    print("📡 Launching Streamlit server on http://localhost:8501...")
+    server_proc = start_streamlit_server()
 
     try:
-        if not wait_for_server("http://localhost:8501"):
-            raise RuntimeError("Streamlit server failed to start within 30 seconds.")
-        print("✅ Streamlit server online at http://localhost:8501")
+        if not wait_for_server():
+            raise RuntimeError("Streamlit server failed to start within timeout.")
+        print("✅ Streamlit server online and ready.")
 
-        # 2. Launch Playwright with 1080p Full HD video recording
-        print("🎥 Initializing Playwright Chromium Director (1920x1080 Full HD)...")
+        # 2. Launch Playwright with 1080p recording
         with sync_playwright() as p:
             browser = p.chromium.launch(
                 headless=True,
-                args=["--start-maximized", "--no-sandbox", "--disable-infobars"],
+                args=[
+                    "--start-maximized",
+                    "--disable-infobars",
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",
+                ],
             )
+
             context = browser.new_context(
                 viewport={"width": 1920, "height": 1080},
                 record_video_dir=str(OUTPUT_DIR),
@@ -221,24 +256,24 @@ def run_recording() -> Path:
 
             # Wait for dashboard to compute and display tabs
             page.locator('[data-testid="stTab"]').first.wait_for(state="visible", timeout=25000)
-            time.sleep(2.5)
+            time.sleep(2.0)
 
             # -------------------------------------------------------------
-            # Scene 4: Executive Scorecard & Interactive Plotly Trend
+            # Scene 4: Elevated Executive Dashboard & Plotly Interactivity
             # -------------------------------------------------------------
-            print("🎬 Scene 4: Executive Dashboard & Boardroom Takeaways...")
+            print("🎬 Scene 4: Elevated Executive Dashboard & Boardroom Takeaways...")
             page.evaluate("window.scrollTo(0, 0)")
             time.sleep(1.0)
             inject_hud(
                 page,
-                "Executive Dashboard",
-                "Live KPI Scorecards • Period-over-Period Deltas • Boardroom Takeaways",
+                "Elevated Executive View",
+                "Upload Forms Auto-Hidden • Executive Takeaways & KPIs Load at Top",
             )
             page.screenshot(path=str(SCREENSHOTS_DIR / "04_executive_dashboard.png"))
             time.sleep(2.5)
 
             # Smooth scroll down to examine KPI cards and Plotly chart
-            smooth_scroll(page, 450)
+            smooth_scroll(page, 250)
             time.sleep(1.5)
 
             # Hover over Plotly trend chart to demonstrate interactivity
@@ -265,11 +300,11 @@ def run_recording() -> Path:
                 "Customer Feedback & Sentiment • CSAT Distribution & Channel Breakdown",
             )
 
-            feedback_tab = page.locator('button[data-testid="stTab"]').filter(has_text="Feedback")
+            feedback_tab = page.locator('button[data-testid="stTab"]').filter(has_text="Survey")
             if feedback_tab.is_visible():
                 feedback_tab.click()
                 time.sleep(2.5)
-                smooth_scroll(page, 400)
+                smooth_scroll(page, 350)
                 page.screenshot(path=str(SCREENSHOTS_DIR / "05_feedback_domain_tab.png"))
                 time.sleep(3.0)
 
@@ -283,11 +318,13 @@ def run_recording() -> Path:
                 "Dimensional Explanatory Power • Pearson Correlation Matrix (n ≥ 5)",
             )
 
-            drivers_tab = page.locator('button[data-testid="stTab"]').filter(has_text="Drivers")
+            drivers_tab = page.locator('button[data-testid="stTab"]').filter(
+                has_text="Correlations"
+            )
             if drivers_tab.is_visible():
                 drivers_tab.click()
                 time.sleep(2.5)
-                smooth_scroll(page, 450)
+                smooth_scroll(page, 400)
                 page.screenshot(path=str(SCREENSHOTS_DIR / "06_key_drivers_tab.png"))
                 time.sleep(3.0)
 
@@ -301,11 +338,13 @@ def run_recording() -> Path:
                 "Temporal Rolling-Baseline Anomalies (|z| ≥ 2.5) • Concentration Index",
             )
 
-            risk_tab = page.locator('button[data-testid="stTab"]').filter(has_text="Risk Signals")
+            risk_tab = page.locator('button[data-testid="stTab"]').filter(
+                has_text="Risk & Outliers"
+            )
             if risk_tab.is_visible():
                 risk_tab.click()
                 time.sleep(2.5)
-                smooth_scroll(page, 400)
+                smooth_scroll(page, 350)
                 page.screenshot(path=str(SCREENSHOTS_DIR / "07_risk_signals_tab.png"))
                 time.sleep(3.0)
 
@@ -324,12 +363,12 @@ def run_recording() -> Path:
             prepare_export_btn = page.locator('button:has-text("Prepare PPTX export")')
             prepare_export_btn.scroll_into_view_if_needed()
             prepare_export_btn.click()
-            time.sleep(3.5)
 
             # Download generated PPTX deck
             download_btn = page.locator('button:has-text("Download PPTX Deck")')
+            download_btn.wait_for(state="visible", timeout=25000)
             if download_btn.is_visible():
-                with page.expect_download(timeout=15000) as download_info:
+                with page.expect_download(timeout=20000) as download_info:
                     download_btn.click()
                 download = download_info.value
                 download_path = OUTPUT_DIR / "Aivara_Executive_Presentation.pptx"
@@ -341,8 +380,12 @@ def run_recording() -> Path:
                     "PowerPoint Deck Ready",
                     f"Generated 16:9 deck ({download_path.stat().st_size // 1024} KB) with zero network calls",
                 )
-                time.sleep(2.5)
+                time.sleep(2.0)
                 page.screenshot(path=str(SCREENSHOTS_DIR / "08_pptx_export_ready.png"))
+
+                # Export slides in background ready for presentation showcase
+                export_pptx_slides(download_path, SLIDES_DIR)
+                shutil.copy(Path("scripts/slide_viewer.html"), OUTPUT_DIR / "slide_viewer.html")
 
             # -------------------------------------------------------------
             # Scene 9: Archetype Switching (Inventory Records Snapshot)
@@ -351,10 +394,19 @@ def run_recording() -> Path:
             inject_hud(
                 page,
                 "Dynamic Archetype Adaptation",
-                "Ingesting Inventory Records • Adapting to Snapshot Archetype",
+                "Switching Dataset via Sidebar • Loading Operations Inventory Data",
             )
+            time.sleep(1.0)
 
+            # Click sidebar "📂 Load New Dataset" button to reset state
+            load_new_btn = page.locator('button:has-text("Load New Dataset")')
+            if load_new_btn.is_visible():
+                load_new_btn.click()
+                time.sleep(2.0)
+
+            # Re-upload inventory file
             file_input = page.locator('input[type="file"]')
+            file_input.wait_for(state="visible", timeout=15000)
             file_input.set_input_files(str(INVENTORY_FILE))
             time.sleep(3.0)
 
@@ -369,9 +421,9 @@ def run_recording() -> Path:
             inject_hud(
                 page,
                 "Operations Snapshot View",
-                "Inventory balance, units sold, and stock-level metrics computed instantly",
+                "Elevated Dashboard • Inventory metrics and stock charts rendered at top of viewport",
             )
-            smooth_scroll(page, 350)
+            page.evaluate("window.scrollTo(0, 0)")
             time.sleep(2.5)
             page.screenshot(path=str(SCREENSHOTS_DIR / "09_inventory_snapshot_view.png"))
 
@@ -396,9 +448,75 @@ def run_recording() -> Path:
             page.screenshot(path=str(SCREENSHOTS_DIR / "10_security_and_privacy.png"))
 
             # -------------------------------------------------------------
-            # Scene 11: Grand Finale & Outro
+            # Scene 11: High-Definition Slide Deck Presentation Showcase
             # -------------------------------------------------------------
-            print("🎬 Scene 11: Production Release v1.0.0 Outro...")
+            print("🎬 Scene 11: High-Definition Slide Deck Presentation Showcase...")
+            viewer_url = (OUTPUT_DIR / "slide_viewer.html").resolve().as_uri()
+
+            page.goto(viewer_url)
+            page.wait_for_selector("#slideImg", timeout=10000)
+            time.sleep(1.5)
+
+            slides_meta = [
+                (
+                    1,
+                    "Executive Title & Run Metadata",
+                    "Automated timestamp, dataset provenance & classification",
+                ),
+                (
+                    2,
+                    "Executive Summary & Strategic Takeaways",
+                    "Synthesized boardroom bullets and high-level findings",
+                ),
+                (
+                    3,
+                    "Primary KPI Scorecard",
+                    "Primary metric cards with Period-over-Period variance and counts",
+                ),
+                (
+                    4,
+                    "Domain Deep-Dive Analytics",
+                    "Customer Feedback & Sentiment distribution by channel and severity",
+                ),
+                (
+                    5,
+                    "Key Explanatory Drivers",
+                    "Dimensional decomposition & Pearson correlation matrix heatmap",
+                ),
+                (
+                    6,
+                    "Statistical Risk Radar",
+                    "Rolling baseline anomaly detection (|z| ≥ 2.5) & concentration",
+                ),
+                (
+                    7,
+                    "Security & Formula Defense",
+                    "Neutralized spreadsheet formula injection threats & data protection",
+                ),
+                (
+                    8,
+                    "Appendix & Methodology Sign-off",
+                    "Deterministic audit log, row counts, and governance signature",
+                ),
+            ]
+
+            for slide_num, title, subtitle in slides_meta:
+                page.evaluate(f"window.setSlide({slide_num})")
+                inject_hud(
+                    page,
+                    f"Slide {slide_num} / {len(slides_meta)}: {title}",
+                    subtitle,
+                )
+                time.sleep(2.4)
+                if slide_num in (1, 3, 4, 5, 7):
+                    page.screenshot(
+                        path=str(SCREENSHOTS_DIR / f"11_slide_{slide_num}_presentation.png")
+                    )
+
+            # -------------------------------------------------------------
+            # Scene 12: Grand Finale & Outro
+            # -------------------------------------------------------------
+            print("🎬 Scene 12: Production Release v1.0.0 Outro...")
             inject_hud(
                 page,
                 "Aivara v1.0.0 Production Release",
