@@ -52,10 +52,14 @@ def check_app_page(base_url: str, timeout: float = 5.0) -> bool:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description="Aivara Container Smoke Verification")
-    parser.add_argument("--url", default="http://localhost:8501", help="Base URL of Aivara application")
+    parser.add_argument(
+        "--url", default="http://localhost:8501", help="Base URL of Aivara application"
+    )
     parser.add_argument("--retries", type=int, default=5, help="Number of retry attempts")
     parser.add_argument("--delay", type=float, default=2.0, help="Delay in seconds between retries")
-    parser.add_argument("--timeout", type=float, default=5.0, help="HTTP request timeout in seconds")
+    parser.add_argument(
+        "--timeout", type=float, default=5.0, help="HTTP request timeout in seconds"
+    )
     args = parser.parse_args()
 
     print(f"🚀 Starting Aivara container smoke test against {args.url} (retries={args.retries})...")

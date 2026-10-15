@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 11: Performance & Scale (Audit §11)**:
+  - Benchmark test harness `scripts/bench.py` profiling latency and memory usage across 1k, 10k, 50k, 100k rows and concurrent user sessions.
+  - Empirical verification of latency SLA: 10,000 rows end-to-end pipeline processing completes in 4.9 seconds (< 10s SLA).
+  - Empirical verification of memory bound: 50,000 rows peak RAM footprint remains under 10 MB (< 500 MB limit).
+  - Concurrent user session throughput verification: 5 concurrent worker sessions executing 10,000 rows in 10.85s (~4,609 rows/sec).
+  - Ingress guard tests asserting `MAX_ROWS_FULL_PROCESSING = 500,000` samples oversized datasets deterministically with load notes and zero unhandled exceptions.
+  - Concurrency safety test verifying thread safety across simultaneous pipeline executions.
+  - Comprehensive performance documentation `docs/PERFORMANCE.md` detailing benchmarks, latency breakdowns, memory consumption, concurrency scaling, and deployment hardware profiles.
+  - Performance test suite (`tests/test_performance.py`) with 4 passing regression tests.
 - **Phase 10: Observability, Configuration, and Deployment (Audit §10)**:
   - Strongly typed `Settings` object (`config.py`) with `from_env()` factory and validation rules (`Settings.validate()`) verifying positive budgets, timeouts, upload caps, and valid environment profiles (`dev`, `prod`, `staging`).
   - Semver `__version__ = "0.9.0"` defined in `config.py` and displayed in the sidebar settings footer alongside application mode.

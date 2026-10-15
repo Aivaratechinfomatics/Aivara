@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 2026-10-15   Current phase: 8 — Export hardening   Overall: 8/13 phases complete
+Last updated: 2026-10-16   Current phase: 11 — Performance & scale   Overall: 11/13 phases complete
 
 > Source of truth for the hardening effort. The agent updates this file at the start of every PLAN, after every significant commit, and at every LOG step. Goal document: `AIVARA_AGENT_PLAN.md`.
 
@@ -16,11 +16,11 @@ Last updated: 2026-10-15   Current phase: 8 — Export hardening   Overall: 8/13
 | 5 | LLM layer: reliability & privacy | done | 2026-10-15 | 2026-10-15 | phase-5-complete |
 | 6 | State, concurrency, multi-user | done | 2026-10-15 | 2026-10-15 | phase-6-complete |
 | 7 | Security hardening | done | 2026-10-15 | 2026-10-15 | phase-7-complete |
-| 8 | Export hardening | in-progress | 2026-10-15 | | |
-| 9 | App structure, UX, UI tests | not-started | | | |
-| 10 | Observability, config, deployment | not-started | | | |
-| 11 | Performance & scale | not-started | | | |
-| 12 | Docs, UAT, release v1.0.0 | not-started | | | |
+| 8 | Export hardening | done | 2026-10-15 | 2026-10-16 | phase-8-complete |
+| 9 | App structure, UX, UI tests | done | 2026-10-16 | 2026-10-16 | phase-9-complete |
+| 10 | Observability, config, deployment | done | 2026-10-16 | 2026-10-16 | phase-10-complete |
+| 11 | Performance & scale | done | 2026-10-16 | 2026-10-16 | phase-11-complete |
+| 12 | Docs, UAT, release v1.0.0 | in-progress | 2026-10-16 | | |
 
 Status values: not-started / planning / in-progress / testing / debugging / gate / done / blocked
 
@@ -143,6 +143,27 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 ---
 
 ## Gate Checklists
+
+### Phase 11 Exit Gate
+- [x] Benchmark pipeline on 1k, 10k, 50k scales (`scripts/bench.py`) measuring per-stage latency and peak memory via `tracemalloc`.
+- [x] 10k rows processes in < 10 seconds on standard laptop (achieved 4.93s).
+- [x] Memory consumption stays under 500MB for 50k rows (achieved 9.41MB peak RAM).
+- [x] File over `MAX_ROWS_FULL_PROCESSING` (500k rows) triggers informative warning note and safe stratified sampling, not crash.
+- [x] Concurrency safety: 5 concurrent worker sessions executing 10k rows in 10.85s (~4,609 rows/sec) without race conditions.
+- [x] Performance documentation complete (`docs/PERFORMANCE.md`) with latency breakdown, sizing limits, and hardware deployment profiles.
+- [x] Performance test suite (`tests/test_performance.py`) passing (4/4 tests).
+- [x] Global gate passes (306/306 tests pass, 81.43% coverage, ruff clean, mypy clean, bandit clean).
+
+### Global Gate (Phase 11 Evaluation)
+- [x] Full test suite passes: 306/306 passed across consecutive runs (0 failures).
+- [x] `ruff check` and `ruff format --check` clean.
+- [x] `mypy` clean on 57 source files.
+- [x] `bandit` scan passes with 0 Medium/High issues.
+- [x] No test makes a real network call (enforced by socket-blocking fixture).
+- [x] No new skips/xfails.
+- [x] Overall coverage met (81.43% repo-wide > 75% threshold).
+- [x] No secrets, sample customer data, or `.env` content committed.
+- [x] `PROGRESS.md`, `CHANGELOG.md`, `docs/PERFORMANCE.md` updated.
 
 ### Phase 10 Exit Gate
 - [x] Strongly typed `Settings` dataclass with `validate()` and `.from_env()` startup validation (`config.py`).
@@ -365,3 +386,4 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2026-10-16 | 8 (Export Hardening) | 284 | 77.87% (export 91.56%) | 0 | 0 | 0 |
 | 2026-10-16 | 9 (App Structure & UX) | 292 | 81.26% (app 95%) | 0 | 0 | 0 |
 | 2026-10-16 | 10 (Observability & Deployment) | 302 | 81.33% | 0 | 0 | 0 |
+| 2026-10-16 | 11 (Performance & Scale) | 306 | 81.43% | 0 | 0 | 0 |

@@ -31,6 +31,7 @@ run_dispatch.bat
 screenshots/
 scripts/*
 !scripts/smoke_container.py
+!scripts/bench.py
 send_new_offers.py
 send_offers_and_whatsapp.bat
 send_unified_dispatch.py
