@@ -21,6 +21,7 @@ htmlcov/
 *.log
 *.tmp
 *.pptx
+!demo_output/*.pptx
 
 # Workspace scratch, sessions & external dispatch tools
 .chrome_session*/
@@ -38,7 +39,13 @@ scripts/*
 !scripts/record_demo_video.py
 !scripts/transcode_video.py
 !scripts/slide_viewer.html
-demo_output/
+demo_output/*
+!demo_output/aivara_v1_demo.mp4
+!demo_output/aivara_v1_demo.webm
+!demo_output/Aivara_Executive_Presentation.pptx
+!demo_output/slide_viewer.html
+!demo_output/slides/
+!demo_output/slides/**
 send_new_offers.py
 send_offers_and_whatsapp.bat
 send_unified_dispatch.py
