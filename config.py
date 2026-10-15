@@ -76,6 +76,15 @@ ANOMALY_PCT_SWING_THRESHOLD = 0.30  # 30% swing fallback when history is short
 # Max rows to hold in memory before we sample for expensive operations.
 MAX_ROWS_FULL_PROCESSING = 500_000
 
+# File size and column limits (Section 12 & Decision D9)
+MAX_UPLOAD_MB = int(os.environ.get("AIVARA_MAX_UPLOAD_MB", "100"))
+MAX_COLUMNS = int(os.environ.get("AIVARA_MAX_COLUMNS", "500"))
+
+# Default null placeholders normalized to NaN during ingestion
+DEFAULT_NULL_STRINGS: frozenset[str] = frozenset(
+    {"", "na", "n/a", "nan", "none", "null", "-", "--", "n.a.", "n/d", "nil"}
+)
+
 # ---------------------------------------------------------------------------
 # App metadata
 # ---------------------------------------------------------------------------

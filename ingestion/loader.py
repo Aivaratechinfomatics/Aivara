@@ -20,7 +20,7 @@ from typing import Any
 
 import pandas as pd
 
-from config import MAX_ROWS_FULL_PROCESSING
+from config import MAX_COLUMNS, MAX_ROWS_FULL_PROCESSING, MAX_UPLOAD_MB
 
 try:
     from charset_normalizer import from_bytes as _cn_from_bytes
@@ -276,10 +276,12 @@ def _prune_trailing_summary_rows(df: pd.DataFrame) -> tuple[pd.DataFrame, list[s
 
 def _sanitize_dataframe_columns_and_cleanup(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
     """Cleans up DataFrame after loading:
-    1. Sanitizes column headers (strips internal newlines, multi-spaces, trims).
-    2. Drops fully-empty rows and columns.
-    3. Drops unnamed spacer columns that have >85% nulls.
-    4. Prunes trailing summary/footer rows.
+    1. Drops fully-empty rows and columns.
+    2. Drops unnamed spacer columns that have >85% nulls.
+    3. Sanitizes column headers (strips internal newlines, multi-spaces, trims).
+    4. Handles blank headers by assigning column_{i+1}.
+    5. Deduplicates column headers (col, col_2, etc.).
+    6. Prunes trailing summary/footer rows.
     """
     if df.empty:
         return df, []
@@ -288,14 +290,8 @@ def _sanitize_dataframe_columns_and_cleanup(df: pd.DataFrame) -> tuple[pd.DataFr
 
     # Drop completely empty rows and columns
     df = df.dropna(how="all").dropna(axis=1, how="all")
-
-    # Sanitize column names: remove newlines, carriage returns, collapse spaces
-    cleaned_cols = []
-    for c in df.columns:
-        c_str = re.sub(r"[\r\n\t]+", " ", str(c))
-        c_str = re.sub(r"\s+", " ", c_str).strip()
-        cleaned_cols.append(c_str)
-    df.columns = cleaned_cols
+    if df.empty:
+        return df, []
 
     # Drop unnamed columns that are mostly NaN
     cols_to_drop = [
@@ -306,6 +302,34 @@ def _sanitize_dataframe_columns_and_cleanup(df: pd.DataFrame) -> tuple[pd.DataFr
     ]
     if cols_to_drop:
         df = df.drop(columns=cols_to_drop)
+
+    # Sanitize, fill blank, and deduplicate column names
+    cleaned_cols: list[str] = []
+    seen_counts: dict[str, int] = {}
+    for i, c in enumerate(df.columns):
+        c_str = re.sub(r"[\r\n\t]+", " ", str(c))
+        c_str = re.sub(r"\s+", " ", c_str).strip()
+        if not c_str or c_str.lower() in ("nan", "none", "null") or c_str.startswith("Unnamed:"):
+            c_str = f"column_{i + 1}"
+            notes.append(f"Assigned default name '{c_str}' to blank column header.")
+
+        base_name = re.sub(r"\.\d+$", "", c_str)
+        if base_name in seen_counts:
+            seen_counts[base_name] += 1
+            deduped = f"{base_name}_{seen_counts[base_name]}"
+            cleaned_cols.append(deduped)
+            notes.append(f"Renamed duplicate column '{base_name}' to '{deduped}'.")
+        elif c_str in seen_counts:
+            seen_counts[c_str] += 1
+            deduped = f"{c_str}_{seen_counts[c_str]}"
+            cleaned_cols.append(deduped)
+            notes.append(f"Renamed duplicate column '{c_str}' to '{deduped}'.")
+        else:
+            seen_counts[c_str] = 1
+            seen_counts[base_name] = 1
+            cleaned_cols.append(c_str)
+
+    df.columns = cleaned_cols
 
     # Prune trailing summary/total rows
     df, prune_notes = _prune_trailing_summary_rows(df)
@@ -318,6 +342,31 @@ def load_csv(file_bytes: bytes, filename: str | None = "uploaded.csv") -> LoadRe
     """Best-effort robust CSV load. Never raises; failures are reported via
     LoadResult.success / .error so the UI can show a friendly message."""
     notes: list[str] = []
+
+    if not file_bytes or len(file_bytes.strip()) == 0:
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="utf-8",
+            delimiter=",",
+            header_row=None,
+            notes=["Uploaded file is empty (0 bytes)."],
+            success=False,
+            error="Uploaded file is empty (0 bytes).",
+        )
+
+    size_mb = len(file_bytes) / (1024 * 1024)
+    if size_mb > MAX_UPLOAD_MB:
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="utf-8",
+            delimiter=",",
+            header_row=None,
+            notes=[
+                f"File size ({size_mb:.1f} MB) exceeds maximum allowed size of {MAX_UPLOAD_MB} MB."
+            ],
+            success=False,
+            error=f"File size ({size_mb:.1f} MB) exceeds maximum allowed size of {MAX_UPLOAD_MB} MB.",
+        )
 
     encoding, enc_notes = _detect_encoding(file_bytes)
     notes.extend(enc_notes)
@@ -367,9 +416,18 @@ def load_csv(file_bytes: bytes, filename: str | None = "uploaded.csv") -> LoadRe
         return None
 
     read_attempts: list[dict[str, Any]] = [
-        dict(sep=delimiter, header=header_arg, engine="python"),
-        dict(sep=delimiter, header=header_arg, engine="python", on_bad_lines=bad_line_handler),
-        dict(sep=None, header=header_arg, engine="python", on_bad_lines=bad_line_handler),
+        dict(
+            sep=delimiter,
+            header=header_arg,
+            engine="python",
+            on_bad_lines=bad_line_handler,
+        ),
+        dict(
+            sep=None,
+            header=header_arg,
+            engine="python",
+            on_bad_lines=bad_line_handler,
+        ),
     ]
 
     last_error: Exception | None = None
@@ -390,6 +448,17 @@ def load_csv(file_bytes: bytes, filename: str | None = "uploaded.csv") -> LoadRe
 
             df, cleanup_notes = _sanitize_dataframe_columns_and_cleanup(df)
             notes.extend(cleanup_notes)
+
+            if df.shape[1] > MAX_COLUMNS:
+                return LoadResult(
+                    dataframe=pd.DataFrame(),
+                    encoding=encoding,
+                    delimiter=delimiter,
+                    header_row=header_arg,
+                    notes=notes,
+                    success=False,
+                    error=f"File exceeds maximum column limit of {MAX_COLUMNS} columns (found {df.shape[1]}).",
+                )
 
             if len(df) > MAX_ROWS_FULL_PROCESSING:
                 notes.append(
@@ -422,6 +491,31 @@ def load_csv(file_bytes: bytes, filename: str | None = "uploaded.csv") -> LoadRe
 def load_excel(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
     """Loads an Excel workbook (.xlsx / .xls) into a DataFrame without crashing."""
     notes: list[str] = ["Loaded Excel workbook."]
+    if not raw_bytes or len(raw_bytes.strip()) == 0:
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="binary",
+            delimiter="excel",
+            header_row=None,
+            notes=["Uploaded file is empty (0 bytes)."],
+            success=False,
+            error="Uploaded file is empty (0 bytes).",
+        )
+
+    size_mb = len(raw_bytes) / (1024 * 1024)
+    if size_mb > MAX_UPLOAD_MB:
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="binary",
+            delimiter="excel",
+            header_row=None,
+            notes=[
+                f"File size ({size_mb:.1f} MB) exceeds maximum allowed size of {MAX_UPLOAD_MB} MB."
+            ],
+            success=False,
+            error=f"File size ({size_mb:.1f} MB) exceeds maximum allowed size of {MAX_UPLOAD_MB} MB.",
+        )
+
     try:
         excel_file = pd.ExcelFile(io.BytesIO(raw_bytes), engine="openpyxl")
         sheet_names = excel_file.sheet_names
@@ -475,6 +569,17 @@ def load_excel(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
         df, cleanup_notes = _sanitize_dataframe_columns_and_cleanup(df)
         notes.extend(cleanup_notes)
 
+        if df.shape[1] > MAX_COLUMNS:
+            return LoadResult(
+                dataframe=pd.DataFrame(),
+                encoding="binary",
+                delimiter="excel",
+                header_row=header_arg,
+                notes=notes,
+                success=False,
+                error=f"File exceeds maximum column limit of {MAX_COLUMNS} columns (found {df.shape[1]}).",
+            )
+
         if len(df) > MAX_ROWS_FULL_PROCESSING:
             notes.append(
                 f"Dataset exceeds {MAX_ROWS_FULL_PROCESSING:,} rows; sampled down for responsiveness."
@@ -504,6 +609,31 @@ def load_excel(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
 def load_file(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
     """Universal file loader: automatically routes between Excel (.xlsx, .xls)
     and CSV based on file extension and magic byte inspection."""
+    if not raw_bytes or len(raw_bytes.strip()) == 0:
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="utf-8",
+            delimiter=",",
+            header_row=None,
+            notes=["Uploaded file is empty (0 bytes)."],
+            success=False,
+            error="Uploaded file is empty (0 bytes).",
+        )
+
+    size_mb = len(raw_bytes) / (1024 * 1024)
+    if size_mb > MAX_UPLOAD_MB:
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="utf-8",
+            delimiter=",",
+            header_row=None,
+            notes=[
+                f"File size ({size_mb:.1f} MB) exceeds maximum allowed size of {MAX_UPLOAD_MB} MB."
+            ],
+            success=False,
+            error=f"File size ({size_mb:.1f} MB) exceeds maximum allowed size of {MAX_UPLOAD_MB} MB.",
+        )
+
     is_excel = False
     if (
         filename

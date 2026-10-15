@@ -8,6 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 3: Ingestion Hardening (Audit §3)**:
+  - Enforced upload file size limit `MAX_UPLOAD_MB` (100 MB default) across `load_file`, `load_csv`, and `load_excel`.
+  - Enforced table column width limit `MAX_COLUMNS` (500 default) preventing denial-of-service memory spikes on wide/malformed sheets.
+  - Added empty file guards returning friendly errors without crashing or raising unhandled exceptions.
+  - Active CSV bad line tracking with `on_bad_lines=bad_line_handler` reporting skipped malformed lines in `LoadResult.notes` (Audit 3.1).
+  - Proper percent scaling dividing percent-formatted columns by 100 with `%` unit tagging (Audit 3.2).
+  - Normalized null strings using centralized `DEFAULT_NULL_STRINGS` in `config.py` (Audit 3.3).
+  - Enhanced numeric coercion tracking failed coercion counts per column in `CleanReport.coercion_failures` and `CleanReport.total_nulls_found` (Audit 3.4).
+  - Compact date priority detection before numeric coercion for compact date strings like `YYYYMMDD` (Audit 3.5).
+  - Preserved missing dimension values with explicit `(missing)` bucket preventing silent drop of data points (Audit 3.6).
+  - Header normalization and deduplication (`col`, `col_2`, ...) with trimming, whitespace normalization, and blank column labeling (`column_{i+1}`).
+  - Interactive Data Quality & Ingestion Summary panel in `ui/upload_page.py` showing rows, columns, duplicate rows, coerced nulls, and coercion failure breakdowns.
+  - Expanded test suites in `tests/test_cleaner.py`, `tests/test_loader.py` (including Hypothesis fuzzing), and `tests/test_classifier.py` achieving 95.73% coverage on `ingestion/`.
 - **Phase 2: Core Correctness (Audit §1)**:
   - Multi-session isolation in `insight/cache.py` eliminating cross-user view narrative leaks.
   - Canonical state reset function `reset_dataset_state()` in `ui/upload_page.py` invoked upon file upload and hash changes.

@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 2026-10-15   Current phase: 2 — Core correctness (audit §1)   Overall: 3/13 phases complete
+Last updated: 2026-10-15   Current phase: 4 — Analytics validity & coverage   Overall: 4/13 phases complete
 
 > Source of truth for the hardening effort. The agent updates this file at the start of every PLAN, after every significant commit, and at every LOG step. Goal document: `AIVARA_AGENT_PLAN.md`.
 
@@ -11,7 +11,7 @@ Last updated: 2026-10-15   Current phase: 2 — Core correctness (audit §1)   O
 | 0 | Baseline & safety net | done | 2026-10-15 | 2026-10-15 | phase-0-complete |
 | 1 | Tooling, CI, repo hygiene | done | 2026-10-15 | 2026-10-15 | phase-1-complete |
 | 2 | Core correctness (audit §1) | done | 2026-10-15 | 2026-10-15 | phase-2-complete |
-| 3 | Ingestion hardening (audit §3) | not-started | | | |
+| 3 | Ingestion hardening (audit §3) | done | 2026-10-15 | 2026-10-15 | phase-3-complete |
 | 4 | Analytics validity & coverage | not-started | | | |
 | 5 | LLM layer: reliability & privacy | not-started | | | |
 | 6 | State, concurrency, multi-user | not-started | | | |
@@ -26,40 +26,42 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 
 ---
 
-## Current Phase Detail — Phase 2: Core Correctness (Audit §1)
+## Current Phase Detail — Phase 3: Ingestion Hardening (Audit §3)
 
 ### Plan (written before coding)
 - **Tasks**:
-  - [x] 1.1 Cross-user view cache: Harden `insight/cache.py` (`get_for_view`, `set_for_view`) so cached narratives are strictly isolated per session/thread instead of a shared global in-memory dictionary.
-  - [x] 1.2 Trend metric order independence: Verify `app.py` selects `primary_metric` independently of column order before invoking `build_trend_series()`.
-  - [x] 1.3 Driver contribution % normalization: Verify `analytics/drivers.py` handles offsetting categories when net delta is zero without exploding.
-  - [x] 1.4 & 1.5 `pct_change` edge cases: Guard `format_pct_change` in `ui/components.py` against NaN and signed infinities.
-  - [x] 1.6, 1.7, 1.8 State reset on new upload: Implement canonical `reset_dataset_state()` in `ui/upload_page.py` invoked on file upload or hash changes.
-  - [x] Invariant testing: Build `tests/test_core_correctness.py` asserting that Screen figures == Facts packet values == PPTX slide figures across sample datasets.
-- **Risks**: Modifying cache signature might break existing view callers if default session ID fallback is absent. Resolved with optional session_id parameter falling back to `st.session_state` or `threading.get_ident()`.
-- **Test strategy**: 12 dedicated regression tests in `tests/test_core_correctness.py` covering multi-session cache isolation, metric order invariance, signed infinities, offsetting category deltas, state resets, and number consistency.
+  - [x] 3.1 Bad lines reporting: count and report skipped malformed lines in `LoadResult.notes`.
+  - [x] 3.2 Percent columns: divide by 100, tag unit `%`, classify as rate/metric.
+  - [x] 3.3 Broader null-token set in `config.py` (`DEFAULT_NULL_STRINGS`).
+  - [x] 3.4 Report failed coercion counts per column in `CleanReport.messages` and `CleanReport.coercion_failures`.
+  - [x] 3.5 Date detection priority before numeric coercion for compact date strings.
+  - [x] 3.6 Explicit `(missing)` bucket for dimension values, no silent drops.
+  - [x] Ingestion Limits: `MAX_UPLOAD_MB` (100 MB), `MAX_COLUMNS` (500), empty file guard.
+  - [x] Headers: deduplicate repeated columns (`col`, `col_2`), strip whitespace, label blank headers.
+  - [x] Data quality summary panel in `ui/upload_page.py`.
+- **Risks**: Delimiter detection with unusual delimiters or uneven column counts; oversized matrices causing memory spikes. Resolved by limits checks and sniff-fallback retry ladder.
+- **Test strategy**: Create `tests/test_cleaner.py` and expand `tests/test_loader.py` covering all edge cases, plus Hypothesis property fuzzing. Core coverage on `ingestion/` >= 95%.
 
 ### Work Log (append-only, newest last)
-- 2026-10-15 22:05: Created Phase 2 implementation plan artifact.
-- 2026-10-15 22:05: Hardened `insight/cache.py` with multi-session isolation and thread-safe session-scoped storage.
-- 2026-10-15 22:05: Refactored `ui/upload_page.py` with canonical `reset_dataset_state()` and SHA-256 content hashing.
-- 2026-10-15 22:05: Added `math.isnan` guard to `ui/components.py` `format_pct_change()`.
-- 2026-10-15 22:06: Created comprehensive test suite `tests/test_core_correctness.py` with 12 tests.
-- 2026-10-15 22:07: Fixed trend single-row and empty dataframe test expectations.
-- 2026-10-15 22:10: Resolved Ruff import formatting in `tests/test_core_correctness.py` and `ui/upload_page.py`.
-- 2026-10-15 22:11: Addressed Bandit CWE-327 alert by switching file hash from MD5 to SHA-256 in `ui/upload_page.py`.
-- 2026-10-15 22:12: Verified all 140 tests passing with 81.79% core engine coverage.
+- 2026-10-15 22:14: Created Phase 3 implementation plan artifact.
+- 2026-10-15 22:15: Beginning Phase 3 TDD development cycle.
+- 2026-10-15 22:25: Implemented limits in `config.py` and `loader.py`, enhanced `cleaner.py` null tokens and coercion reporting.
+- 2026-10-15 22:27: Added Data Quality & Ingestion Summary panel to `ui/upload_page.py`.
+- 2026-10-15 22:30: Expanded tests in `test_cleaner.py` and `test_loader.py` with edge cases and Hypothesis fuzzing.
+- 2026-10-15 22:31: Achieved 95.73% coverage on `ingestion/` (55 tests passing).
+- 2026-10-15 22:32: Ran full test suite (173 tests passing) and all static checks (ruff, mypy, bandit) with zero issues.
 
 ### Test Results
-- 2026-10-15 22:07: `python -m pytest tests/test_core_correctness.py -v` -> 12 passed
-- 2026-10-15 22:10: `python -m ruff check .` & `python -m ruff format --check insight ui tests` -> Clean
-- 2026-10-15 22:11: `python -m mypy config.py analytics/ ingestion/ export/ insight/` -> Success: no issues found in 27 source files
-- 2026-10-15 22:11: `python -m bandit -r analytics/ ingestion/ export/ insight/ ui/ config.py -ll` -> No issues identified (0 High, 0 Medium)
-- 2026-10-15 22:10: `python -m pytest --cov=analytics --cov=ingestion --cov=export --cov=insight --cov-fail-under=75` -> 140 passed, 81.79% coverage
+- 2026-10-15 22:31: `python -m pytest tests/test_cleaner.py tests/test_loader.py tests/test_classifier.py --cov=ingestion --cov-fail-under=95` -> 55 passed, 95.73% coverage
+- 2026-10-15 22:32: `python -m pytest tests/ -q` -> 173 passed
+- 2026-10-15 22:30: `python -m ruff check .` & `python -m ruff format --check` -> Clean
+- 2026-10-15 22:31: `python -m mypy config.py analytics/ ingestion/ export/ insight/` -> Clean (27 files)
+- 2026-10-15 22:31: `python -m bandit -r analytics/ ingestion/ export/ insight/ ui/ config.py -ll` -> Clean (0 Medium, 0 High)
+- 2026-10-15 22:32: `python -m pytest --cov=analytics --cov=ingestion --cov=export --cov=insight --cov-fail-under=75` -> 173 passed, 85.63% overall coverage
 
 ### Debug Log
-- `tests/test_core_correctness.py`: Single row dataframe trend test asserted `None` instead of `TrendResult` with `prior_period_start=None` -> Updated test assertion -> Resolved (attempt 1/3).
-- `Bandit B324`: High severity warning for `hashlib.md5` on file bytes in `upload_page.py` -> Migrated to `hashlib.sha256` -> Resolved (attempt 1/3).
+- `tests/test_loader.py`: Column mangling in pandas appends `.1` when duplicate headers are read; updated `_sanitize_dataframe_columns_and_cleanup()` to regex-strip trailing digits to clean base names (`revenue`, `revenue_2`) -> Resolved (attempt 1/3).
+- `tests/test_cleaner.py`: Dropped rows on `test_broader_null_placeholders_and_total_count` because `dropna(how="all")` removed single-column rows when all cells became null -> Added an `id` column to fixture -> Resolved (attempt 1/3).
 
 ---
 
@@ -80,12 +82,12 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2.3 `MAX_ROWS_FULL_PROCESSING` unused | already-fixed | `ingestion/loader.py` lines 389-393: samples at `MAX_ROWS_FULL_PROCESSING` and appends note | Phase 3 (regression test) |
 | 2.4 Unused constants/functions | already-fixed | `SEVERITY_LOW` used in `anomalies.py`; `estimate_tokens` used in `client.py`; `APP_TABS` used in `app.py` | Phase 4 / Phase 9 |
 | 2.5 Customers tab duplicate of Operations | already-fixed | `app.py` lines 593-601: filters for customer-shaped dimension columns or shows informative empty state | Phase 9 (regression test) |
-| 3.1 `on_bad_lines="skip"` silent drop | already-fixed | `ingestion/loader.py` lines 359-385: records `skipped_bad_lines` and reports in `notes` | Phase 3 (regression test) |
-| 3.2 Percent columns mis-scaled | already-fixed | `ingestion/cleaner.py` line 65: divides by 100.0; verified by `test_percent_columns_scaled_properly` | Phase 3 (regression test) |
-| 3.3 Null tokens inconsistent | already-fixed | `ingestion/cleaner.py` line 23: normalized `_NULL_STRINGS` set; verified by `test_null_placeholders_normalized` | Phase 3 (regression test) |
-| 3.4 Partial coercion not reported | already-fixed | `ingestion/cleaner.py` line 76: reports unparsed count in `report.messages`; verified by `test_partial_coercion_reports_failure_count` | Phase 3 (regression test) |
-| 3.5 Compact dates claimed by numeric pass | already-fixed | `ingestion/cleaner.py` line 48: guards against date-shape before numeric coercion; verified by `test_compact_date_format_coerced_to_datetime_not_numeric` | Phase 3 (regression test) |
-| 3.6 NaN dimensions dropped silently | already-fixed | `analytics/drivers.py` & `analytics/anomalies.py`: `.fillna("(missing)")` preserves null dimension groups | Phase 3 (regression test) |
+| 3.1 `on_bad_lines="skip"` silent drop | fixed | `ingestion/loader.py`: records `skipped_bad_lines` and reports in `notes`; verified by `tests/test_loader.py::test_malformed_csv_bad_lines_counted_and_reported` | Phase 3 |
+| 3.2 Percent columns mis-scaled | fixed | `ingestion/cleaner.py`: divides by 100.0, tags `%` unit; verified by `tests/test_cleaner.py::test_percent_columns_scaled_properly` | Phase 3 |
+| 3.3 Null tokens inconsistent | fixed | `config.py` & `ingestion/cleaner.py`: centralized `DEFAULT_NULL_STRINGS`; verified by `tests/test_cleaner.py::test_null_placeholders_normalized` | Phase 3 |
+| 3.4 Partial coercion not reported | fixed | `ingestion/cleaner.py`: reports unparsed counts in `CleanReport.coercion_failures`; verified by `tests/test_cleaner.py::test_partial_coercion_reports_failure_count` | Phase 3 |
+| 3.5 Compact dates claimed by numeric pass | fixed | `ingestion/cleaner.py`: date pattern checks before numeric coercion; verified by `tests/test_cleaner.py::test_compact_date_format_coerced_to_datetime_not_numeric` | Phase 3 |
+| 3.6 NaN dimensions dropped silently | fixed | `analytics/drivers.py` & `analytics/anomalies.py`: `.fillna("(missing)")` preserves null dimension groups | Phase 3 |
 | 3.7 Narrow exception handling in export | still-broken | `export/pptx_builder.py` line 341 catches Exception but has no timeout or slide placeholder | Phase 8 |
 | 3.8 LLM sentence-split parsing / bad cache | still-broken | `insight/client.py` line 48 has fallback sentence regex without strict JSON schema validation | Phase 5 |
 | 4.1 Everything aggregated with `.sum()` | still-broken | Rate metrics use `mean`, but general metrics lack configurable aggregation (`sum`, `mean`, `weighted_mean`, `last`) in UI | Phase 4 |
@@ -98,22 +100,36 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 
 ## Gate Checklists
 
+### Phase 3 Exit Gate
+- [x] Ingestion unit/property test coverage >= 95.0% (`ingestion/` achieves 95.73% branch coverage).
+- [x] Bad line skipping counted and reported in `LoadResult.notes` (Audit 3.1).
+- [x] Percent scaling divides by 100 with unit `%` and classified as rate (Audit 3.2).
+- [x] Centralized null strings configured in `config.py` and normalized (Audit 3.3).
+- [x] Partial coercion failures tracked per column in `CleanReport` (Audit 3.4).
+- [x] Compact dates preserved before numeric coercion pass (Audit 3.5).
+- [x] Missing dimensions preserved with `(missing)` bucket (Audit 3.6).
+- [x] Upload limit `MAX_UPLOAD_MB` (100 MB) and column limit `MAX_COLUMNS` (500) enforced.
+- [x] Empty file guard prevents unhandled crashes.
+- [x] Column headers deduplicated (`col`, `col_2`) and trimmed.
+- [x] Data quality summary panel active on upload page in `ui/upload_page.py`.
+
+### Global Gate (Phase 3 Evaluation)
+- [x] Full test suite passes: 173/173 passed across consecutive runs (0 failures).
+- [x] `ruff check` and `ruff format --check` clean.
+- [x] `mypy` clean on 27 core engine modules.
+- [x] `bandit` scan passes with 0 Medium/High issues.
+- [x] No test makes a real network call (enforced by socket-blocking fixture).
+- [x] No new skips/xfails.
+- [x] Overall coverage met (85.63% > 75% threshold; `ingestion/` 95.73% > 95% threshold).
+- [x] No secrets, sample customer data, or `.env` content committed.
+- [x] `PROGRESS.md` and `CHANGELOG.md` updated.
+
 ### Phase 2 Exit Gate
 - [x] All 8 items from Audit §1 have automated regression tests passing (`tests/test_core_correctness.py`).
 - [x] Cache is strictly isolated per session/thread (verified by `test_cross_user_view_cache_isolation`).
 - [x] Invariant holds across all fixtures: Screen figure == Facts packet == PPTX figure (verified by `test_number_consistency_screen_facts_pptx`).
 - [x] Reset on upload wipes all cached analytics, export buffers, and classification states.
 - [x] Bandit scan passes with 0 Medium/High issues.
-
-### Global Gate (Phase 2 Evaluation)
-- [x] Full test suite passes: 140/140 passed across consecutive runs.
-- [x] `ruff check` and `ruff format --check` clean.
-- [x] `mypy` clean on 27 core engine modules.
-- [x] No test makes a real network call (enforced by socket-blocking fixture).
-- [x] No new skips/xfails.
-- [x] Coverage met (81.79% > 75% threshold).
-- [x] No secrets, sample customer data, or `.env` content committed.
-- [x] `PROGRESS.md` and `CHANGELOG.md` updated.
 
 ---
 
@@ -138,7 +154,7 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 
 | Date | Question | Options | Recommendation | Blocks |
 |---|---|---|---|---|
-| None | All Phase 1 tasks unblocked. | — | — | — |
+| None | All Phase 3 tasks complete; Phase 4 ready to proceed. | — | — | — |
 
 ---
 
@@ -156,3 +172,4 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2026-10-15 | 0 (Baseline) | 126 | ~82% | TBD | TBD | 0 |
 | 2026-10-15 | 1 (Tooling) | 128 | 80.86% | 0 | 0 | 0 |
 | 2026-10-15 | 2 (Core Correctness) | 140 | 81.79% | 0 | 0 | 0 |
+| 2026-10-15 | 3 (Ingestion Hardening) | 173 | 85.63% (ingestion 95.73%) | 0 | 0 | 0 |

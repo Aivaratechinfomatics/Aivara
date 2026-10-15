@@ -14,13 +14,15 @@ from dataclasses import dataclass, field
 import numpy as np
 import pandas as pd
 
+from config import DEFAULT_NULL_STRINGS
+
 _CURRENCY_CHARS = re.compile(r"[₹$€£,]")
 _PERCENT_CHAR = re.compile(r"%\s*$")
 _PAREN_NEGATIVE = re.compile(r"^\((.*)\)$")
 _DATE_SHAPE_PATTERN = re.compile(
-    r"^\s*\d{1,4}[-/]\d{1,2}[-/]\d{1,4}(\s|$|T)|^\s*\d{4}\d{2}\d{2}\s*$"
+    r"^\s*\d{1,4}[-/]\d{1,2}[-/]\d{1,4}(\s|$|T)|^\s*\d{4}\d{2}\d{2}\s*|^\s*\d{2}[-/]\d{2}[-/]\d{4}\s*$"
 )
-_NULL_STRINGS = {"", "na", "n/a", "nan", "none", "null", "-", "--"}
+_NULL_STRINGS = set(DEFAULT_NULL_STRINGS)
 
 
 @dataclass
@@ -28,8 +30,10 @@ class CleanReport:
     empty_rows_removed: int = 0
     empty_columns_removed: int = 0
     duplicate_rows_flagged: int = 0
+    total_nulls_found: int = 0
     columns_coerced_numeric: list[str] = field(default_factory=list)
     columns_coerced_datetime: list[str] = field(default_factory=list)
+    coercion_failures: dict[str, int] = field(default_factory=dict)
     messages: list[str] = field(default_factory=list)
 
 
@@ -93,10 +97,12 @@ def clean_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
     # 1. Trim whitespace on string/object columns and normalize null tokens to NaN.
     def _normalize_null_value(v):
         if pd.isna(v):
+            report.total_nulls_found += 1
             return np.nan
         if isinstance(v, str):
             v_clean = v.strip()
             if v_clean.lower() in _NULL_STRINGS:
+                report.total_nulls_found += 1
                 return np.nan
             return v_clean
         return v
@@ -151,6 +157,7 @@ def clean_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
             df[col] = converted
             report.columns_coerced_numeric.append(col)
             if unparsed_count > 0:
+                report.coercion_failures[col] = unparsed_count
                 numeric_details.append(
                     f"{col} ({unparsed_count} value(s) could not be parsed and are now empty)"
                 )
@@ -179,6 +186,7 @@ def clean_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
             df[col] = pd.to_datetime(df[col], errors="coerce", format="mixed")
             report.columns_coerced_datetime.append(col)
             if unparsed_count > 0:
+                report.coercion_failures[col] = unparsed_count
                 datetime_details.append(
                     f"{col} ({unparsed_count} value(s) could not be parsed and are now empty)"
                 )

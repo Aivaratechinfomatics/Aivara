@@ -45,6 +45,9 @@ def reset_dataset_state() -> None:
         "_export_figures",
         "_pptx_buffer",
         "_view_insights",
+        "_load_notes",
+        "_clean_messages",
+        "_clean_report",
     ]
     for k in keys_to_clear:
         st.session_state.pop(k, None)
@@ -75,13 +78,7 @@ def render_upload_page() -> bool:
             st.error(f"Could not read this file: {load_result.error}")
             return False
 
-        for note in load_result.notes:
-            st.caption(f"ℹ️ {note}")
-
         cleaned_df, clean_report = clean_dataframe(load_result.dataframe)
-        for msg in clean_report.messages:
-            st.caption(f"🧹 {msg}")
-
         classifications = classify_columns(cleaned_df)
 
         st.session_state["dataset"] = cleaned_df
@@ -90,9 +87,45 @@ def render_upload_page() -> bool:
         st.session_state["_uploaded_file_hash"] = file_hash
         st.session_state["dataset_name"] = uploaded.name
         st.session_state["schema_confirmed"] = False
+        st.session_state["_load_notes"] = load_result.notes
+        st.session_state["_clean_messages"] = clean_report.messages
+        st.session_state["_clean_report"] = clean_report
 
     df = st.session_state["dataset"]
     classifications = list(st.session_state["classifications"].values())
+
+    # Data Quality Summary Panel
+    clean_report = st.session_state.get("_clean_report")
+    load_notes = st.session_state.get("_load_notes", [])
+    clean_messages = st.session_state.get("_clean_messages", [])
+
+    with st.expander("📊 Data Quality & Ingestion Summary", expanded=False):
+        m1, m2, m3, m4 = st.columns(4)
+        m1.metric("Rows Loaded", f"{len(df):,}")
+        m2.metric("Columns", len(df.columns))
+        m3.metric("Flagged Duplicates", getattr(clean_report, "duplicate_rows_flagged", 0))
+        m4.metric("Normalized Nulls", getattr(clean_report, "total_nulls_found", 0))
+
+        if clean_report and (
+            clean_report.empty_rows_removed > 0 or clean_report.empty_columns_removed > 0
+        ):
+            st.caption(
+                f"🧹 Dropped {clean_report.empty_rows_removed} fully empty row(s) and {clean_report.empty_columns_removed} spacer column(s)."
+            )
+
+        if clean_report and getattr(clean_report, "coercion_failures", None):
+            st.warning("⚠️ Unparsed values during type coercion:")
+            for c_fail, count in clean_report.coercion_failures.items():
+                st.write(
+                    f"- **{c_fail}**: {count} cell(s) could not be parsed and were converted to empty/null."
+                )
+
+        if load_notes or clean_messages:
+            st.write("##### Ingestion Activity Log")
+            for note in load_notes:
+                st.caption(f"ℹ️ {note}")
+            for msg in clean_messages:
+                st.caption(f"🧹 {msg}")
 
     st.subheader("Detected schema")
     st.caption("Review and override any column's role below, then continue to the dashboard.")
