@@ -1,0 +1,63 @@
+{
+  "classifications": {
+    "date": {
+      "confidence": 0.99,
+      "role": "date"
+    },
+    "orders": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "region": {
+      "confidence": 0.6,
+      "role": "dimension"
+    },
+    "revenue": {
+      "confidence": 0.9,
+      "role": "metric"
+    }
+  },
+  "columns": [
+    "date",
+    "region",
+    "revenue",
+    "orders",
+    "_is_duplicate"
+  ],
+  "dataset_name": "currency.csv",
+  "executive_takeaways": [
+    "**Portfolio Scale**: Analyzed 4 records totaling **$38.5k** in Revenue (average **9,612.81** per entry).",
+    "**Top Contributor**: Leading entity is **North**, generating 58.3% of total revenue.",
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 32.3% of total (Gini: 0.10, HHI: 2,588).",
+    "**Key Discovered Driver**: Strong positive driver: Higher Orders strongly associates with higher Revenue (r = +0.99)."
+  ],
+  "kpis": {
+    "orders": {
+      "abs_change": 13.0,
+      "current_value": 228.0,
+      "pct_change": 6.0465,
+      "prior_value": 215.0,
+      "unit": null
+    },
+    "revenue": {
+      "abs_change": 1950.25,
+      "current_value": 20200.75,
+      "pct_change": 10.686,
+      "prior_value": 18250.5,
+      "unit": null
+    }
+  },
+  "profile": {
+    "domain_type": "timeseries",
+    "entity_dimension": "region",
+    "grouping_dimensions": [],
+    "primary_date_col": "date",
+    "primary_metric": "revenue",
+    "profile_type": "timeseries"
+  },
+  "risk_signals": [],
+  "shape": [
+    4,
+    5
+  ]
+}

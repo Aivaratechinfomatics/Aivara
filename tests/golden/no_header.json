@@ -1,0 +1,63 @@
+{
+  "classifications": {
+    "column_1": {
+      "confidence": 0.99,
+      "role": "date"
+    },
+    "column_2": {
+      "confidence": 0.6,
+      "role": "dimension"
+    },
+    "column_3": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "column_4": {
+      "confidence": 0.9,
+      "role": "metric"
+    }
+  },
+  "columns": [
+    "column_1",
+    "column_2",
+    "column_3",
+    "column_4",
+    "_is_duplicate"
+  ],
+  "dataset_name": "no_header.csv",
+  "executive_takeaways": [
+    "**Portfolio Scale**: Analyzed 4 records totaling **11,200** in Column 3 (average **2,800.00** per entry).",
+    "**Top Contributor**: Leading entity is **North**, generating 58.0% of total column 3.",
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 31.2% of total (Gini: 0.10, HHI: 2,578).",
+    "**Key Discovered Driver**: Strong positive driver: Higher Column 4 strongly associates with higher Column 3 (r = +0.94)."
+  ],
+  "kpis": {
+    "column_3": {
+      "abs_change": -5700.0,
+      "current_value": 0.0,
+      "pct_change": -100.0,
+      "prior_value": 5700.0,
+      "unit": null
+    },
+    "column_4": {
+      "abs_change": -97.0,
+      "current_value": 0.0,
+      "pct_change": -100.0,
+      "prior_value": 97.0,
+      "unit": null
+    }
+  },
+  "profile": {
+    "domain_type": "timeseries",
+    "entity_dimension": "column_2",
+    "grouping_dimensions": [],
+    "primary_date_col": "column_1",
+    "primary_metric": "column_3",
+    "profile_type": "timeseries"
+  },
+  "risk_signals": [],
+  "shape": [
+    4,
+    5
+  ]
+}

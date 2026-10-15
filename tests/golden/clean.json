@@ -1,0 +1,102 @@
+{
+  "classifications": {
+    "cost": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "date": {
+      "confidence": 0.99,
+      "role": "date"
+    },
+    "product": {
+      "confidence": 0.6,
+      "role": "dimension"
+    },
+    "region": {
+      "confidence": 0.6,
+      "role": "dimension"
+    },
+    "revenue": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "units": {
+      "confidence": 0.9,
+      "role": "metric"
+    }
+  },
+  "columns": [
+    "date",
+    "region",
+    "product",
+    "revenue",
+    "cost",
+    "units",
+    "_is_duplicate"
+  ],
+  "dataset_name": "clean.csv",
+  "executive_takeaways": [
+    "**Portfolio Scale**: Analyzed 7 records totaling **$67.0k** in Revenue (average **9,571.43** per entry).",
+    "**Top Contributor**: Leading entity is **Widget A**, generating 55.2% of total revenue.",
+    "**Concentration Alert**: High concentration: top 20% of entries account for 40.3% of total (Gini: 0.17, HHI: 1,557).",
+    "**Key Discovered Driver**: Strong positive driver: Higher Units strongly associates with higher Revenue (r = +1.00)."
+  ],
+  "kpis": {
+    "cost": {
+      "abs_change": 5500.0,
+      "current_value": 17000.0,
+      "pct_change": 47.8261,
+      "prior_value": 11500.0,
+      "unit": null
+    },
+    "revenue": {
+      "abs_change": 11000.0,
+      "current_value": 30000.0,
+      "pct_change": 57.8947,
+      "prior_value": 19000.0,
+      "unit": null
+    },
+    "revenue_margin": {
+      "abs_change": 3.8596,
+      "current_value": 43.3333,
+      "pct_change": 3.8596,
+      "prior_value": 39.4737,
+      "unit": "%"
+    },
+    "units": {
+      "abs_change": 110.0,
+      "current_value": 300.0,
+      "pct_change": 57.8947,
+      "prior_value": 190.0,
+      "unit": null
+    }
+  },
+  "profile": {
+    "domain_type": "timeseries",
+    "entity_dimension": "product",
+    "grouping_dimensions": [
+      "region"
+    ],
+    "primary_date_col": "date",
+    "primary_metric": "revenue",
+    "profile_type": "timeseries"
+  },
+  "risk_signals": [
+    {
+      "description": "revenue swung +58% period-over-period.",
+      "severity": "medium"
+    },
+    {
+      "description": "cost swung +48% period-over-period.",
+      "severity": "medium"
+    },
+    {
+      "description": "units swung +58% period-over-period.",
+      "severity": "medium"
+    }
+  ],
+  "shape": [
+    7,
+    7
+  ]
+}

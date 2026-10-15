@@ -1,0 +1,106 @@
+{
+  "classifications": {
+    "Cost Price Per Unit (USD)": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "Cost Price Total (USD)": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "Hand-In- Stock": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "Number of Units Sold": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "Opening Stock": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "Product ID": {
+      "confidence": 0.9,
+      "role": "id"
+    },
+    "Product Name": {
+      "confidence": 0.9,
+      "role": "dimension"
+    },
+    "Purchase/ Stock in": {
+      "confidence": 0.9,
+      "role": "metric"
+    }
+  },
+  "columns": [
+    "Product ID",
+    "Product Name",
+    "Opening Stock",
+    "Purchase/ Stock in",
+    "Number of Units Sold",
+    "Hand-In- Stock",
+    "Cost Price Per Unit (USD)",
+    "Cost Price Total (USD)",
+    "_is_duplicate"
+  ],
+  "dataset_name": "inventory_sample.csv",
+  "executive_takeaways": [
+    "**Portfolio Scale**: Analyzed 46 records totaling **$359.8k** in Cost Price Total (Usd) (average **7,820.87** per entry).",
+    "**Top Contributor**: Leading entity is **Smartphone**, generating 20.0% of total Cost Price Total (USD).",
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 79.2% of total (Gini: 0.72, HHI: 1,089).",
+    "**Key Discovered Driver**: Strong positive driver: Higher Cost Price Per Unit (Usd) strongly associates with higher Cost Price Total (Usd) (r = +0.97)."
+  ],
+  "kpis": {
+    "Cost Price Per Unit (USD)": {
+      "abs_change": null,
+      "current_value": 7166.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    },
+    "Cost Price Total (USD)": {
+      "abs_change": null,
+      "current_value": 359760.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    },
+    "Hand-In- Stock": {
+      "abs_change": null,
+      "current_value": 2004.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    },
+    "Opening Stock": {
+      "abs_change": null,
+      "current_value": 1655.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    }
+  },
+  "profile": {
+    "domain_type": "inventory",
+    "entity_dimension": "Product Name",
+    "grouping_dimensions": [],
+    "primary_date_col": null,
+    "primary_metric": "Cost Price Total (USD)",
+    "profile_type": "snapshot"
+  },
+  "risk_signals": [
+    {
+      "description": "Laptop: Unusually high Cost Price Total (USD) (72,000.0 (z=4.1))",
+      "severity": "medium"
+    },
+    {
+      "description": "Smartphone: Unusually high Cost Price Total (USD) (72,000.0 (z=4.1))",
+      "severity": "medium"
+    }
+  ],
+  "shape": [
+    46,
+    9
+  ]
+}

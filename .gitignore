@@ -17,8 +17,26 @@ htmlcov/
 
 # Local cache & temporary files
 .aivara_insight_cache.json
+.aivara_budget_state.json
 *.log
 *.tmp
+*.pptx
+
+# Workspace scratch, sessions & external dispatch tools
+.chrome_session*/
+10-15s
+Account
+cpanel_deploy*
+run_dispatch.bat
+screenshots/
+scripts/
+send_new_offers.py
+send_offers_and_whatsapp.bat
+send_unified_dispatch.py
+send_whatsapp_messages.py
+start.bat
+website/
+whatsapp_dispatch*.csv
 
 # IDEs and editors
 .vscode/
@@ -29,3 +47,4 @@ htmlcov/
 # OS files
 .DS_Store
 Thumbs.db
+

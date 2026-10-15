@@ -1,0 +1,63 @@
+{
+  "classifications": {
+    "cost": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "date": {
+      "confidence": 0.99,
+      "role": "date"
+    },
+    "region": {
+      "confidence": 0.6,
+      "role": "dimension"
+    },
+    "sales": {
+      "confidence": 0.9,
+      "role": "metric"
+    }
+  },
+  "columns": [
+    "date",
+    "region",
+    "sales",
+    "cost",
+    "_is_duplicate"
+  ],
+  "dataset_name": "semicolon.csv",
+  "executive_takeaways": [
+    "**Portfolio Scale**: Analyzed 4 records totaling **$19.2k** in Sales (average **4,800.00** per entry).",
+    "**Top Contributor**: Leading entity is **East**, generating 57.8% of total sales.",
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 31.8% of total (Gini: 0.10, HHI: 2,579).",
+    "**Key Discovered Driver**: Strong positive driver: Higher Cost strongly associates with higher Sales (r = +0.99)."
+  ],
+  "kpis": {
+    "cost": {
+      "abs_change": -5800.0,
+      "current_value": 0.0,
+      "pct_change": -100.0,
+      "prior_value": 5800.0,
+      "unit": null
+    },
+    "sales": {
+      "abs_change": -10000.0,
+      "current_value": 0.0,
+      "pct_change": -100.0,
+      "prior_value": 10000.0,
+      "unit": null
+    }
+  },
+  "profile": {
+    "domain_type": "timeseries",
+    "entity_dimension": "region",
+    "grouping_dimensions": [],
+    "primary_date_col": "date",
+    "primary_metric": "sales",
+    "profile_type": "timeseries"
+  },
+  "risk_signals": [],
+  "shape": [
+    4,
+    5
+  ]
+}

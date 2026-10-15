@@ -1,0 +1,65 @@
+{
+  "classifications": {
+    "product": {
+      "confidence": 0.6,
+      "role": "dimension"
+    },
+    "region": {
+      "confidence": 0.6,
+      "role": "dimension"
+    },
+    "revenue": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "units": {
+      "confidence": 0.9,
+      "role": "metric"
+    }
+  },
+  "columns": [
+    "region",
+    "product",
+    "revenue",
+    "units",
+    "_is_duplicate"
+  ],
+  "dataset_name": "no_date.csv",
+  "executive_takeaways": [
+    "**Portfolio Scale**: Analyzed 3 records totaling **$27.0k** in Revenue (average **9,000.00** per entry).",
+    "**Top Contributor**: Leading entity is **Widget A**, generating 37.0% of total revenue.",
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 37.0% of total (Gini: 0.05, HHI: 3,361).",
+    "**Key Discovered Driver**: Strong positive driver: Higher Units strongly associates with higher Revenue (r = +1.00)."
+  ],
+  "kpis": {
+    "revenue": {
+      "abs_change": null,
+      "current_value": 27000.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    },
+    "units": {
+      "abs_change": null,
+      "current_value": 270.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    }
+  },
+  "profile": {
+    "domain_type": "snapshot",
+    "entity_dimension": "product",
+    "grouping_dimensions": [
+      "region"
+    ],
+    "primary_date_col": null,
+    "primary_metric": "revenue",
+    "profile_type": "snapshot"
+  },
+  "risk_signals": [],
+  "shape": [
+    3,
+    5
+  ]
+}

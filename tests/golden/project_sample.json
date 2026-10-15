@@ -1,0 +1,197 @@
+{
+  "classifications": {
+    "Assigned to": {
+      "confidence": 0.9,
+      "role": "dimension"
+    },
+    "Days Required": {
+      "confidence": 0.9,
+      "role": "metric"
+    },
+    "End Date": {
+      "confidence": 0.99,
+      "role": "date"
+    },
+    "Progress": {
+      "confidence": 0.95,
+      "role": "metric"
+    },
+    "Project Name": {
+      "confidence": 0.9,
+      "role": "dimension"
+    },
+    "Start Date": {
+      "confidence": 0.99,
+      "role": "date"
+    },
+    "Task Name": {
+      "confidence": 0.9,
+      "role": "dimension"
+    }
+  },
+  "columns": [
+    "Project Name",
+    "Task Name",
+    "Assigned to",
+    "Start Date",
+    "Days Required",
+    "End Date",
+    "Progress",
+    "_is_duplicate"
+  ],
+  "dataset_name": "project_sample.csv",
+  "executive_takeaways": [
+    "**Portfolio Scale**: Analyzed 46 records totaling **1,218** in Days Required (average **26.48** per entry).",
+    "**Top Contributor**: Leading entity is **Lead Generation**, generating 4.9% of total Days Required.",
+    "**Distribution Balance**: Evenly distributed: top 20% of entries account for 31.0% of total (Gini: 0.16)."
+  ],
+  "kpis": {
+    "Completed Tasks": {
+      "abs_change": null,
+      "current_value": 9.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    },
+    "Completion Rate": {
+      "abs_change": null,
+      "current_value": 36.8913,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": "%"
+    },
+    "In-Progress Tasks": {
+      "abs_change": null,
+      "current_value": 15.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    },
+    "Total Days Required": {
+      "abs_change": null,
+      "current_value": 1218.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": "days"
+    },
+    "Total Tasks": {
+      "abs_change": null,
+      "current_value": 46.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    },
+    "Unstarted Tasks": {
+      "abs_change": null,
+      "current_value": 22.0,
+      "pct_change": null,
+      "prior_value": null,
+      "unit": null
+    }
+  },
+  "profile": {
+    "domain_type": "project",
+    "entity_dimension": "Task Name",
+    "grouping_dimensions": [
+      "Project Name",
+      "Assigned to"
+    ],
+    "primary_date_col": "Start Date",
+    "primary_metric": "Days Required",
+    "profile_type": "project"
+  },
+  "risk_signals": [
+    {
+      "description": "Campaign Analysis (Marketing): Long-duration task (25 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "User Interface Design (Product Dev): Long-duration task (25 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Customer Feedback (Customer Svc): Long-duration task (30 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Data Collection (Research): Long-duration task (32 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Research Paper Writing (Research): Long-duration task (27 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Feature Enhancement (Development): Long-duration task (34 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Code Review (Development): Long-duration task (30 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Quality Control (Production): Long-duration task (27 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Packaging Design (Production): Long-duration task (22 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Contract Negotiation (Sales): Long-duration task (35 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Software Updates (Support): Long-duration task (22 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Inventory Management (Operations): Long-duration task (25 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Facility Maintenance (Operations): Long-duration task (20 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Market Expansion (Consulting): Long-duration task (32 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Client Advisory (Consulting): Long-duration task (25 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Certification Programs (Training): Long-duration task (30 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Skill Development (Training): Long-duration task (22 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Conference Management (Events): Long-duration task (20 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Sponsorship Coordinatio (Events): Long-duration task (35 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Inventory Optimization (Logistics): Long-duration task (20 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "System Integration (Engineering): Long-duration task (22 days) not yet started (0%).",
+      "severity": "high"
+    },
+    {
+      "description": "Prototype Testing (Engineering): Long-duration task (27 days) not yet started (0%).",
+      "severity": "high"
+    }
+  ],
+  "shape": [
+    46,
+    8
+  ]
+}

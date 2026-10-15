@@ -1,0 +1,50 @@
+{
+  "classifications": {
+    "city": {
+      "confidence": 0.6,
+      "role": "dimension"
+    },
+    "date": {
+      "confidence": 0.99,
+      "role": "date"
+    },
+    "revenue": {
+      "confidence": 0.9,
+      "role": "metric"
+    }
+  },
+  "columns": [
+    "date",
+    "city",
+    "revenue",
+    "_is_duplicate"
+  ],
+  "dataset_name": "mixed_encoding.csv",
+  "executive_takeaways": [
+    "**Portfolio Scale**: Analyzed 3 records totaling **$15.3k** in Revenue (average **5,100.00** per entry).",
+    "**Top Contributor**: Leading entity is **S\u7dcc Paulo**, generating 100.0% of total revenue.",
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 35.3% of total (Gini: 0.02, HHI: 3,339)."
+  ],
+  "kpis": {
+    "revenue": {
+      "abs_change": -4900.0,
+      "current_value": 0.0,
+      "pct_change": -100.0,
+      "prior_value": 4900.0,
+      "unit": null
+    }
+  },
+  "profile": {
+    "domain_type": "timeseries",
+    "entity_dimension": "city",
+    "grouping_dimensions": [],
+    "primary_date_col": "date",
+    "primary_metric": "revenue",
+    "profile_type": "timeseries"
+  },
+  "risk_signals": [],
+  "shape": [
+    3,
+    4
+  ]
+}
