@@ -126,37 +126,42 @@ def render_upload_page() -> bool:
             for msg in clean_messages:
                 st.caption(f"🧹 {msg}")
 
-    st.subheader("Detected schema")
-    st.caption("Review and override any column's role below, then continue to the dashboard.")
+    is_confirmed = bool(st.session_state.get("schema_confirmed"))
 
-    overrides = st.session_state.get("overrides", {})
-    ambiguous = {c.name for c in ambiguous_columns(classifications)}
+    with st.expander("⚙️ Detected Schema & Column Roles", expanded=not is_confirmed):
+        st.caption("Review and override any column's role below, then continue to the dashboard.")
 
-    for c in classifications:
-        cols = st.columns([3, 2, 2, 3])
-        cols[0].write(c.name)
-        flag = " ⚠️ low confidence" if c.name in ambiguous else ""
-        cols[1].write(f"{c.role}{flag}")
-        cols[2].write(f"{c.confidence:.0%} confidence")
-        current_role = overrides.get(c.name, c.role)
-        new_role = cols[3].selectbox(
-            "Override",
-            ALL_ROLES,
-            index=ALL_ROLES.index(current_role),
-            key=f"override_{c.name}",
-            label_visibility="collapsed",
-        )
-        if new_role != c.role:
-            overrides[c.name] = new_role
+        overrides = st.session_state.get("overrides", {})
+        ambiguous = {c.name for c in ambiguous_columns(classifications)}
 
-    st.session_state["overrides"] = overrides
+        for c in classifications:
+            cols = st.columns([3, 2, 2, 3])
+            cols[0].write(c.name)
+            flag = " ⚠️ low confidence" if c.name in ambiguous else ""
+            cols[1].write(f"{c.role}{flag}")
+            cols[2].write(f"{c.confidence:.0%} confidence")
+            current_role = overrides.get(c.name, c.role)
+            new_role = cols[3].selectbox(
+                "Override",
+                ALL_ROLES,
+                index=ALL_ROLES.index(current_role),
+                key=f"override_{c.name}",
+                label_visibility="collapsed",
+            )
+            if new_role != c.role:
+                overrides[c.name] = new_role
 
-    if st.button("Confirm schema and build dashboard", type="primary", key="confirm_schema_btn"):
-        final_classifications = apply_overrides(classifications, overrides)
-        st.session_state["classifications"] = {c.name: c for c in final_classifications}
-        st.session_state["schema_confirmed"] = True
+        st.session_state["overrides"] = overrides
+
+        if st.button(
+            "Confirm schema and build dashboard", type="primary", key="confirm_schema_btn"
+        ):
+            final_classifications = apply_overrides(classifications, overrides)
+            st.session_state["classifications"] = {c.name: c for c in final_classifications}
+            st.session_state["schema_confirmed"] = True
+            st.rerun()
 
     with st.expander("Preview raw data"):
         st.dataframe(df.head(50))
 
-    return bool(st.session_state.get("schema_confirmed"))
+    return is_confirmed

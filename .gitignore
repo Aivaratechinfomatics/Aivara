@@ -33,6 +33,9 @@ scripts/*
 !scripts/smoke_container.py
 !scripts/bench.py
 !scripts/uat_verify.py
+!scripts/record_demo_video.py
+!scripts/transcode_video.py
+demo_output/
 send_new_offers.py
 send_offers_and_whatsapp.bat
 send_unified_dispatch.py
