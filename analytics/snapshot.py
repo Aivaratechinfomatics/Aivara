@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 import pandas as pd
 
-from analytics.kpis import KPIResult, is_rate_metric
+from analytics.kpis import KPIResult, get_metric_aggregation, is_rate_metric
 
 
 @dataclass
@@ -54,19 +54,27 @@ def compute_snapshot_analytics(
     primary_metric: str,
     secondary_metrics: list[str],
     grouping_cols: list[str] | None = None,
+    metric_aggs: dict[str, str] | None = None,
 ) -> SnapshotAnalyticsResult:
     """Compute rich rankings, Pareto concentration, and outliers for a
     cross-sectional snapshot (e.g. inventory, product catalog, sales leaderboard)."""
     total_items = len(df)
     kpis: dict[str, KPIResult] = {}
+    aggs = metric_aggs or {}
 
     all_metrics = [primary_metric] + [m for m in secondary_metrics if m != primary_metric]
     for m in all_metrics:
         if m not in df.columns or not pd.api.types.is_numeric_dtype(df[m]):
             continue
-        is_rate = is_rate_metric(m)
-        val = float(df[m].mean(skipna=True)) if is_rate else float(df[m].sum(skipna=True))
-        unit = "%" if is_rate else None
+        resolved_agg = get_metric_aggregation(m, override=aggs.get(m))
+        if resolved_agg == "mean":
+            val = float(df[m].mean(skipna=True))
+        elif resolved_agg == "last":
+            s_m = df[m].dropna()
+            val = float(s_m.iloc[-1]) if not s_m.empty else 0.0
+        else:
+            val = float(df[m].sum(skipna=True))
+        unit = "%" if is_rate_metric(m) else None
         kpis[m] = KPIResult(
             name=m,
             unit=unit,
@@ -74,7 +82,8 @@ def compute_snapshot_analytics(
             prior_value=None,
             pct_change=None,
             abs_change=None,
-            is_derived_ratio=is_rate,
+            is_derived_ratio=is_rate_metric(m),
+            agg=resolved_agg,
         )
 
     # Entity rankings by primary_metric

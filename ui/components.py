@@ -82,8 +82,15 @@ def render_kpi_tile(kpi: KPIResult, unit: str | None = None) -> None:
     display_unit = unit or kpi.unit
     value_str = format_number(kpi.current_value, display_unit)
     delta_str = format_pct_change(kpi.pct_change, with_arrow=True)
+    agg_desc = getattr(kpi, "agg", "sum")
+    help_tooltip = f"Calculated using {agg_desc.upper()} aggregation."
 
-    st.metric(label=kpi.name.replace("_", " ").title(), value=value_str, delta=delta_str)
+    st.metric(
+        label=kpi.name.replace("_", " ").title(),
+        value=value_str,
+        delta=delta_str,
+        help=help_tooltip,
+    )
 
 
 def render_insight_card(

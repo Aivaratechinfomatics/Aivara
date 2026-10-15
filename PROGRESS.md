@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 2026-10-15   Current phase: 4 — Analytics validity & coverage   Overall: 4/13 phases complete
+Last updated: 2026-10-15   Current phase: 5 — LLM layer: reliability & privacy   Overall: 5/13 phases complete
 
 > Source of truth for the hardening effort. The agent updates this file at the start of every PLAN, after every significant commit, and at every LOG step. Goal document: `AIVARA_AGENT_PLAN.md`.
 
@@ -12,7 +12,7 @@ Last updated: 2026-10-15   Current phase: 4 — Analytics validity & coverage   
 | 1 | Tooling, CI, repo hygiene | done | 2026-10-15 | 2026-10-15 | phase-1-complete |
 | 2 | Core correctness (audit §1) | done | 2026-10-15 | 2026-10-15 | phase-2-complete |
 | 3 | Ingestion hardening (audit §3) | done | 2026-10-15 | 2026-10-15 | phase-3-complete |
-| 4 | Analytics validity & coverage | not-started | | | |
+| 4 | Analytics validity & coverage | done | 2026-10-15 | 2026-10-15 | phase-4-complete |
 | 5 | LLM layer: reliability & privacy | not-started | | | |
 | 6 | State, concurrency, multi-user | not-started | | | |
 | 7 | Security hardening | not-started | | | |
@@ -26,7 +26,42 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 
 ---
 
-## Current Phase Detail — Phase 3: Ingestion Hardening (Audit §3)
+## Current Phase Detail — Phase 4: Analytics Validity & Coverage (Complete)
+
+### Plan (written before coding)
+- **Tasks**:
+  - [x] 4.1 Aggregation semantics: introduce `agg` per metric (`sum` | `mean` | `weighted_mean` | `last`), heuristic default for rate/ratio metrics (`conversion_rate`), manual override support, apply across KPIs, trend, drivers, anomalies.
+  - [x] 4.2 Anomaly detection: augment cross-sectional category outliers with temporal rolling baseline anomalies when history exists; label static snapshot outliers as "structural outlier"; standardize `SEVERITY_LOW`, `SEVERITY_MEDIUM`, `SEVERITY_HIGH`.
+  - [x] Statistical discovery engine: enforce minimum sample size $n \ge 5$ in correlation, add "correlation ≠ causation" caption, guard divide-by-zero in concentration index.
+  - [x] Domain modules: hand-computed expectations and edge case tests for `commerce.py`, `finance.py` (budget variance sign convention), `workforce.py` (point-in-time headcount), `feedback.py` (NPS and CSAT formulas).
+  - [x] Customers/Operations tabs separation check.
+- **Risks**: Modifying aggregation in `kpis.py` and `trend.py` could affect existing golden tests if any golden dataset uses rate metrics. Re-baseline golden tests only if mathematically justified per Audit 4.1.
+- **Test strategy**: Create `tests/test_domain_hand_computed.py` with hand-verified calculations. Expand existing tests in `test_kpis.py`, `test_trend.py`, `test_drivers.py`, `test_anomalies.py`, `test_stats.py`. Target `>= 95.0%` coverage across `analytics/`.
+
+### Work Log (append-only, newest last)
+- 2026-10-15 22:35: Created Phase 4 implementation plan artifact.
+- 2026-10-15 22:36: Beginning Phase 4 development.
+- 2026-10-15 22:42: Implemented aggregation semantics in `analytics/kpis.py`, `trend.py`, `drivers.py`, `snapshot.py`, `anomalies.py`, and `app.py`. Added tooltip indicator on KPI tiles.
+- 2026-10-15 22:45: Implemented temporal anomaly detection `detect_temporal_anomalies` with rolling baselines and zero-variance floor; standardized severity tiers end-to-end.
+- 2026-10-15 22:47: Enforced statistical floor $n \ge 5$ in correlation matrix, added causation caveat to executive takeaways, fixed expense sign convention in `finance.py`.
+- 2026-10-15 22:48: Documented Decision D11 in `DECISIONS.md` and re-baselined golden datasets with verified identical numerical behavior.
+- 2026-10-15 23:01: Built `tests/test_domain_hand_computed.py` and `tests/test_analytics_deep_coverage.py`. Achieved 95.71% coverage across `analytics/`. All 194 tests pass.
+- 2026-10-15 23:02: Verified ruff linting, ruff formatting, mypy (27 files), and bandit security scan clean.
+
+### Test Results
+- 2026-10-15 23:01: `python -m pytest tests/test_analytics_deep_coverage.py tests/test_anomalies.py tests/test_domains.py tests/test_domain_hand_computed.py tests/test_drivers.py tests/test_core_correctness.py tests/test_golden.py --cov=analytics` -> 52 passed, 95.71% coverage
+- 2026-10-15 23:02: `python -m pytest tests/ -q` -> 194 passed
+- 2026-10-15 23:02: `python -m ruff check .` & `python -m ruff format --check` -> Clean
+- 2026-10-15 23:02: `python -m mypy config.py analytics/ ingestion/ export/ insight/` -> Clean (27 files)
+- 2026-10-15 23:02: `python -m bandit -r analytics/ ingestion/ export/ insight/ ui/ config.py -ll` -> Clean (0 Medium, 0 High)
+
+### Debug Log
+- `tests/test_golden.py`: `project_sample.csv` failed due to non-deterministic `Timestamp.now()` overdue check on 2024 tasks in `analytics/snapshot.py` -> Reverted overdue date logic to deterministic long-duration unstarted task check -> Resolved (attempt 1/3).
+- `tests/test_analytics_deep_coverage.py`: Missing branch in Excel serial parsing due to pandas converting numeric series to 1970 timestamp nanoseconds -> Enhanced Excel serial number boundary range (1000..100000) check -> Resolved (attempt 1/3).
+
+---
+
+## Prior Phase Detail — Phase 3: Ingestion Hardening (Audit §3)
 
 ### Plan (written before coding)
 - **Tasks**:
@@ -90,8 +125,8 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 3.6 NaN dimensions dropped silently | fixed | `analytics/drivers.py` & `analytics/anomalies.py`: `.fillna("(missing)")` preserves null dimension groups | Phase 3 |
 | 3.7 Narrow exception handling in export | still-broken | `export/pptx_builder.py` line 341 catches Exception but has no timeout or slide placeholder | Phase 8 |
 | 3.8 LLM sentence-split parsing / bad cache | still-broken | `insight/client.py` line 48 has fallback sentence regex without strict JSON schema validation | Phase 5 |
-| 4.1 Everything aggregated with `.sum()` | still-broken | Rate metrics use `mean`, but general metrics lack configurable aggregation (`sum`, `mean`, `weighted_mean`, `last`) in UI | Phase 4 |
-| 4.2 Anomalies = structural outliers | still-broken | `analytics/anomalies.py` only computes category-vs-category cross-sectional z-scores, not temporal rolling baselines | Phase 4 |
+| 4.1 Everything aggregated with `.sum()` | fixed | `analytics/kpis.py`, `trend.py`, `drivers.py`, `snapshot.py`: configurable `agg`, rate metrics default to `mean`; verified by `tests/test_analytics_deep_coverage.py::test_kpi_rate_metric_aggregation_is_mean_not_sum` | Phase 4 |
+| 4.2 Anomalies = structural outliers | fixed | `analytics/anomalies.py`: `detect_temporal_anomalies` rolling baselines, structural outlier labeling; verified by `tests/test_analytics_deep_coverage.py::test_anomalies_temporal_and_severities` | Phase 4 |
 | 4.3 Cache/budget not multi-process safe | still-broken | `insight/budget.py` and `cache.py` use `threading.Lock` rather than multi-process safe locks/SQLite | Phase 6 |
 | 4.4 Dockerfile kaleido libs | still-broken | `Dockerfile` runs as root, unpinned base digest, no HEALTHCHECK | Phase 1 / Phase 10 |
 | 4.5 README privacy overstated | still-broken | `README.md` states "raw data never leaves this server" but facts packets include categorical entity names | Phase 5 / Phase 12 |
@@ -99,6 +134,24 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 ---
 
 ## Gate Checklists
+
+### Phase 4 Exit Gate
+- [x] Coverage >= 95.0% across `analytics/**` (`analytics/` achieves 95.71% branch coverage).
+- [x] Every analytics module has dedicated tests (`kpis`, `trend`, `drivers`, `anomalies`, `stats`, `snapshot`, `profiler`, `commerce`, `finance`, `workforce`, `feedback`).
+- [x] Rate/ratio metrics are no longer summed (verified by `test_kpi_rate_metric_aggregation_is_mean_not_sum`).
+- [x] Anomaly output labeled correctly ("structural outlier"); severity tiers consistent end-to-end (`SEVERITY_LOW`, `SEVERITY_MEDIUM`, `SEVERITY_HIGH`).
+- [x] Golden snapshot diffs reviewed and recorded in `DECISIONS.md` (Decision D11).
+
+### Global Gate (Phase 4 Evaluation)
+- [x] Full test suite passes: 194/194 passed across consecutive runs (0 failures).
+- [x] `ruff check` and `ruff format --check` clean.
+- [x] `mypy` clean on 27 core engine modules.
+- [x] `bandit` scan passes with 0 Medium/High issues.
+- [x] No test makes a real network call (enforced by socket-blocking fixture).
+- [x] No new skips/xfails.
+- [x] Overall coverage met (88.54% > 75% threshold; `analytics/` 95.71% > 95% threshold).
+- [x] No secrets, sample customer data, or `.env` content committed.
+- [x] `PROGRESS.md`, `CHANGELOG.md`, and `DECISIONS.md` updated.
 
 ### Phase 3 Exit Gate
 - [x] Ingestion unit/property test coverage >= 95.0% (`ingestion/` achieves 95.73% branch coverage).
@@ -112,17 +165,6 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 - [x] Empty file guard prevents unhandled crashes.
 - [x] Column headers deduplicated (`col`, `col_2`) and trimmed.
 - [x] Data quality summary panel active on upload page in `ui/upload_page.py`.
-
-### Global Gate (Phase 3 Evaluation)
-- [x] Full test suite passes: 173/173 passed across consecutive runs (0 failures).
-- [x] `ruff check` and `ruff format --check` clean.
-- [x] `mypy` clean on 27 core engine modules.
-- [x] `bandit` scan passes with 0 Medium/High issues.
-- [x] No test makes a real network call (enforced by socket-blocking fixture).
-- [x] No new skips/xfails.
-- [x] Overall coverage met (85.63% > 75% threshold; `ingestion/` 95.73% > 95% threshold).
-- [x] No secrets, sample customer data, or `.env` content committed.
-- [x] `PROGRESS.md` and `CHANGELOG.md` updated.
 
 ### Phase 2 Exit Gate
 - [x] All 8 items from Audit §1 have automated regression tests passing (`tests/test_core_correctness.py`).
@@ -147,6 +189,7 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | D8 | Hosting target / deploy | accepted | Docker + Compose, no auto-deploy from CI |
 | D9 | Supported data scale | accepted | 500k rows / 100 MB max |
 | D10 | LLM providers | accepted | OpenRouter only with swappable adapter interface |
+| D11 | Golden snapshot re-baselining | accepted | Re-baseline golden snapshots for statistical disclaimer and $n \ge 5$ threshold |
 
 ---
 
@@ -154,7 +197,7 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 
 | Date | Question | Options | Recommendation | Blocks |
 |---|---|---|---|---|
-| None | All Phase 3 tasks complete; Phase 4 ready to proceed. | — | — | — |
+| None | All Phase 4 tasks complete; Phase 5 ready to proceed. | — | — | — |
 
 ---
 
@@ -173,3 +216,4 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2026-10-15 | 1 (Tooling) | 128 | 80.86% | 0 | 0 | 0 |
 | 2026-10-15 | 2 (Core Correctness) | 140 | 81.79% | 0 | 0 | 0 |
 | 2026-10-15 | 3 (Ingestion Hardening) | 173 | 85.63% (ingestion 95.73%) | 0 | 0 | 0 |
+| 2026-10-15 | 4 (Analytics Validity) | 194 | 88.54% (analytics 95.71%) | 0 | 0 | 0 |

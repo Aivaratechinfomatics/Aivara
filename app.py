@@ -103,6 +103,7 @@ def run_pipeline() -> dict:
             primary_metric=profile.primary_metric,
             secondary_metrics=profile.secondary_metrics,
             grouping_cols=profile.grouping_dimensions,
+            metric_aggs=profile.metric_aggregations,
         )
         kpis = snapshot_res.kpis
         primary_metric = profile.primary_metric
@@ -181,12 +182,19 @@ def run_pipeline() -> dict:
         label = "current vs prior period"
 
         if date_col and primary_metric:
-            trend = build_trend_series(df, date_col, primary_metric)
+            trend = build_trend_series(
+                df,
+                date_col,
+                primary_metric,
+                agg=profile.metric_aggregations.get(primary_metric),
+            )
             if trend is not None:
                 df_current, df_prior = split_current_prior(df, date_col, trend)
                 label = period_label(trend.granularity)
 
-        kpis = compute_all_kpis(df_current, df_prior, metric_cols)
+        kpis = compute_all_kpis(
+            df_current, df_prior, metric_cols, metric_aggs=profile.metric_aggregations
+        )
         if not primary_metric and kpis:
             primary_metric = next(iter(kpis), None)
 
@@ -194,11 +202,23 @@ def run_pipeline() -> dict:
         top_dimension_driver = None
         if primary_metric and dimension_cols:
             all_dimension_drivers = rank_dimensions_by_explanatory_power(
-                df_current, df_prior, dimension_cols, primary_metric
+                df_current,
+                df_prior,
+                dimension_cols,
+                primary_metric,
+                agg=profile.metric_aggregations.get(primary_metric),
             )
             top_dimension_driver = all_dimension_drivers[0] if all_dimension_drivers else None
 
-        risk_signals = compute_risk_signals(df_current, df_prior, metric_cols, dimension_cols)
+        risk_signals = compute_risk_signals(
+            df_current,
+            df_prior,
+            metric_cols,
+            dimension_cols,
+            full_df=df,
+            date_col=date_col,
+            metric_aggs=profile.metric_aggregations,
+        )
 
         facts_packets = {}
         for name, kpi in kpis.items():

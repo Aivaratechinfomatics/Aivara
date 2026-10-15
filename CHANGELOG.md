@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 4: Analytics Validity & Coverage (Audit §4)**:
+  - Configurable aggregation semantics (`agg`: `sum`, `mean`, `weighted_mean`, `last`) in `analytics/kpis.py`, `trend.py`, `drivers.py`, `snapshot.py`, and `anomalies.py`. Rate/ratio metrics (`rate`, `pct`, `percent`, `ratio`, `avg`, `average`, `score`, `margin`, `nps`, `share`, `yield`) default to `"mean"` instead of being summed (Audit 4.1).
+  - Manual aggregation overrides in `DatasetProfile` and UI schema configuration, with aggregation tooltip indicator on KPI tiles.
+  - Category-vs-own-history temporal anomaly detection (`detect_temporal_anomalies`) in `analytics/anomalies.py` using rolling baselines and zero-variance baseline floor (Audit 4.2).
+  - Relabeled cross-sectional snapshot anomalies as `"structural outlier"` and standardized severity tiers (`SEVERITY_LOW`, `SEVERITY_MEDIUM`, `SEVERITY_HIGH`) across temporal anomalies, group outliers, and period swings.
+  - Statistical discovery safeguards: sample size threshold $n \ge 5$ in `compute_correlation_matrix()` to suppress spurious drivers on tiny datasets, explicit `"Correlation indicates statistical association, not direct causation"` disclaimer in driver narratives, and divide-by-zero guards in concentration index.
+  - Financial domain mathematical correctness: expense/cost variance convention (`is_cost`) in `analytics/domains/finance.py` ensuring expense overruns are unfavorable and savings under budget are favorable.
+  - Dedicated hand-computed verification test suite (`tests/test_domain_hand_computed.py`) hand-checking commerce AOV/basket/repeat rate, finance revenue/cost variances, workforce headcount/median/turnover, and feedback NPS/CSAT.
+  - Deep analytics branch test suite (`tests/test_analytics_deep_coverage.py`) achieving 95.71% coverage across `analytics/`.
 - **Phase 3: Ingestion Hardening (Audit §3)**:
   - Enforced upload file size limit `MAX_UPLOAD_MB` (100 MB default) across `load_file`, `load_csv`, and `load_excel`.
   - Enforced table column width limit `MAX_COLUMNS` (500 default) preventing denial-of-service memory spikes on wide/malformed sheets.

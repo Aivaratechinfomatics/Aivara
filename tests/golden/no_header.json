@@ -28,8 +28,7 @@
   "executive_takeaways": [
     "**Portfolio Scale**: Analyzed 4 records totaling **11,200** in Column 3 (average **2,800.00** per entry).",
     "**Top Contributor**: Leading entity is **North**, generating 58.0% of total column 3.",
-    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 31.2% of total (Gini: 0.10, HHI: 2,578).",
-    "**Key Discovered Driver**: Strong positive driver: Higher Column 4 strongly associates with higher Column 3 (r = +0.94)."
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 31.2% of total (Gini: 0.10, HHI: 2,578)."
   ],
   "kpis": {
     "column_3": {

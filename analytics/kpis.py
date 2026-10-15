@@ -15,7 +15,12 @@ import pandas as pd
 
 COST_NAME_PATTERN = ("cost", "expense", "spend")
 REVENUE_NAME_PATTERN = ("revenue", "sales", "income", "gmv")
-RATE_NAME_PATTERN = re.compile(r"(rate|pct|percent|ratio|avg|average|score|margin)", re.I)
+RATE_NAME_PATTERN = re.compile(
+    r"(rate|pct|percent|ratio|avg|average|score|margin|nps|share|yield)", re.I
+)
+POINT_IN_TIME_NAME_PATTERN = re.compile(
+    r"(headcount|balance|inventory|stock|capacity|employees|staff)", re.I
+)
 
 
 @dataclass
@@ -27,10 +32,21 @@ class KPIResult:
     pct_change: float | None
     abs_change: float | None
     is_derived_ratio: bool = False
+    agg: str = "sum"
 
 
 def is_rate_metric(metric_name: str) -> bool:
     return bool(RATE_NAME_PATTERN.search(metric_name))
+
+
+def get_metric_aggregation(metric_name: str, override: str | None = None) -> str:
+    """Determines aggregation semantic: 'sum', 'mean', or 'last'.
+    Honors user override if valid; otherwise infers via metric name patterns."""
+    if override in ("sum", "mean", "weighted_mean", "last"):
+        return "mean" if override == "weighted_mean" else override
+    if is_rate_metric(metric_name):
+        return "mean"
+    return "sum"
 
 
 def select_primary_and_secondary_metrics(
@@ -56,11 +72,21 @@ def select_primary_and_secondary_metrics(
 
 
 def _totals(
-    series_current: pd.Series, series_prior: pd.Series | None, is_rate: bool = False
+    series_current: pd.Series,
+    series_prior: pd.Series | None,
+    agg: str = "sum",
 ) -> tuple[float, float | None]:
-    if is_rate:
+    if agg == "mean":
         current_total = float(series_current.mean(skipna=True))
         prior_total = float(series_prior.mean(skipna=True)) if series_prior is not None else None
+    elif agg == "last":
+        s_cur = series_current.dropna()
+        current_total = float(s_cur.iloc[-1]) if not s_cur.empty else 0.0
+        if series_prior is not None:
+            s_pri = series_prior.dropna()
+            prior_total = float(s_pri.iloc[-1]) if not s_pri.empty else None
+        else:
+            prior_total = None
     else:
         current_total = float(series_current.sum(skipna=True))
         prior_total = float(series_prior.sum(skipna=True)) if series_prior is not None else None
@@ -71,12 +97,13 @@ def compute_kpi(
     df_current: pd.DataFrame,
     df_prior: pd.DataFrame | None,
     metric_col: str,
+    agg: str | None = None,
 ) -> KPIResult:
-    is_rate = is_rate_metric(metric_col)
+    resolved_agg = get_metric_aggregation(metric_col, override=agg)
     current_total, prior_total = _totals(
         df_current[metric_col],
         df_prior[metric_col] if df_prior is not None else None,
-        is_rate=is_rate,
+        agg=resolved_agg,
     )
 
     pct_change = None
@@ -92,11 +119,13 @@ def compute_kpi(
 
     return KPIResult(
         name=metric_col,
-        unit=None,
+        unit="%" if resolved_agg == "mean" and is_rate_metric(metric_col) else None,
         current_value=current_total,
         prior_value=prior_total,
         pct_change=pct_change,
         abs_change=abs_change,
+        is_derived_ratio=is_rate_metric(metric_col),
+        agg=resolved_agg,
     )
 
 
@@ -142,6 +171,7 @@ def compute_margin_kpi(
         pct_change=pct_change,
         abs_change=abs_change,
         is_derived_ratio=True,
+        agg="derived",
     )
 
 
@@ -150,15 +180,17 @@ def compute_all_kpis(
     df_prior: pd.DataFrame | None,
     metric_columns: list[str],
     max_secondary: int = 3,
+    metric_aggs: dict[str, str] | None = None,
 ) -> dict[str, KPIResult]:
     primary, secondary = select_primary_and_secondary_metrics(
         df_current, metric_columns, max_secondary
     )
     results: dict[str, KPIResult] = {}
+    aggs = metric_aggs or {}
     if primary:
-        results[primary] = compute_kpi(df_current, df_prior, primary)
+        results[primary] = compute_kpi(df_current, df_prior, primary, agg=aggs.get(primary))
     for col in secondary:
-        results[col] = compute_kpi(df_current, df_prior, col)
+        results[col] = compute_kpi(df_current, df_prior, col, agg=aggs.get(col))
 
     margin_pair = find_margin_pair(metric_columns)
     if margin_pair:

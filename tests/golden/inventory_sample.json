@@ -49,7 +49,7 @@
     "**Portfolio Scale**: Analyzed 46 records totaling **$359.8k** in Cost Price Total (Usd) (average **7,820.87** per entry).",
     "**Top Contributor**: Leading entity is **Smartphone**, generating 20.0% of total Cost Price Total (USD).",
     "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 79.2% of total (Gini: 0.72, HHI: 1,089).",
-    "**Key Discovered Driver**: Strong positive driver: Higher Cost Price Per Unit (Usd) strongly associates with higher Cost Price Total (Usd) (r = +0.97)."
+    "**Key Discovered Driver**: Strong positive driver: Higher Cost Price Per Unit (Usd) strongly associates with higher Cost Price Total (Usd) (r = +0.97). (Note: Correlation indicates statistical association, not direct causation.)"
   ],
   "kpis": {
     "Cost Price Per Unit (USD)": {

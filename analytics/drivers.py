@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 
 import pandas as pd
 
+from analytics.kpis import get_metric_aggregation
+
 RATE_NAME_PATTERN = re.compile(r"(rate|pct|percent|ratio|avg|average|score|margin)", re.I)
 
 
@@ -59,6 +61,7 @@ def compute_dimension_drivers(
     df_prior: pd.DataFrame | None,
     dimension_col: str,
     metric_col: str,
+    agg: str | None = None,
 ) -> DimensionDriverResult | None:
     if df_prior is None or df_prior.empty or df_current.empty:
         return None
@@ -66,12 +69,18 @@ def compute_dimension_drivers(
     cur_dim = df_current[dimension_col].fillna("(missing)").astype(str)
     prior_dim = df_prior[dimension_col].fillna("(missing)").astype(str)
 
-    is_rate = bool(RATE_NAME_PATTERN.search(metric_col))
-    if is_rate:
+    resolved_agg = get_metric_aggregation(metric_col, override=agg)
+    if resolved_agg == "mean":
         cur_grouped = df_current.groupby(cur_dim)[metric_col].mean(numeric_only=True)
         prior_grouped = df_prior.groupby(prior_dim)[metric_col].mean(numeric_only=True)
         total_delta = float(
             df_current[metric_col].mean(skipna=True) - df_prior[metric_col].mean(skipna=True)
+        )
+    elif resolved_agg == "last":
+        cur_grouped = df_current.groupby(cur_dim)[metric_col].last()
+        prior_grouped = df_prior.groupby(prior_dim)[metric_col].last()
+        total_delta = (
+            float(cur_grouped.sum() - prior_grouped.sum()) if not cur_grouped.empty else 0.0
         )
     else:
         cur_grouped = df_current.groupby(cur_dim)[metric_col].sum(numeric_only=True)
@@ -114,10 +123,11 @@ def rank_dimensions_by_explanatory_power(
     df_prior: pd.DataFrame | None,
     dimension_columns: list[str],
     metric_col: str,
+    agg: str | None = None,
 ) -> list[DimensionDriverResult]:
     results = []
     for dim in dimension_columns:
-        r = compute_dimension_drivers(df_current, df_prior, dim, metric_col)
+        r = compute_dimension_drivers(df_current, df_prior, dim, metric_col, agg=agg)
         if r is not None and r.contributions:
             results.append(r)
     return sorted(results, key=lambda r: r.concentration_score, reverse=True)

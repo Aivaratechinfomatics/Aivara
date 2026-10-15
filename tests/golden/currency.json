@@ -28,8 +28,7 @@
   "executive_takeaways": [
     "**Portfolio Scale**: Analyzed 4 records totaling **$38.5k** in Revenue (average **9,612.81** per entry).",
     "**Top Contributor**: Leading entity is **North**, generating 58.3% of total revenue.",
-    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 32.3% of total (Gini: 0.10, HHI: 2,588).",
-    "**Key Discovered Driver**: Strong positive driver: Higher Orders strongly associates with higher Revenue (r = +0.99)."
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 32.3% of total (Gini: 0.10, HHI: 2,588)."
   ],
   "kpis": {
     "orders": {
