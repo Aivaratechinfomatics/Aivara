@@ -70,7 +70,9 @@ def compute_dimension_drivers(
     if is_rate:
         cur_grouped = df_current.groupby(cur_dim)[metric_col].mean(numeric_only=True)
         prior_grouped = df_prior.groupby(prior_dim)[metric_col].mean(numeric_only=True)
-        total_delta = float(df_current[metric_col].mean(skipna=True) - df_prior[metric_col].mean(skipna=True))
+        total_delta = float(
+            df_current[metric_col].mean(skipna=True) - df_prior[metric_col].mean(skipna=True)
+        )
     else:
         cur_grouped = df_current.groupby(cur_dim)[metric_col].sum(numeric_only=True)
         prior_grouped = df_prior.groupby(prior_dim)[metric_col].sum(numeric_only=True)
@@ -100,7 +102,9 @@ def compute_dimension_drivers(
             )
         )
 
-    result = DimensionDriverResult(dimension=dimension_col, total_delta=total_delta, contributions=contributions)
+    result = DimensionDriverResult(
+        dimension=dimension_col, total_delta=total_delta, contributions=contributions
+    )
     result.concentration_score = _concentration_score(contributions)
     return result
 

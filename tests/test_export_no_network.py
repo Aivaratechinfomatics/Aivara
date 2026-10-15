@@ -4,7 +4,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import ast
-import importlib
 
 
 def test_pptx_builder_does_not_import_insight_client():
@@ -13,7 +12,7 @@ def test_pptx_builder_does_not_import_insight_client():
     path = os.path.join(
         os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "export", "pptx_builder.py"
     )
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         source = f.read()
 
     tree = ast.parse(source)
@@ -49,12 +48,25 @@ def test_export_builds_deck_without_network_call(monkeypatch):
 
     insight_cache.set_for_view(
         "Executive",
-        {"headline": "Revenue grew 8%.", "driver_explanation": "North led the gain.", "suggested_action": "Review stock."},
+        {
+            "headline": "Revenue grew 8%.",
+            "driver_explanation": "North led the gain.",
+            "suggested_action": "Review stock.",
+        },
     )
 
-    tiles = [KPITileData(label="Revenue", value_display="1.2M", delta_display="+8.0%", delta_positive=True)]
+    tiles = [
+        KPITileData(
+            label="Revenue", value_display="1.2M", delta_display="+8.0%", delta_positive=True
+        )
+    ]
     views = [ViewExportData(view_name="Executive", kpi_tiles=tiles)]
-    inputs = DeckInputs(dataset_name="test.csv", period_covered="this month vs last month", views=views, risk_signals=[])
+    inputs = DeckInputs(
+        dataset_name="test.csv",
+        period_covered="this month vs last month",
+        views=views,
+        risk_signals=[],
+    )
 
     buffer = build_deck(inputs)
     assert buffer.getbuffer().nbytes > 0
@@ -88,6 +100,7 @@ def test_no_risk_slide_when_no_signals():
 def test_export_snapshot_and_project_profiles():
     import plotly.graph_objects as go
     from pptx import Presentation
+
     from export.pptx_builder import DeckInputs, KPITileData, ViewExportData, build_deck
 
     dummy_fig = go.Figure(go.Bar(x=["A", "B"], y=[10, 20]))
@@ -139,4 +152,3 @@ def test_export_snapshot_and_project_profiles():
     assert buf_proj.getbuffer().nbytes > 0
     prs_proj = Presentation(buf_proj)
     assert len(prs_proj.slides) >= 7  # Cover, TOC, Exec, View 1, View 2, Risk, Closing
-

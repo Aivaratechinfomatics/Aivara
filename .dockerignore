@@ -1,0 +1,40 @@
+# Git and development
+.git/
+.gitignore
+.github/
+
+# Environments and caches
+.env
+.env.*
+.venv/
+env/
+venv/
+__pycache__/
+*.py[cod]
+*.pytest_cache/
+.coverage
+htmlcov/
+
+# State and local caches
+.aivara_insight_cache.json*
+.aivara_budget_state.json*
+*.log
+*.tmp
+*.pptx
+
+# IDEs
+.vscode/
+.idea/
+
+# External scratch tools and data
+.chrome_session*/
+10-15s
+Account
+cpanel_deploy*
+run_dispatch.bat
+screenshots/
+scripts/
+send_*.py
+send_*.bat
+website/
+whatsapp_dispatch*.csv

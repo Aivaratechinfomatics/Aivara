@@ -70,4 +70,3 @@ def test_negative_swing_from_zero_pct_change():
     df_prior = pd.DataFrame({"profit": [0]})
     result = compute_kpi(df_current, df_prior, "profit")
     assert result.pct_change == float("-inf")
-

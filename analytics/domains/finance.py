@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+
 import pandas as pd
 
 
@@ -45,13 +46,45 @@ def compute_finance_analytics(
     """Analyzes budget vs actuals, line items, and computes bridge waterfall data."""
     cols = df.columns
     if not account_col:
-        account_col = next((c for c in cols if re.search(r"(account|line[_\s]?item|category|item|desc|dept)", c, re.I)), None)
+        account_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(account|line[_\s]?item|category|item|desc|dept)", c, re.I)
+            ),
+            None,
+        )
     if not actual_col:
-        actual_col = next((c for c in cols if re.search(r"(actual|realized|current|spent|cost|rev)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        actual_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(actual|realized|current|spent|cost|rev)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
     if not budget_col:
-        budget_col = next((c for c in cols if re.search(r"(budget|target|plan|forecast|quota)", c, re.I) and pd.api.types.is_numeric_dtype(df[c]) and c != actual_col), None)
+        budget_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(budget|target|plan|forecast|quota)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+                and c != actual_col
+            ),
+            None,
+        )
     if not variance_col:
-        variance_col = next((c for c in cols if re.search(r"(variance|diff|delta)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        variance_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(variance|diff|delta)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
 
     # Compute actual and budget totals
     total_act = float(df[actual_col].dropna().sum()) if actual_col else 0.0
@@ -108,7 +141,9 @@ def compute_finance_analytics(
         if budget_col:
             waterfall_steps.append(WaterfallStep(label="Budget", measure="total", amount=total_bud))
             # Add top 6 variance drivers
-            sorted_by_impact = grouped.reindex(grouped[var_col_name].abs().sort_values(ascending=False).index)
+            sorted_by_impact = grouped.reindex(
+                grouped[var_col_name].abs().sort_values(ascending=False).index
+            )
             top_drivers = sorted_by_impact.head(6)
             for _, r in top_drivers.iterrows():
                 waterfall_steps.append(

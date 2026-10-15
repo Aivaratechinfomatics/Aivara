@@ -12,7 +12,7 @@ import json
 import os
 import threading
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from config import BUDGET_STATE_PATH, DAILY_CALL_BUDGET
 
@@ -48,14 +48,14 @@ def estimate_tokens(text: str) -> int:
 
 
 def _today_key() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    return datetime.now(UTC).strftime("%Y-%m-%d")
 
 
 def _read_state(path: str) -> dict:
     if not os.path.exists(path):
         return {}
     try:
-        with open(path, "r", encoding="utf-8") as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except (json.JSONDecodeError, OSError):
         return {}
@@ -68,7 +68,9 @@ def _write_state(path: str, state: dict) -> None:
     os.replace(tmp_path, path)
 
 
-def get_status(path: str = BUDGET_STATE_PATH, daily_budget: int = DAILY_CALL_BUDGET) -> BudgetStatus:
+def get_status(
+    path: str = BUDGET_STATE_PATH, daily_budget: int = DAILY_CALL_BUDGET
+) -> BudgetStatus:
     with _lock:
         state = _read_state(path)
         today = _today_key()

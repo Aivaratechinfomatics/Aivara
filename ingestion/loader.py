@@ -16,6 +16,7 @@ import csv
 import io
 import re
 from dataclasses import dataclass, field
+from typing import Any
 
 import pandas as pd
 
@@ -24,7 +25,7 @@ from config import MAX_ROWS_FULL_PROCESSING
 try:
     from charset_normalizer import from_bytes as _cn_from_bytes
 except ImportError:  # pragma: no cover - optional dependency
-    _cn_from_bytes = None
+    _cn_from_bytes = None  # type: ignore[assignment]
 
 
 CANDIDATE_DELIMITERS = [",", ";", "\t", "|"]
@@ -198,8 +199,7 @@ def _find_best_header_row(rows: list[list[str]], max_scan: int = 25) -> tuple[in
         if not non_nulls:
             continue
         text_cells = [
-            v for v in non_nulls
-            if not _is_numeric_value(v) and not _DATE_SHAPE_PATTERN.match(v)
+            v for v in non_nulls if not _is_numeric_value(v) and not _DATE_SHAPE_PATTERN.match(v)
         ]
         distinct_text = set(text_cells)
         # Score header based on count of valid column labels and variety
@@ -209,10 +209,11 @@ def _find_best_header_row(rows: list[list[str]], max_scan: int = 25) -> tuple[in
         # If subsequent row has numbers or dates, strong signal that current row is a header
         if idx + 1 < len(rows):
             next_row = rows[idx + 1]
-            next_non_nulls = [str(v).strip() for v in next_row if pd.notna(v) and str(v).strip() != ""]
+            next_non_nulls = [
+                str(v).strip() for v in next_row if pd.notna(v) and str(v).strip() != ""
+            ]
             next_nums = [
-                v for v in next_non_nulls
-                if _is_numeric_value(v) or _DATE_SHAPE_PATTERN.match(v)
+                v for v in next_non_nulls if _is_numeric_value(v) or _DATE_SHAPE_PATTERN.match(v)
             ]
             if next_nums and len(text_cells) >= len(non_nulls) * 0.5:
                 score += 8.0
@@ -260,7 +261,9 @@ def _prune_trailing_summary_rows(df: pd.DataFrame) -> tuple[pd.DataFrame, list[s
                 break
         if is_summary:
             rows_to_drop.append(idx)
-            notes.append(f"Pruned trailing summary/footer row '{summary_word}' to protect aggregation accuracy.")
+            notes.append(
+                f"Pruned trailing summary/footer row '{summary_word}' to protect aggregation accuracy."
+            )
         else:
             # If we hit a normal data row, stop pruning upwards
             break
@@ -296,8 +299,10 @@ def _sanitize_dataframe_columns_and_cleanup(df: pd.DataFrame) -> tuple[pd.DataFr
 
     # Drop unnamed columns that are mostly NaN
     cols_to_drop = [
-        c for c in df.columns
-        if str(c).startswith("Unnamed:") and (df[c].isna().mean() > 0.85 or df[c].dropna().nunique() <= 1)
+        c
+        for c in df.columns
+        if str(c).startswith("Unnamed:")
+        and (df[c].isna().mean() > 0.85 or df[c].dropna().nunique() <= 1)
     ]
     if cols_to_drop:
         df = df.drop(columns=cols_to_drop)
@@ -309,7 +314,7 @@ def _sanitize_dataframe_columns_and_cleanup(df: pd.DataFrame) -> tuple[pd.DataFr
     return df, notes
 
 
-def load_csv(file_bytes: bytes, filename: str = "uploaded.csv") -> LoadResult:
+def load_csv(file_bytes: bytes, filename: str | None = "uploaded.csv") -> LoadResult:
     """Best-effort robust CSV load. Never raises; failures are reported via
     LoadResult.success / .error so the UI can show a friendly message."""
     notes: list[str] = []
@@ -361,7 +366,7 @@ def load_csv(file_bytes: bytes, filename: str = "uploaded.csv") -> LoadResult:
         skipped_bad_lines += 1
         return None
 
-    read_attempts = [
+    read_attempts: list[dict[str, Any]] = [
         dict(sep=delimiter, header=header_arg, engine="python"),
         dict(sep=delimiter, header=header_arg, engine="python", on_bad_lines=bad_line_handler),
         dict(sep=None, header=header_arg, engine="python", on_bad_lines=bad_line_handler),
@@ -379,7 +384,7 @@ def load_csv(file_bytes: bytes, filename: str = "uploaded.csv") -> LoadResult:
                 last_error = ValueError("Only one column parsed; delimiter guess may be wrong.")
                 continue
             if not has_header:
-                df.columns = [f"column_{i+1}" for i in range(df.shape[1])]
+                df.columns = [f"column_{i + 1}" for i in range(df.shape[1])]
             if skipped_bad_lines > 0:
                 notes.append(f"{skipped_bad_lines} row(s) skipped: malformed (wrong column count).")
 
@@ -458,10 +463,12 @@ def load_excel(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
             df = pd.read_excel(excel_file, sheet_name=sheet_to_load, header=best_header_row)
             header_arg = best_header_row
             if best_header_row > 0:
-                notes.append(f"Auto-detected table header at row {best_header_row + 1} (skipped leading decorative/metadata rows).")
+                notes.append(
+                    f"Auto-detected table header at row {best_header_row + 1} (skipped leading decorative/metadata rows)."
+                )
         else:
             df = df_raw.copy()
-            df.columns = [f"column_{i+1}" for i in range(df.shape[1])]
+            df.columns = [f"column_{i + 1}" for i in range(df.shape[1])]
             header_arg = None
             notes.append("No explicit header row detected — generated column names instead.")
 
@@ -498,12 +505,13 @@ def load_file(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
     """Universal file loader: automatically routes between Excel (.xlsx, .xls)
     and CSV based on file extension and magic byte inspection."""
     is_excel = False
-    if filename and filename.lower().endswith((".xlsx", ".xls")):
-        is_excel = True
-    elif raw_bytes.startswith(b"PK\x03\x04"):  # ZIP/XLSX magic signature
+    if (
+        filename
+        and filename.lower().endswith((".xlsx", ".xls"))
+        or raw_bytes.startswith(b"PK\x03\x04")
+    ):
         is_excel = True
 
     if is_excel:
         return load_excel(raw_bytes, filename=filename)
     return load_csv(raw_bytes, filename=filename)
-

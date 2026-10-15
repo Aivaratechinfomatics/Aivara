@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-import numpy as np
 import pandas as pd
 
 from config import ANOMALY_PCT_SWING_THRESHOLD, ANOMALY_ZSCORE_THRESHOLD
@@ -31,7 +30,10 @@ class RiskSignal:
 
 
 def detect_group_outliers(
-    df: pd.DataFrame, metric_col: str, dimension_col: str, z_threshold: float = ANOMALY_ZSCORE_THRESHOLD
+    df: pd.DataFrame,
+    metric_col: str,
+    dimension_col: str,
+    z_threshold: float = ANOMALY_ZSCORE_THRESHOLD,
 ) -> list[RiskSignal]:
     """Flag categories within `dimension_col` whose `metric_col` total is a
     z-score outlier relative to the other categories."""

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
 
@@ -41,17 +42,62 @@ def compute_workforce_analytics(
     """Computes HR and workforce intelligence metrics."""
     cols = df.columns
     if not emp_col:
-        emp_col = next((c for c in cols if re.search(r"(emp[_\s]?id|employee|worker|staff|person)", c, re.I)), None)
+        emp_col = next(
+            (c for c in cols if re.search(r"(emp[_\s]?id|employee|worker|staff|person)", c, re.I)),
+            None,
+        )
     if not dept_col:
-        dept_col = next((c for c in cols if re.search(r"(dept|department|division|business[_\s]?unit|team|function)", c, re.I)), None)
+        dept_col = next(
+            (
+                c
+                for c in cols
+                if re.search(
+                    r"(dept|department|division|business[_\s]?unit|team|function)", c, re.I
+                )
+            ),
+            None,
+        )
     if not salary_col:
-        salary_col = next((c for c in cols if re.search(r"(salary|comp|compensation|base[_\s]?pay|wages|rate)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        salary_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(salary|comp|compensation|base[_\s]?pay|wages|rate)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
     if not tenure_col:
-        tenure_col = next((c for c in cols if re.search(r"(tenure|years[_\s]?at|service|experience|months)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        tenure_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(tenure|years[_\s]?at|service|experience|months)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
     if not perf_col:
-        perf_col = next((c for c in cols if re.search(r"(perf|performance|rating|score|evaluation)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        perf_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(perf|performance|rating|score|evaluation)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
     if not status_col:
-        status_col = next((c for c in cols if re.search(r"(status|attrition|active|employment[_\s]?status|terminated)", c, re.I)), None)
+        status_col = next(
+            (
+                c
+                for c in cols
+                if re.search(
+                    r"(status|attrition|active|employment[_\s]?status|terminated)", c, re.I
+                )
+            ),
+            None,
+        )
 
     # 1. Headcount
     headcount = df[emp_col].dropna().nunique() if emp_col else len(df)
@@ -71,7 +117,9 @@ def compute_workforce_analytics(
     turnover = None
     if status_col:
         status_s = df[status_col].dropna().astype(str).str.lower()
-        terminated_count = status_s.str.contains(r"(?:term|left|resigned|inactive|no\b|churn)").sum()
+        terminated_count = status_s.str.contains(
+            r"(?:term|left|resigned|inactive|no\b|churn)"
+        ).sum()
         if len(status_s) > 0:
             turnover = float(terminated_count / len(status_s))
 
@@ -88,10 +136,6 @@ def compute_workforce_analytics(
     dept_table = pd.DataFrame()
     sal_table = pd.DataFrame()
     if dept_col:
-        agg_dict = {dept_col: "count"}
-        if salary_col:
-            agg_dict[salary_col] = ["count", "mean", "median", "min", "max"]
-        
         dept_grouped = df.groupby(dept_col).size().reset_index(name="headcount")
         dept_grouped["share_pct"] = (dept_grouped["headcount"] / max(1, headcount)) * 100.0
         dept_grouped = dept_grouped.sort_values(by="headcount", ascending=False)

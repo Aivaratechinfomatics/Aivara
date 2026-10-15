@@ -29,7 +29,9 @@ from config import (
 )
 
 DATE_NAME_PATTERN = re.compile(r"(date|_dt$|^dt_|period|month|year|timestamp|time)", re.I)
-ID_NAME_PATTERN = re.compile(r"(^id$|[_\s]id$|^uuid$|[_\s]uuid$|[_\s]code$|^code$|[_\s]sku$|^sku$|[_\s]num$|^num$|#$)", re.I)
+ID_NAME_PATTERN = re.compile(
+    r"(^id$|[_\s]id$|^uuid$|[_\s]uuid$|[_\s]code$|^code$|[_\s]sku$|^sku$|[_\s]num$|^num$|#$)", re.I
+)
 LABEL_NAME_PATTERN = re.compile(
     r"(name|title|desc|description|label|category|type|assigned|owner|person|employee|segment|status|state|team)",
     re.I,
@@ -121,7 +123,11 @@ def _classify_column(name: str, series: pd.Series, n_rows: int) -> ColumnClassif
             )
 
         conf = 0.95 if is_rate else 0.9
-        reason = "Percentage/rate metric." if is_rate else "Numeric dtype with continuous-looking variation."
+        reason = (
+            "Percentage/rate metric."
+            if is_rate
+            else "Numeric dtype with continuous-looking variation."
+        )
         return ColumnClassification(name, ROLE_METRIC, conf, reason, is_rate=is_rate)
 
     # --- string columns: id, dimension, or text -----------------------------
@@ -144,16 +150,24 @@ def _classify_column(name: str, series: pd.Series, n_rows: int) -> ColumnClassif
 
         if unique_ratio >= ID_UNIQUE_RATIO_FLOOR and n_rows > 100:
             return ColumnClassification(
-                name, ROLE_ID, 0.75, f"Near-unique per row ({unique_ratio:.0%} unique) in large dataset."
+                name,
+                ROLE_ID,
+                0.75,
+                f"Near-unique per row ({unique_ratio:.0%} unique) in large dataset.",
             )
 
         is_low_cardinality = (
-            unique_ratio < DIMENSION_UNIQUE_RATIO_CAP or n_unique <= DIMENSION_UNIQUE_ABS_CAP or n_rows <= 150
+            unique_ratio < DIMENSION_UNIQUE_RATIO_CAP
+            or n_unique <= DIMENSION_UNIQUE_ABS_CAP
+            or n_rows <= 150
         )
         if is_low_cardinality and n_unique > 0:
             conf = 0.85 if unique_ratio < DIMENSION_UNIQUE_RATIO_CAP else 0.6
             return ColumnClassification(
-                name, ROLE_DIMENSION, conf, f"{n_unique} distinct values ({unique_ratio:.1%} unique)."
+                name,
+                ROLE_DIMENSION,
+                conf,
+                f"{n_unique} distinct values ({unique_ratio:.1%} unique).",
             )
 
     # --- fallback ----------------------------------------------------------

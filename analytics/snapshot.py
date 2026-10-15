@@ -9,9 +9,9 @@ Provides:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 import pandas as pd
-import numpy as np
 
 from analytics.kpis import KPIResult, is_rate_metric
 
@@ -85,7 +85,9 @@ def compute_snapshot_analytics(
     entity = entity_col if (entity_col and entity_col in df.columns) else df.columns[0]
     if primary_metric in df.columns and pd.api.types.is_numeric_dtype(df[primary_metric]):
         total_val = float(df[primary_metric].sum(skipna=True))
-        sorted_df = df[[entity, primary_metric]].dropna().sort_values(primary_metric, ascending=False)
+        sorted_df = (
+            df[[entity, primary_metric]].dropna().sort_values(primary_metric, ascending=False)
+        )
 
         # Top 10
         for _, row in sorted_df.head(10).iterrows():
@@ -113,10 +115,19 @@ def compute_snapshot_analytics(
 
     # Outliers & domain signals (e.g. high stock with 0 sales)
     outliers: list[dict] = []
-    sold_col = next((c for c in df.columns if re.search(r"(sold|sales|orders|movement)", c, re.I)), None)
-    stock_col = next((c for c in df.columns if re.search(r"(stock|hand|inventory|qty|quantity)", c, re.I)), None)
+    sold_col = next(
+        (c for c in df.columns if re.search(r"(sold|sales|orders|movement)", c, re.I)), None
+    )
+    stock_col = next(
+        (c for c in df.columns if re.search(r"(stock|hand|inventory|qty|quantity)", c, re.I)), None
+    )
 
-    if sold_col and stock_col and pd.api.types.is_numeric_dtype(df[sold_col]) and pd.api.types.is_numeric_dtype(df[stock_col]):
+    if (
+        sold_col
+        and stock_col
+        and pd.api.types.is_numeric_dtype(df[sold_col])
+        and pd.api.types.is_numeric_dtype(df[stock_col])
+    ):
         dead_stock = df[(df[sold_col] == 0) & (df[stock_col] > 0)]
         for _, r in dead_stock.head(5).iterrows():
             outliers.append(
@@ -150,7 +161,11 @@ def compute_snapshot_analytics(
     if grouping_cols:
         for g in grouping_cols:
             if g in df.columns and g != entity:
-                agg_dict = {m: "sum" if not is_rate_metric(m) else "mean" for m in all_metrics if m in df.columns}
+                agg_dict = {
+                    m: "sum" if not is_rate_metric(m) else "mean"
+                    for m in all_metrics
+                    if m in df.columns
+                }
                 if agg_dict:
                     grp = df.groupby(g).agg(agg_dict).reset_index()
                     group_rollups[g] = grp
@@ -181,7 +196,11 @@ def compute_project_analytics(
 
     # Normalise progress column to 0..100
     prog_series = pd.Series(0.0, index=df.index)
-    if progress_col and progress_col in df.columns and pd.api.types.is_numeric_dtype(df[progress_col]):
+    if (
+        progress_col
+        and progress_col in df.columns
+        and pd.api.types.is_numeric_dtype(df[progress_col])
+    ):
         s = df[progress_col].fillna(0.0)
         # If stored as 0..1, scale to 0..100
         if s.max() <= 1.0 and s.max() > 0:
@@ -195,9 +214,18 @@ def compute_project_analytics(
     avg_progress = float(prog_series.mean()) if total_tasks else 0.0
 
     total_days = 0.0
-    if duration_col and duration_col in df.columns and pd.api.types.is_numeric_dtype(df[duration_col]):
+    if (
+        duration_col
+        and duration_col in df.columns
+        and pd.api.types.is_numeric_dtype(df[duration_col])
+    ):
         total_days = float(df[duration_col].sum(skipna=True))
-    elif start_date_col and end_date_col and start_date_col in df.columns and end_date_col in df.columns:
+    elif (
+        start_date_col
+        and end_date_col
+        and start_date_col in df.columns
+        and end_date_col in df.columns
+    ):
         s_date = pd.to_datetime(df[start_date_col], errors="coerce")
         e_date = pd.to_datetime(df[end_date_col], errors="coerce")
         dur = (e_date - s_date).dt.days.dropna()
@@ -207,11 +235,15 @@ def compute_project_analytics(
         "Completion Rate": KPIResult("Completion Rate", "%", avg_progress, None, None, None, True),
         "Total Tasks": KPIResult("Total Tasks", None, float(total_tasks), None, None, None),
         "Completed Tasks": KPIResult("Completed Tasks", None, float(completed), None, None, None),
-        "In-Progress Tasks": KPIResult("In-Progress Tasks", None, float(in_progress), None, None, None),
+        "In-Progress Tasks": KPIResult(
+            "In-Progress Tasks", None, float(in_progress), None, None, None
+        ),
         "Unstarted Tasks": KPIResult("Unstarted Tasks", None, float(unstarted), None, None, None),
     }
     if total_days > 0:
-        kpis["Total Days Required"] = KPIResult("Total Days Required", "days", total_days, None, None, None)
+        kpis["Total Days Required"] = KPIResult(
+            "Total Days Required", "days", total_days, None, None, None
+        )
 
     # Project-level rollup
     proj_col = project_col or (task_col if task_col in df.columns else df.columns[0])
@@ -244,7 +276,11 @@ def compute_project_analytics(
     for idx, row in df.iterrows():
         prog = prog_series.loc[idx]
         task_name = str(row[task_name_col])
-        dur = float(row[duration_col]) if (duration_col and duration_col in df.columns and pd.notna(row[duration_col])) else 0.0
+        dur = (
+            float(row[duration_col])
+            if (duration_col and duration_col in df.columns and pd.notna(row[duration_col]))
+            else 0.0
+        )
 
         if prog <= 0.0 and dur >= 20:
             at_risk.append(

@@ -13,17 +13,17 @@ Inspects classified columns and data properties to automatically detect:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 import pandas as pd
 
+from analytics.kpis import is_rate_metric, select_primary_and_secondary_metrics
 from ingestion.classifier import (
     ROLE_DATE,
     ROLE_DIMENSION,
-    ROLE_ID,
     ROLE_METRIC,
     ColumnClassification,
 )
-from analytics.kpis import select_primary_and_secondary_metrics, is_rate_metric
 
 PROFILE_TIMESERIES = "timeseries"
 PROFILE_PROJECT = "project"
@@ -41,15 +41,30 @@ DOMAIN_SNAPSHOT = "snapshot"
 _START_DATE_PATTERN = re.compile(r"(start|begin|open|create|launch)", re.I)
 _END_DATE_PATTERN = re.compile(r"(end|due|finish|close|target|deadline|complete)", re.I)
 _DURATION_PATTERN = re.compile(r"(day|days|duration|hour|hours|week|weeks|time_spent)", re.I)
-_PROJECT_ENTITY_PATTERN = re.compile(r"(task|project|ticket|issue|milestone|feature|deliverable)", re.I)
-_ITEM_ENTITY_PATTERN = re.compile(r"(product|item|sku|service|customer|client|employee|account|name|title)", re.I)
+_PROJECT_ENTITY_PATTERN = re.compile(
+    r"(task|project|ticket|issue|milestone|feature|deliverable)", re.I
+)
+_ITEM_ENTITY_PATTERN = re.compile(
+    r"(product|item|sku|service|customer|client|employee|account|name|title)", re.I
+)
 
 _COMMERCE_ORDER_PATTERN = re.compile(r"(order[_\s]?id|invoice|receipt|transaction)", re.I)
-_COMMERCE_KEYWORD_PATTERN = re.compile(r"(cart|basket|checkout|discount|shipping|refund|customer[_\s]?id)", re.I)
-_FINANCE_KEYWORD_PATTERN = re.compile(r"(budget|actual|variance|cogs|opex|ebitda|gross[_\s]?profit|operating[_\s]?income)", re.I)
-_WORKFORCE_KEYWORD_PATTERN = re.compile(r"(salary|compensation|headcount|emp[_\s]?id|employee|hire[_\s]?date|tenure|attrition|turnover|job[_\s]?title)", re.I)
-_FEEDBACK_KEYWORD_PATTERN = re.compile(r"(rating|score|nps|csat|satisfaction|stars|feedback|ticket[_\s]?id|resolution[_\s]?time)", re.I)
-_INVENTORY_KEYWORD_PATTERN = re.compile(r"(stock|reorder|on[_\s]?hand|inventory|warehouse|sku|lead[_\s]?time|safety[_\s]?stock)", re.I)
+_COMMERCE_KEYWORD_PATTERN = re.compile(
+    r"(cart|basket|checkout|discount|shipping|refund|customer[_\s]?id)", re.I
+)
+_FINANCE_KEYWORD_PATTERN = re.compile(
+    r"(budget|actual|variance|cogs|opex|ebitda|gross[_\s]?profit|operating[_\s]?income)", re.I
+)
+_WORKFORCE_KEYWORD_PATTERN = re.compile(
+    r"(salary|compensation|headcount|emp[_\s]?id|employee|hire[_\s]?date|tenure|attrition|turnover|job[_\s]?title)",
+    re.I,
+)
+_FEEDBACK_KEYWORD_PATTERN = re.compile(
+    r"(rating|score|nps|csat|satisfaction|stars|feedback|ticket[_\s]?id|resolution[_\s]?time)", re.I
+)
+_INVENTORY_KEYWORD_PATTERN = re.compile(
+    r"(stock|reorder|on[_\s]?hand|inventory|warehouse|sku|lead[_\s]?time|safety[_\s]?stock)", re.I
+)
 
 
 @dataclass
@@ -89,18 +104,26 @@ def _detect_domain_type(
     has_budget = any(re.search(r"\bbudget\b", c, re.I) for c in metric_cols)
     has_actual = any(re.search(r"\bactual\b", c, re.I) for c in metric_cols)
     has_variance = any(re.search(r"\bvariance\b", c, re.I) for c in metric_cols)
-    if (has_budget and has_actual) or has_variance or len(re.findall(_FINANCE_KEYWORD_PATTERN, all_col_names)) >= 2:
+    if (
+        (has_budget and has_actual)
+        or has_variance
+        or len(re.findall(_FINANCE_KEYWORD_PATTERN, all_col_names)) >= 2
+    ):
         return DOMAIN_FINANCE
 
     # Check Commerce
     has_order = any(_COMMERCE_ORDER_PATTERN.search(c) for c in df.columns)
     has_commerce_kw = bool(_COMMERCE_KEYWORD_PATTERN.search(all_col_names))
-    has_sales_qty = any(re.search(r"(sales|revenue|price|total)", c, re.I) for c in metric_cols) and any(re.search(r"(qty|quantity|units)", c, re.I) for c in metric_cols)
+    has_sales_qty = any(
+        re.search(r"(sales|revenue|price|total)", c, re.I) for c in metric_cols
+    ) and any(re.search(r"(qty|quantity|units)", c, re.I) for c in metric_cols)
     if has_order or (has_commerce_kw and has_sales_qty):
         return DOMAIN_COMMERCE
 
     # Check Workforce
-    has_salary = any(re.search(r"(salary|comp|compensation|base[_\s]?pay|wages)", c, re.I) for c in metric_cols)
+    has_salary = any(
+        re.search(r"(salary|comp|compensation|base[_\s]?pay|wages)", c, re.I) for c in metric_cols
+    )
     has_dept = any(re.search(r"(dept|department|division)", c, re.I) for c in dim_cols)
     has_emp = any(re.search(r"(emp|employee|staff)", c, re.I) for c in df.columns)
     if (has_salary and has_dept) or (has_emp and has_dept):
@@ -113,7 +136,9 @@ def _detect_domain_type(
         return DOMAIN_FEEDBACK
 
     # Check Inventory
-    has_stock = any(re.search(r"(stock|inventory|on[_\s]?hand|reorder)", c, re.I) for c in metric_cols)
+    has_stock = any(
+        re.search(r"(stock|inventory|on[_\s]?hand|reorder)", c, re.I) for c in metric_cols
+    )
     if has_stock and any(_INVENTORY_KEYWORD_PATTERN.search(c) for c in df.columns):
         return DOMAIN_INVENTORY
 
@@ -141,8 +166,7 @@ def profile_dataset(
     dim_cols = [name for name, c in cmap.items() if c.role == ROLE_DIMENSION and name in df.columns]
 
     rate_metrics = [
-        m for m in metric_cols
-        if getattr(cmap.get(m), "is_rate", False) or is_rate_metric(m)
+        m for m in metric_cols if getattr(cmap.get(m), "is_rate", False) or is_rate_metric(m)
     ]
 
     duration_metric = next((m for m in metric_cols if _DURATION_PATTERN.search(m)), None)
@@ -158,10 +182,15 @@ def profile_dataset(
         start_date_col = date_cols[0]
 
     has_project_keywords = any(_PROJECT_ENTITY_PATTERN.search(d) for d in dim_cols)
-    has_progress = any(re.search(r"(progress|completion|status|percent_complete)", m, re.I) for m in metric_cols + dim_cols)
+    has_progress = any(
+        re.search(r"(progress|completion|status|percent_complete)", m, re.I)
+        for m in metric_cols + dim_cols
+    )
 
     # Decide profile type
-    if (len(date_cols) >= 2 or (start_date_col and (duration_metric or end_date_col))) and (has_project_keywords or has_progress):
+    if (len(date_cols) >= 2 or (start_date_col and (duration_metric or end_date_col))) and (
+        has_project_keywords or has_progress
+    ):
         profile_type = PROFILE_PROJECT
     elif len(date_cols) >= 1:
         # Check if primary date column has continuous dates
@@ -203,7 +232,9 @@ def profile_dataset(
 
     # Summary label
     if domain_type == DOMAIN_PROJECT:
-        summary_label = f"Project & Task Portfolio ({n_rows} tasks across {len(date_cols)} timeline milestones)"
+        summary_label = (
+            f"Project & Task Portfolio ({n_rows} tasks across {len(date_cols)} timeline milestones)"
+        )
     elif domain_type == DOMAIN_COMMERCE:
         summary_label = f"E-Commerce & Orders Analytics ({n_rows} orders/items across {len(metric_cols)} metrics)"
     elif domain_type == DOMAIN_FINANCE:
@@ -216,14 +247,18 @@ def profile_dataset(
         summary_label = f"Inventory & Logistics Snapshot ({n_rows} SKUs)"
     elif profile_type == PROFILE_SNAPSHOT:
         entity_desc = entity_dimension or "items"
-        summary_label = f"Snapshot Analytics ({n_rows} {entity_desc} across {len(metric_cols)} metrics)"
+        summary_label = (
+            f"Snapshot Analytics ({n_rows} {entity_desc} across {len(metric_cols)} metrics)"
+        )
     else:
         summary_label = f"Time-Series Performance ({n_rows} records over {date_cols[0]})"
 
     return DatasetProfile(
         profile_type=profile_type,
         date_columns=date_cols,
-        primary_date_col=start_date_col if profile_type == PROFILE_PROJECT else (date_cols[0] if date_cols else None),
+        primary_date_col=start_date_col
+        if profile_type == PROFILE_PROJECT
+        else (date_cols[0] if date_cols else None),
         end_date_col=end_date_col,
         entity_dimension=entity_dimension,
         grouping_dimensions=grouping_dimensions,
@@ -238,4 +273,3 @@ def profile_dataset(
         summary_label=summary_label,
         domain_type=domain_type,
     )
-

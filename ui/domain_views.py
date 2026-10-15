@@ -16,10 +16,10 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from analytics.domains.commerce import CommerceAnalyticsResult
+from analytics.domains.feedback import FeedbackAnalyticsResult
 from analytics.domains.finance import FinanceAnalyticsResult
 from analytics.domains.workforce import WorkforceAnalyticsResult
-from analytics.domains.feedback import FeedbackAnalyticsResult
-from ui.components import format_number, humanize_col
+from ui.components import humanize_col
 
 
 def render_commerce_view(df: pd.DataFrame, res: CommerceAnalyticsResult, profile) -> None:
@@ -47,7 +47,9 @@ def render_commerce_view(df: pd.DataFrame, res: CommerceAnalyticsResult, profile
                 labels={val_col: humanize_col(val_col), p_col: humanize_col(p_col)},
                 title="Top 10 Products by Revenue",
             )
-            fig_p.update_layout(template="plotly_white", height=380, margin=dict(l=40, r=20, t=40, b=40))
+            fig_p.update_layout(
+                template="plotly_white", height=380, margin=dict(l=40, r=20, t=40, b=40)
+            )
             st.plotly_chart(fig_p, width="stretch", key="comm_top_prod")
             if "_export_figures" not in st.session_state:
                 st.session_state["_export_figures"] = {}
@@ -80,7 +82,9 @@ def render_finance_view(df: pd.DataFrame, res: FinanceAnalyticsResult, profile) 
     k1.metric("Total Actual", f"${res.total_actual:,.0f}")
     k2.metric("Total Budget", f"${res.total_budget:,.0f}")
     var_sign = "+" if res.variance_abs >= 0 else ""
-    k3.metric("Variance ($)", f"{var_sign}${res.variance_abs:,.0f}", delta=f"{res.variance_pct:+.1f}%")
+    k3.metric(
+        "Variance ($)", f"{var_sign}${res.variance_abs:,.0f}", delta=f"{res.variance_pct:+.1f}%"
+    )
     k4.metric("Status", "Favorable" if res.is_favorable else "Unfavorable")
 
     st.subheader("Bridge Waterfall Walk")
@@ -138,7 +142,9 @@ def render_workforce_view(df: pd.DataFrame, res: WorkforceAnalyticsResult, profi
                 hole=0.4,
                 title="Staff Distribution by Department",
             )
-            fig_dept.update_layout(template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20))
+            fig_dept.update_layout(
+                template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20)
+            )
             st.plotly_chart(fig_dept, width="stretch", key="wf_dept_pie")
             if "_export_figures" not in st.session_state:
                 st.session_state["_export_figures"] = {}
@@ -149,7 +155,9 @@ def render_workforce_view(df: pd.DataFrame, res: WorkforceAnalyticsResult, profi
         if not res.salary_by_dept_table.empty:
             st.dataframe(res.salary_by_dept_table, use_container_width=True)
             if res.tenure_perf_corr is not None:
-                st.caption(f"📈 Tenure vs Performance Rating correlation: **r = {res.tenure_perf_corr:+.2f}**")
+                st.caption(
+                    f"📈 Tenure vs Performance Rating correlation: **r = {res.tenure_perf_corr:+.2f}**"
+                )
         else:
             st.info("Salary details by department not available.")
 
@@ -182,10 +190,12 @@ def render_feedback_view(df: pd.DataFrame, res: FeedbackAnalyticsResult, profile
     with c1:
         st.subheader("NPS / Sentiment Breakdown")
         if res.promoter_pct is not None:
-            nps_breakdown = pd.DataFrame({
-                "Group": ["Promoters (9-10)", "Passives (7-8)", "Detractors (0-6)"],
-                "Share": [res.promoter_pct, res.passive_pct, res.detractor_pct],
-            })
+            nps_breakdown = pd.DataFrame(
+                {
+                    "Group": ["Promoters (9-10)", "Passives (7-8)", "Detractors (0-6)"],
+                    "Share": [res.promoter_pct, res.passive_pct, res.detractor_pct],
+                }
+            )
             fig_nps = px.bar(
                 nps_breakdown,
                 x="Group",
@@ -198,7 +208,12 @@ def render_feedback_view(df: pd.DataFrame, res: FeedbackAnalyticsResult, profile
                 },
                 title="Promoter vs Detractor Share (%)",
             )
-            fig_nps.update_layout(template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20), showlegend=False)
+            fig_nps.update_layout(
+                template="plotly_white",
+                height=380,
+                margin=dict(l=20, r=20, t=40, b=20),
+                showlegend=False,
+            )
             st.plotly_chart(fig_nps, width="stretch", key="fb_nps_bar")
             if "_export_figures" not in st.session_state:
                 st.session_state["_export_figures"] = {}
@@ -215,7 +230,9 @@ def render_feedback_view(df: pd.DataFrame, res: FeedbackAnalyticsResult, profile
                 y="Count",
                 title="Response Frequency by Rating",
             )
-            fig_dist.update_layout(template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20))
+            fig_dist.update_layout(
+                template="plotly_white", height=380, margin=dict(l=20, r=20, t=40, b=20)
+            )
             st.plotly_chart(fig_dist, width="stretch", key="fb_dist_bar")
         if res.priority_breakdown is not None:
             st.caption("Ticket Priority Breakdown")

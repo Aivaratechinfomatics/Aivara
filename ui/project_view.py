@@ -7,14 +7,13 @@ task progress, and team assignments.
 
 from __future__ import annotations
 
-import streamlit as st
-import plotly.express as px
-import plotly.graph_objects as go
 import pandas as pd
+import plotly.express as px
+import streamlit as st
 
 from analytics.profiler import DatasetProfile
 from analytics.snapshot import ProjectAnalyticsResult
-from ui.components import humanize_col, render_kpi_tile, render_insight_card
+from ui.components import humanize_col, render_insight_card, render_kpi_tile
 
 
 def render_project_overview_view(
@@ -183,7 +182,9 @@ def render_project_at_risk_view(project_res: ProjectAnalyticsResult) -> None:
             c1, c2 = st.columns([3, 1])
             with c1:
                 st.markdown(f"⚠️ **{t['task']}**")
-                st.caption(f"Project: `{t.get('project', 'N/A')}` | Assigned To: `{t.get('assignee', 'N/A')}`")
+                st.caption(
+                    f"Project: `{t.get('project', 'N/A')}` | Assigned To: `{t.get('assignee', 'N/A')}`"
+                )
                 st.write(t["reason"])
             with c2:
                 st.caption("Status: `UNSTARTED`")

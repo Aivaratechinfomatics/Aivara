@@ -8,8 +8,6 @@ import pandas as pd
 
 from analytics.anomalies import (
     SEVERITY_HIGH,
-    SEVERITY_LOW,
-    SEVERITY_MEDIUM,
     detect_group_outliers,
     detect_period_swings,
 )

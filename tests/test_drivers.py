@@ -58,6 +58,11 @@ def test_rank_dimensions_by_concentration():
             "revenue": [140, 100, 100, 100],
         }
     )
-    ranked = rank_dimensions_by_explanatory_power(df_current, df_prior, ["region", "product"], "revenue")
-    assert ranked[0].dimension in ("region", "product")  # both are equally concentrated here (same data)
+    ranked = rank_dimensions_by_explanatory_power(
+        df_current, df_prior, ["region", "product"], "revenue"
+    )
+    assert ranked[0].dimension in (
+        "region",
+        "product",
+    )  # both are equally concentrated here (same data)
     assert ranked[0].concentration_score >= ranked[-1].concentration_score

@@ -4,7 +4,8 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
-from analytics.snapshot import compute_snapshot_analytics, compute_project_analytics
+
+from analytics.snapshot import compute_project_analytics, compute_snapshot_analytics
 
 
 def test_compute_snapshot_analytics_basic():

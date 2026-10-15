@@ -10,7 +10,8 @@ Computes:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 import pandas as pd
 
 
@@ -43,19 +44,52 @@ def compute_commerce_analytics(
     # Find columns dynamically if not explicitly specified
     cols = df.columns
     if not order_col:
-        order_col = next((c for c in cols if re.search(r"(order[_\s]?id|invoice|receipt|trans)", c, re.I)), None)
+        order_col = next(
+            (c for c in cols if re.search(r"(order[_\s]?id|invoice|receipt|trans)", c, re.I)), None
+        )
     if not customer_col:
-        customer_col = next((c for c in cols if re.search(r"(cust|client|account|buyer|user[_\s]?id)", c, re.I)), None)
+        customer_col = next(
+            (c for c in cols if re.search(r"(cust|client|account|buyer|user[_\s]?id)", c, re.I)),
+            None,
+        )
     if not product_col:
-        product_col = next((c for c in cols if re.search(r"(product|item|sku|title)", c, re.I)), None)
+        product_col = next(
+            (c for c in cols if re.search(r"(product|item|sku|title)", c, re.I)), None
+        )
     if not revenue_col:
-        revenue_col = next((c for c in cols if re.search(r"(sales|revenue|amount|total|price)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        revenue_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(sales|revenue|amount|total|price)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
     if not qty_col:
-        qty_col = next((c for c in cols if re.search(r"(qty|quantity|units|volume)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        qty_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(qty|quantity|units|volume)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
     if not discount_col:
-        discount_col = next((c for c in cols if re.search(r"(disc|rebate|markdown)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        discount_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(disc|rebate|markdown)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
     if not channel_col:
-        channel_col = next((c for c in cols if re.search(r"(channel|store|region|market|source)", c, re.I)), None)
+        channel_col = next(
+            (c for c in cols if re.search(r"(channel|store|region|market|source)", c, re.I)), None
+        )
 
     # 1. Orders and Totals
     n_rows = len(df)
@@ -77,7 +111,10 @@ def compute_commerce_analytics(
             df.groupby(customer_col)
             .agg(
                 total_spend=(revenue_col, "sum"),
-                order_count=(order_col if order_col else revenue_col, "nunique" if order_col else "count"),
+                order_count=(
+                    order_col if order_col else revenue_col,
+                    "nunique" if order_col else "count",
+                ),
             )
             .reset_index()
             .sort_values(by="total_spend", ascending=False)
@@ -111,7 +148,10 @@ def compute_commerce_analytics(
             df.groupby(channel_col)
             .agg(
                 revenue=(revenue_col, "sum"),
-                orders=(order_col if order_col else revenue_col, "nunique" if order_col else "count"),
+                orders=(
+                    order_col if order_col else revenue_col,
+                    "nunique" if order_col else "count",
+                ),
             )
             .reset_index()
             .sort_values(by="revenue", ascending=False)

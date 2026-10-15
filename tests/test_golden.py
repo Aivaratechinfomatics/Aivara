@@ -76,22 +76,23 @@ def extract_pipeline_snapshot(filepath: str | Path, filename: str) -> dict:
         }
 
     risk_list = []
-    for r in (pres.get("risk_signals") or []):
+    for r in pres.get("risk_signals") or []:
         if isinstance(r, dict):
             risk_list.append({"description": r.get("description"), "severity": r.get("severity")})
         else:
-            risk_list.append({
-                "description": getattr(r, "description", str(r)),
-                "severity": getattr(r, "severity", "medium"),
-            })
+            risk_list.append(
+                {
+                    "description": getattr(r, "description", str(r)),
+                    "severity": getattr(r, "severity", "medium"),
+                }
+            )
 
     snapshot = {
         "dataset_name": filename,
         "shape": list(clean_df.shape),
         "columns": [str(c) for c in clean_df.columns],
         "classifications": {
-            c.name: {"role": c.role, "confidence": _normalize_num(c.confidence)}
-            for c in classified
+            c.name: {"role": c.role, "confidence": _normalize_num(c.confidence)} for c in classified
         },
         "profile": {
             "profile_type": prof.profile_type,
@@ -120,12 +121,11 @@ def generate_or_verify_golden(filename: str):
             json.dump(live_snapshot, fh, indent=2, sort_keys=True)
         return
 
-    with open(golden_path, "r", encoding="utf-8") as fh:
+    with open(golden_path, encoding="utf-8") as fh:
         expected = json.load(fh)
 
     assert live_snapshot == expected, (
-        f"Golden regression detected for {filename}!\n"
-        f"Diff: {live_snapshot} != {expected}"
+        f"Golden regression detected for {filename}!\nDiff: {live_snapshot} != {expected}"
     )
 
 

@@ -1,14 +1,15 @@
 import numpy as np
 import pandas as pd
 import pytest
+
+from analytics.profiler import PROFILE_SNAPSHOT, DatasetProfile
 from analytics.stats import (
+    attribute_anomalies,
+    compute_concentration_index,
     compute_correlation_matrix,
     extract_key_drivers,
-    compute_concentration_index,
-    attribute_anomalies,
     generate_executive_takeaways,
 )
-from analytics.profiler import DatasetProfile, PROFILE_SNAPSHOT
 
 
 def test_compute_correlation_matrix_and_drivers():
@@ -66,10 +67,12 @@ def test_attribute_anomalies():
 
 
 def test_generate_executive_takeaways():
-    df = pd.DataFrame({
-        "Product": ["Widget A", "Widget B", "Widget C"],
-        "Sales": [10000, 3000, 1000],
-    })
+    df = pd.DataFrame(
+        {
+            "Product": ["Widget A", "Widget B", "Widget C"],
+            "Sales": [10000, 3000, 1000],
+        }
+    )
     profile = DatasetProfile(
         profile_type=PROFILE_SNAPSHOT,
         date_columns=[],

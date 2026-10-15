@@ -10,12 +10,12 @@ from __future__ import annotations
 
 import math
 import re
-import streamlit as st
+
 import plotly.graph_objects as go
+import streamlit as st
 
 from analytics.kpis import KPIResult
 from insight.client import BudgetExhaustedError, InsightResult
-
 
 # ---------------------------------------------------------------------------
 # Column-name humanizer — converts snake_case, camelCase, ALL_CAPS, and
@@ -58,7 +58,9 @@ def format_number(value: float, unit: str | None = None) -> str:
         return f"{value / 1_000_000:.2f}M"
     if abs_value >= 1_000:
         return f"{value / 1_000:.1f}K"
-    return f"{value:,.2f}" if isinstance(value, float) and not value.is_integer() else f"{value:,.0f}"
+    return (
+        f"{value:,.2f}" if isinstance(value, float) and not value.is_integer() else f"{value:,.0f}"
+    )
 
 
 def format_pct_change(
@@ -162,7 +164,7 @@ def build_trend_figure(
                 name=h_title,
                 fill="tozeroy",
                 line=dict(color=color),
-                fillcolor=f"rgba(26,115,232,0.15)",
+                fillcolor="rgba(26,115,232,0.15)",
             )
         )
     else:  # Line (default)

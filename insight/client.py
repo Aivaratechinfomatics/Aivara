@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import re
 from dataclasses import dataclass
+from typing import Any
 
 import requests
 
@@ -24,7 +25,11 @@ from config import (
     OPENROUTER_BASE_URL,
 )
 from insight import budget, cache
-from insight.prompts import build_column_classification_prompt, build_insight_prompt, cache_key_material
+from insight.prompts import (
+    build_column_classification_prompt,
+    build_insight_prompt,
+    cache_key_material,
+)
 
 
 @dataclass
@@ -61,7 +66,7 @@ def _split_into_sentences(text: str) -> list[str]:
         pass
 
     lines = [line.strip() for line in text.splitlines() if line.strip()]
-    if len(lines) >= 2 and any(re.match(r"^(?:[1-3][\.\)]|\-|\*)\s*", l) for l in lines):
+    if len(lines) >= 2 and any(re.match(r"^(?:[1-3][\.\)]|\-|\*)\s*", ln) for ln in lines):
         numbered_parts = []
         for line in lines:
             cleaned_line = re.sub(r"^(?:[1-3][\.\)]|\-|\*)\s*", "", line).strip()
@@ -70,7 +75,9 @@ def _split_into_sentences(text: str) -> list[str]:
         if len(numbered_parts) >= 2:
             return numbered_parts
 
-    parts = [p.strip() for p in re.split(r"(?<=[.!?])\s+(?=[A-Z0-9\"'\(])", text.strip()) if p.strip()]
+    parts = [
+        p.strip() for p in re.split(r"(?<=[.!?])\s+(?=[A-Z0-9\"'\(])", text.strip()) if p.strip()
+    ]
     return parts
 
 
@@ -87,7 +94,7 @@ def _call_openrouter(messages: list[dict], model: str, allow_paid: bool) -> tupl
         "Authorization": f"Bearer {OPENROUTER_API_KEY}",
         "Content-Type": "application/json",
     }
-    payload = {
+    payload: Any = {
         "model": actual_model,
         "messages": messages,
         "max_tokens": MAX_OUTPUT_TOKENS,
@@ -110,10 +117,10 @@ def generate_insight(
     allow_paid: bool = ALLOW_PAID_MODELS_DEFAULT,
 ) -> InsightResult:
     """Fail-soft insight generation:
-      1. Check cache by content hash -> return cached hit, no network call, no budget spend.
-      2. Check budget -> if exhausted, raise BudgetExhaustedError (caller shows a neutral
-         placeholder, per Section 9.2.7 — the dashboard must still render fully).
-      3. Call OpenRouter, parse the 3-sentence structure, cache it.
+    1. Check cache by content hash -> return cached hit, no network call, no budget spend.
+    2. Check budget -> if exhausted, raise BudgetExhaustedError (caller shows a neutral
+       placeholder, per Section 9.2.7 — the dashboard must still render fully).
+    3. Call OpenRouter, parse the 3-sentence structure, cache it.
     """
     key_material = cache_key_material(facts_packet, model)
     cached = cache.get(key_material)

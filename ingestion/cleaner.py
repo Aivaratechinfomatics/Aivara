@@ -106,9 +106,13 @@ def clean_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
 
     # 2. Drop fully-empty or uninformative spacer columns.
     empty_cols = [
-        c for c in df.columns
+        c
+        for c in df.columns
         if df[c].isna().all()
-        or (str(c).startswith("Unnamed:") and (df[c].isna().mean() > 0.85 or df[c].dropna().nunique() <= 1))
+        or (
+            str(c).startswith("Unnamed:")
+            and (df[c].isna().mean() > 0.85 or df[c].dropna().nunique() <= 1)
+        )
         or (df[c].isna().mean() > 0.95 and df[c].dropna().nunique() <= 1 and c != "_is_duplicate")
     ]
     if empty_cols:
@@ -182,9 +186,7 @@ def clean_dataframe(df: pd.DataFrame) -> tuple[pd.DataFrame, CleanReport]:
                 datetime_details.append(col)
 
     if report.columns_coerced_datetime:
-        report.messages.append(
-            "Parsed as dates: " + ", ".join(datetime_details)
-        )
+        report.messages.append("Parsed as dates: " + ", ".join(datetime_details))
 
     return df, report
 
@@ -213,14 +215,18 @@ def detect_wide_matrix(df: pd.DataFrame) -> tuple[bool, list[str], list[str]]:
             date_cols.append(col)
         else:
             try:
-                parsed = pd.to_datetime(col_str, errors="raise")
+                _ = pd.to_datetime(col_str, errors="raise")
                 date_cols.append(col)
                 continue
             except Exception:
                 pass
             id_cols.append(col)
 
-    if len(date_cols) >= 3 and len(id_cols) >= 1 and (len(date_cols) / max(1, df.shape[1] - 1)) >= 0.4:
+    if (
+        len(date_cols) >= 3
+        and len(id_cols) >= 1
+        and (len(date_cols) / max(1, df.shape[1] - 1)) >= 0.4
+    ):
         numeric_count = sum(pd.api.types.is_numeric_dtype(df[c]) for c in date_cols)
         if numeric_count >= len(date_cols) * 0.6:
             return True, id_cols, date_cols
@@ -247,4 +253,3 @@ def unpivot_matrix_table(
     )
     melted[value_name] = pd.to_numeric(melted[value_name], errors="coerce")
     return melted
-

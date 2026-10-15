@@ -6,13 +6,13 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import pandas as pd
 import plotly.graph_objects as go
 
-from ui.components import humanize_col, build_trend_figure, build_drivers_figure
-from ui.chart_builder import build_chart_figure, CHART_TYPES
-
+from ui.chart_builder import CHART_TYPES, build_chart_figure
+from ui.components import build_drivers_figure, build_trend_figure, humanize_col
 
 # ---------------------------------------------------------------------------
 # humanize_col tests
 # ---------------------------------------------------------------------------
+
 
 def test_humanize_snake_case():
     assert humanize_col("total_revenue") == "Total Revenue"
@@ -43,11 +43,14 @@ def test_humanize_single_word():
 # build_trend_figure tests
 # ---------------------------------------------------------------------------
 
+
 def _sample_trend_df():
-    return pd.DataFrame({
-        "period": pd.date_range("2024-01-01", periods=6, freq="MS"),
-        "value": [100.0, 120.0, 90.0, 140.0, 130.0, 160.0],
-    })
+    return pd.DataFrame(
+        {
+            "period": pd.date_range("2024-01-01", periods=6, freq="MS"),
+            "value": [100.0, 120.0, 90.0, 140.0, 130.0, 160.0],
+        }
+    )
 
 
 def test_trend_figure_line_returns_figure():
@@ -76,6 +79,7 @@ def test_trend_figure_has_axis_labels():
 # ---------------------------------------------------------------------------
 # build_drivers_figure tests
 # ---------------------------------------------------------------------------
+
 
 class _MockContribution:
     def __init__(self, category, contribution_pct):
@@ -109,14 +113,17 @@ def test_drivers_figure_has_axis_labels():
 # build_chart_figure tests — one for each chart type
 # ---------------------------------------------------------------------------
 
+
 def _make_df():
-    return pd.DataFrame({
-        "date": pd.date_range("2024-01-01", periods=20, freq="D"),
-        "revenue": [float(i * 10 + 50) for i in range(20)],
-        "cost": [float(i * 5 + 20) for i in range(20)],
-        "region": (["North", "South"] * 10),
-        "category": (["A", "B", "C", "D"] * 5),
-    })
+    return pd.DataFrame(
+        {
+            "date": pd.date_range("2024-01-01", periods=20, freq="D"),
+            "revenue": [float(i * 10 + 50) for i in range(20)],
+            "cost": [float(i * 5 + 20) for i in range(20)],
+            "region": (["North", "South"] * 10),
+            "category": (["A", "B", "C", "D"] * 5),
+        }
+    )
 
 
 def test_chart_line():
@@ -184,11 +191,13 @@ def test_chart_heatmap():
 
 
 def test_chart_timeline_gantt():
-    df = pd.DataFrame({
-        "task": ["T1", "T2"],
-        "start": pd.to_datetime(["2024-01-01", "2024-01-05"]),
-        "end": pd.to_datetime(["2024-01-05", "2024-01-10"]),
-    })
+    df = pd.DataFrame(
+        {
+            "task": ["T1", "T2"],
+            "start": pd.to_datetime(["2024-01-01", "2024-01-05"]),
+            "end": pd.to_datetime(["2024-01-05", "2024-01-10"]),
+        }
+    )
     fig = build_chart_figure(df, "Timeline (Gantt)", x_col="start", y_col="end", color_col="task")
     assert isinstance(fig, go.Figure)
 
@@ -238,7 +247,9 @@ def test_chart_funnel():
 
 def test_chart_dual_axis():
     df = _make_df()
-    fig = build_chart_figure(df, "Dual-Axis (Line + Bar)", x_col="region", y_col="revenue", color_col="cost")
+    fig = build_chart_figure(
+        df, "Dual-Axis (Line + Bar)", x_col="region", y_col="revenue", color_col="cost"
+    )
     assert isinstance(fig, go.Figure)
 
 
@@ -250,6 +261,7 @@ def test_chart_bubble():
 
 def test_suggest_best_chart():
     from ui.chart_builder import suggest_best_chart
+
     df = _make_df()
     assert suggest_best_chart(df, "date", "revenue") == "Line"
     assert suggest_best_chart(df, "revenue", "cost") == "Scatter"
@@ -259,9 +271,22 @@ def test_suggest_best_chart():
 def test_all_chart_types_covered():
     """Ensure CHART_TYPES list matches what we test above (no new type silently untested)."""
     expected = {
-        "Line", "Area", "Bar", "Horizontal Bar", "Scatter", "Bubble",
-        "Dual-Axis (Line + Bar)", "Pie", "Donut", "Treemap", "Sunburst",
-        "Waterfall", "Funnel", "Box", "Histogram", "Heatmap", "Timeline (Gantt)",
+        "Line",
+        "Area",
+        "Bar",
+        "Horizontal Bar",
+        "Scatter",
+        "Bubble",
+        "Dual-Axis (Line + Bar)",
+        "Pie",
+        "Donut",
+        "Treemap",
+        "Sunburst",
+        "Waterfall",
+        "Funnel",
+        "Box",
+        "Histogram",
+        "Heatmap",
+        "Timeline (Gantt)",
     }
     assert set(CHART_TYPES) == expected
-

@@ -1,0 +1,85 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "aivara-insight-lite"
+version = "0.1.0"
+description = "Autonomous data intelligence and AI-narrated executive dashboards"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    { name = "Aivara Tech" }
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "W",   # pycodestyle warnings
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify
+]
+ignore = [
+    "E501", # line length handled by formatter
+    "B008", # function call in default argument
+    "SIM108", # ternary operator preference
+    "SIM105", # try-except-pass vs contextlib.suppress
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["analytics", "config", "export", "ingestion", "insight", "ui"]
+
+[tool.mypy]
+python_version = "3.12"
+warn_return_any = false
+warn_unused_configs = true
+disallow_untyped_defs = false
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "analytics.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "ingestion.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "export.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "insight.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+testpaths = ["tests"]
+addopts = "-v --strict-markers"
+markers = [
+    "slow: marks tests as slow",
+    "live: marks tests that connect to external network/APIs (excluded in CI)",
+]
+
+[tool.coverage.run]
+source = ["analytics", "config", "export", "ingestion", "insight", "ui"]
+omit = ["tests/*", "venv/*", "scripts/*", "website/*"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+fail_under = 75

@@ -3,7 +3,6 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import numpy as np
 import pandas as pd
 
 from ingestion.cleaner import clean_dataframe
@@ -20,7 +19,21 @@ def test_percent_columns_scaled_properly():
 
 
 def test_null_placeholders_normalized():
-    tokens = ["", "na", "n/a", "N/A", "NaN", "NAN", "None", "none", "NULL", "null", "-", "--", "Valid"]
+    tokens = [
+        "",
+        "na",
+        "n/a",
+        "N/A",
+        "NaN",
+        "NAN",
+        "None",
+        "none",
+        "NULL",
+        "null",
+        "-",
+        "--",
+        "Valid",
+    ]
     df = pd.DataFrame({"category": tokens, "val": range(len(tokens))})
     cleaned_df, report = clean_dataframe(df)
     assert "category" in cleaned_df

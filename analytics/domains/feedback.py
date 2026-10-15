@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+
 import pandas as pd
 
 
@@ -39,13 +40,35 @@ def compute_feedback_analytics(
     """Computes survey, NPS, and support ticket intelligence."""
     cols = df.columns
     if not rating_col:
-        rating_col = next((c for c in cols if re.search(r"(rating|score|nps|csat|satisfaction|stars)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        rating_col = next(
+            (
+                c
+                for c in cols
+                if re.search(r"(rating|score|nps|csat|satisfaction|stars)", c, re.I)
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
     if not ticket_col:
-        ticket_col = next((c for c in cols if re.search(r"(ticket|case|incident|issue|inquiry)", c, re.I)), None)
+        ticket_col = next(
+            (c for c in cols if re.search(r"(ticket|case|incident|issue|inquiry)", c, re.I)), None
+        )
     if not resolution_col:
-        resolution_col = next((c for c in cols if re.search(r"(resolution|handling|duration|turnaround|time_to_close|sla)", c, re.I) and pd.api.types.is_numeric_dtype(df[c])), None)
+        resolution_col = next(
+            (
+                c
+                for c in cols
+                if re.search(
+                    r"(resolution|handling|duration|turnaround|time_to_close|sla)", c, re.I
+                )
+                and pd.api.types.is_numeric_dtype(df[c])
+            ),
+            None,
+        )
     if not priority_col:
-        priority_col = next((c for c in cols if re.search(r"(priority|severity|urgency|tier)", c, re.I)), None)
+        priority_col = next(
+            (c for c in cols if re.search(r"(priority|severity|urgency|tier)", c, re.I)), None
+        )
 
     n_rows = len(df)
     nps_score = None

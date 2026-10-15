@@ -111,4 +111,3 @@ def build_project_facts_packet(
         "total_duration_days": total_days,
         "at_risk_tasks_count": at_risk_count,
     }
-

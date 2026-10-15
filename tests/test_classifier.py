@@ -77,7 +77,7 @@ def test_entity_name_classified_as_dimension_not_id():
     # 46 products with 46 unique names must be classified as dimension, not ID
     df = pd.DataFrame(
         {
-            "product_id": [f"P{100+i}" for i in range(46)],
+            "product_id": [f"P{100 + i}" for i in range(46)],
             "product_name": [f"Product Item {i}" for i in range(46)],
             "revenue": [100.0 + i for i in range(46)],
         }

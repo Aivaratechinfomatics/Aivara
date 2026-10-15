@@ -11,7 +11,8 @@ Runs 100% offline with zero network dependencies. Computes:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+
 import numpy as np
 import pandas as pd
 
@@ -46,7 +47,8 @@ class AnomalyAttribution:
 def compute_correlation_matrix(df: pd.DataFrame, numeric_cols: list[str]) -> pd.DataFrame:
     """Computes a clean Pearson correlation matrix for valid numeric columns."""
     valid_cols = [
-        c for c in numeric_cols
+        c
+        for c in numeric_cols
         if c in df.columns and pd.api.types.is_numeric_dtype(df[c]) and df[c].dropna().nunique() > 1
     ]
     if len(valid_cols) < 2:
@@ -108,13 +110,17 @@ def _build_relationship(col_a: str, col_b: str, r: float, human_fn) -> DriverRel
         narrative = f"Strong positive driver: Higher {hb} strongly associates with higher {ha} (r = {r:+.2f})."
     elif r >= 0.45:
         strength = "moderate positive"
-        narrative = f"Moderate positive relationship: {hb} moves in tandem with {ha} (r = {r:+.2f})."
+        narrative = (
+            f"Moderate positive relationship: {hb} moves in tandem with {ha} (r = {r:+.2f})."
+        )
     elif r <= -0.75:
         strength = "strong negative"
         narrative = f"Strong inverse driver: Higher {hb} strongly associates with lower {ha} (r = {r:+.2f})."
     else:
         strength = "moderate negative"
-        narrative = f"Moderate inverse relationship: Higher {hb} tends to reduce {ha} (r = {r:+.2f})."
+        narrative = (
+            f"Moderate inverse relationship: Higher {hb} tends to reduce {ha} (r = {r:+.2f})."
+        )
 
     return DriverRelationship(
         metric_a=col_a,
@@ -162,7 +168,7 @@ def compute_concentration_index(series: pd.Series | np.ndarray) -> Concentration
 
     # HHI: sum of squared percentage market shares (0 to 10,000)
     shares = (vals / total_sum) * 100.0
-    hhi = float(np.sum(shares ** 2))
+    hhi = float(np.sum(shares**2))
 
     if gini >= 0.70 or hhi > 2500 or top_20_share > 0.80:
         risk_level = "Extreme"
@@ -192,7 +198,11 @@ def attribute_anomalies(
     dimension_cols: list[str],
 ) -> list[AnomalyAttribution]:
     """Identifies which category values drive extreme outliers for a metric."""
-    if df.empty or metric_col not in df.columns or not pd.api.types.is_numeric_dtype(df[metric_col]):
+    if (
+        df.empty
+        or metric_col not in df.columns
+        or not pd.api.types.is_numeric_dtype(df[metric_col])
+    ):
         return []
 
     s = df[metric_col].dropna()
@@ -258,9 +268,21 @@ def generate_executive_takeaways(
         mean_val = s.mean()
         ha = primary_m.replace("_", " ").title()
         if total_val >= 1_000_000:
-            scale_str = f"${total_val / 1_000_000:,.1f}M" if "price" in primary_m.lower() or "sales" in primary_m.lower() or "rev" in primary_m.lower() else f"{total_val / 1_000_000:,.1f}M"
+            scale_str = (
+                f"${total_val / 1_000_000:,.1f}M"
+                if "price" in primary_m.lower()
+                or "sales" in primary_m.lower()
+                or "rev" in primary_m.lower()
+                else f"{total_val / 1_000_000:,.1f}M"
+            )
         elif total_val >= 1_000:
-            scale_str = f"${total_val / 1_000:,.1f}k" if "price" in primary_m.lower() or "sales" in primary_m.lower() or "rev" in primary_m.lower() else f"{total_val:,.0f}"
+            scale_str = (
+                f"${total_val / 1_000:,.1f}k"
+                if "price" in primary_m.lower()
+                or "sales" in primary_m.lower()
+                or "rev" in primary_m.lower()
+                else f"{total_val:,.0f}"
+            )
         else:
             scale_str = f"{total_val:,.1f}"
 
@@ -268,7 +290,9 @@ def generate_executive_takeaways(
             f"**Portfolio Scale**: Analyzed {n_rows:,} records totaling **{scale_str}** in {ha} (average **{mean_val:,.2f}** per entry)."
         )
     else:
-        takeaways.append(f"**Dataset Overview**: Evaluated {n_rows:,} records across {df.shape[1]} dimensions and metrics.")
+        takeaways.append(
+            f"**Dataset Overview**: Evaluated {n_rows:,} records across {df.shape[1]} dimensions and metrics."
+        )
 
     # 2. Performance / Entity Leader Takeaway
     entity_dim = getattr(profile, "entity_dimension", None)

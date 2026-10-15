@@ -15,12 +15,12 @@ import plotly.graph_objects as go
 import streamlit as st
 
 from analytics.stats import (
+    attribute_anomalies,
+    compute_concentration_index,
     compute_correlation_matrix,
     extract_key_drivers,
-    compute_concentration_index,
-    attribute_anomalies,
 )
-from ui.components import humanize_col, format_number
+from ui.components import humanize_col
 
 
 def render_stats_view(df: pd.DataFrame, profile) -> None:
@@ -31,11 +31,19 @@ def render_stats_view(df: pd.DataFrame, profile) -> None:
         "Uncovers metric correlations, portfolio concentration risks, and outlier drivers."
     )
 
-    metric_cols = [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c]) and c != "_is_duplicate"]
-    dim_cols = getattr(profile, "all_dimensions", [c for c in df.columns if not pd.api.types.is_numeric_dtype(df[c])])
+    metric_cols = [
+        c for c in df.columns if pd.api.types.is_numeric_dtype(df[c]) and c != "_is_duplicate"
+    ]
+    dim_cols = getattr(
+        profile,
+        "all_dimensions",
+        [c for c in df.columns if not pd.api.types.is_numeric_dtype(df[c])],
+    )
 
     if len(metric_cols) < 2:
-        st.info("At least 2 numeric metrics are required to compute correlation matrices and driver relationships.")
+        st.info(
+            "At least 2 numeric metrics are required to compute correlation matrices and driver relationships."
+        )
         return
 
     corr_df = compute_correlation_matrix(df, metric_cols)
@@ -47,10 +55,12 @@ def render_stats_view(df: pd.DataFrame, profile) -> None:
         d_cols = st.columns(min(3, len(drivers)))
         for idx, driver in enumerate(drivers[:3]):
             with d_cols[idx % len(d_cols)]:
-                badge = "🟢 Positive Driver" if "positive" in driver.strength else "🔴 Inverse Driver"
+                badge = (
+                    "🟢 Positive Driver" if "positive" in driver.strength else "🔴 Inverse Driver"
+                )
                 st.markdown(
                     f"""
-                    <div style="background-color: rgba(26,115,232,0.05); padding: 14px; border-radius: 8px; border-left: 4px solid {'#1a73e8' if 'positive' in driver.strength else '#ea4335'}; margin-bottom: 12px;">
+                    <div style="background-color: rgba(26,115,232,0.05); padding: 14px; border-radius: 8px; border-left: 4px solid {"#1a73e8" if "positive" in driver.strength else "#ea4335"}; margin-bottom: 12px;">
                         <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #5f6368;">{badge}</span>
                         <div style="font-size: 18px; font-weight: bold; margin: 4px 0;">r = {driver.correlation:+.2f}</div>
                         <div style="font-size: 13px; color: #3c4043;">{driver.narrative}</div>
@@ -100,8 +110,16 @@ def render_stats_view(df: pd.DataFrame, profile) -> None:
         with c1:
             st.markdown(f"**Concentration Risk: {humanize_col(primary_m)}**")
             k1, k2 = st.columns(2)
-            k1.metric("Gini Coefficient", f"{conc.gini:.2f}", help="0 = completely even, 1 = extreme concentration")
-            k2.metric("Top 20% Share", f"{conc.top_20_pct_share:.1%}", help="Share of total metric held by top 20% entries")
+            k1.metric(
+                "Gini Coefficient",
+                f"{conc.gini:.2f}",
+                help="0 = completely even, 1 = extreme concentration",
+            )
+            k2.metric(
+                "Top 20% Share",
+                f"{conc.top_20_pct_share:.1%}",
+                help="Share of total metric held by top 20% entries",
+            )
             st.caption(conc.narrative)
 
         with c2:

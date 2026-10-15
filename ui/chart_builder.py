@@ -14,8 +14,8 @@ across Streamlit rerenders without resetting on every interaction.
 from __future__ import annotations
 
 import pandas as pd
-import plotly.graph_objects as go
 import plotly.express as px
+import plotly.graph_objects as go
 import streamlit as st
 
 from ui.components import humanize_col
@@ -43,7 +43,18 @@ CHART_TYPES = [
 ]
 
 # Chart types that require BOTH an X and a Y column
-_NEEDS_XY = {"Line", "Area", "Bar", "Horizontal Bar", "Scatter", "Box", "Bubble", "Waterfall", "Funnel", "Dual-Axis (Line + Bar)"}
+_NEEDS_XY = {
+    "Line",
+    "Area",
+    "Bar",
+    "Horizontal Bar",
+    "Scatter",
+    "Box",
+    "Bubble",
+    "Waterfall",
+    "Funnel",
+    "Dual-Axis (Line + Bar)",
+}
 # Hierarchical charts
 _HIERARCHY = {"Treemap", "Sunburst"}
 # Chart types that only need a single value column (+ optional label col)
@@ -58,6 +69,7 @@ _BUBBLE = {"Bubble"}
 
 
 # ----------------------------------------------------------------------- util
+
 
 def _numeric_cols(df: pd.DataFrame) -> list[str]:
     return [c for c in df.columns if pd.api.types.is_numeric_dtype(df[c])]
@@ -91,6 +103,7 @@ def _default_y(df: pd.DataFrame) -> str:
 
 
 # ----------------------------------------------------------------- main build
+
 
 def build_chart_figure(
     df: pd.DataFrame,
@@ -129,13 +142,18 @@ def build_chart_figure(
             plot_df = plot_df.sort_values(x_col)
             if color_col and color_col in plot_df.columns:
                 fig = px.line(
-                    plot_df, x=x_col, y=y_col, color=color_col,
+                    plot_df,
+                    x=x_col,
+                    y=y_col,
+                    color=color_col,
                     labels={x_col: h_x, y_col: h_y, color_col: h_color},
                     title=f"{h_y} by {h_x}",
                 )
             else:
                 fig = px.line(
-                    plot_df, x=x_col, y=y_col,
+                    plot_df,
+                    x=x_col,
+                    y=y_col,
                     labels={x_col: h_x, y_col: h_y},
                     title=f"{h_y} over {h_x}",
                 )
@@ -151,13 +169,19 @@ def build_chart_figure(
             plot_df = _aggregate(grp_cols)
             if color_col and color_col in plot_df.columns:
                 fig = px.bar(
-                    plot_df, x=x_col, y=y_col, color=color_col, barmode="group",
+                    plot_df,
+                    x=x_col,
+                    y=y_col,
+                    color=color_col,
+                    barmode="group",
                     labels={x_col: h_x, y_col: h_y, color_col: h_color},
                     title=f"{h_y} by {h_x}",
                 )
             else:
                 fig = px.bar(
-                    plot_df, x=x_col, y=y_col,
+                    plot_df,
+                    x=x_col,
+                    y=y_col,
                     labels={x_col: h_x, y_col: h_y},
                     title=f"{h_y} by {h_x}",
                 )
@@ -170,14 +194,21 @@ def build_chart_figure(
             plot_df = plot_df.sort_values(y_col, ascending=True)
             if color_col and color_col in plot_df.columns:
                 fig = px.bar(
-                    plot_df, x=y_col, y=x_col, color=color_col,
-                    orientation="h", barmode="group",
+                    plot_df,
+                    x=y_col,
+                    y=x_col,
+                    color=color_col,
+                    orientation="h",
+                    barmode="group",
                     labels={x_col: h_x, y_col: h_y, color_col: h_color},
                     title=f"{h_y} by {h_x}",
                 )
             else:
                 fig = px.bar(
-                    plot_df, x=y_col, y=x_col, orientation="h",
+                    plot_df,
+                    x=y_col,
+                    y=x_col,
+                    orientation="h",
                     labels={x_col: h_x, y_col: h_y},
                     title=f"{h_y} by {h_x}",
                 )
@@ -185,16 +216,23 @@ def build_chart_figure(
         elif chart_type == "Scatter":
             if not x_col or not y_col:
                 return None
-            scatter_df = df[[c for c in [x_col, y_col, color_col] if c and c in df.columns]].dropna()
+            scatter_df = df[
+                [c for c in [x_col, y_col, color_col] if c and c in df.columns]
+            ].dropna()
             if color_col and color_col in scatter_df.columns:
                 fig = px.scatter(
-                    scatter_df, x=x_col, y=y_col, color=color_col,
+                    scatter_df,
+                    x=x_col,
+                    y=y_col,
+                    color=color_col,
                     labels={x_col: h_x, y_col: h_y, color_col: h_color},
                     title=f"{h_y} vs {h_x}",
                 )
             else:
                 fig = px.scatter(
-                    scatter_df, x=x_col, y=y_col,
+                    scatter_df,
+                    x=x_col,
+                    y=y_col,
                     labels={x_col: h_x, y_col: h_y},
                     title=f"{h_y} vs {h_x}",
                 )
@@ -221,13 +259,17 @@ def build_chart_figure(
             box_df = df[box_cols].dropna(subset=[y_col])
             if x_col and x_col in box_df.columns:
                 fig = px.box(
-                    box_df, x=x_col, y=y_col, color=color_col if color_col else None,
+                    box_df,
+                    x=x_col,
+                    y=y_col,
+                    color=color_col if color_col else None,
                     labels={x_col: h_x, y_col: h_y},
                     title=f"Distribution of {h_y}" + (f" by {h_x}" if x_col else ""),
                 )
             else:
                 fig = px.box(
-                    box_df, y=y_col,
+                    box_df,
+                    y=y_col,
                     labels={y_col: h_y},
                     title=f"Distribution of {h_y}",
                 )
@@ -237,7 +279,8 @@ def build_chart_figure(
                 return None
             hist_df = df[[x_col]].dropna() if x_col in df.columns else df
             fig = px.histogram(
-                hist_df, x=x_col,
+                hist_df,
+                x=x_col,
                 labels={x_col: h_x},
                 title=f"Frequency Distribution of {h_x}",
                 nbins=30,
@@ -276,7 +319,9 @@ def build_chart_figure(
             gantt_df = gantt_df.dropna(subset=[x_col, y_col])
             if gantt_df.empty:
                 return None
-            task_col = color_col if (color_col and color_col in gantt_df.columns) else gantt_df.columns[0]
+            task_col = (
+                color_col if (color_col and color_col in gantt_df.columns) else gantt_df.columns[0]
+            )
             fig = px.timeline(
                 gantt_df,
                 x_start=x_col,
@@ -290,7 +335,9 @@ def build_chart_figure(
         elif chart_type in ("Treemap", "Sunburst"):
             if not x_col or not y_col:
                 return None
-            path_cols = ([color_col] if color_col and color_col != x_col and color_col in df.columns else []) + [x_col]
+            path_cols = (
+                [color_col] if color_col and color_col != x_col and color_col in df.columns else []
+            ) + [x_col]
             plot_df = _aggregate(path_cols)
             if y_col in plot_df.columns:
                 plot_df = plot_df[plot_df[y_col] > 0]
@@ -344,7 +391,15 @@ def build_chart_figure(
         elif chart_type == "Dual-Axis (Line + Bar)":
             if not x_col or not y_col:
                 return None
-            sec_y = color_col if (color_col and color_col in df.columns and pd.api.types.is_numeric_dtype(df[color_col])) else None
+            sec_y = (
+                color_col
+                if (
+                    color_col
+                    and color_col in df.columns
+                    and pd.api.types.is_numeric_dtype(df[color_col])
+                )
+                else None
+            )
             agg_dict = {y_col: "sum"}
             if sec_y and sec_y != y_col:
                 agg_dict[sec_y] = "mean"
@@ -388,7 +443,15 @@ def build_chart_figure(
         elif chart_type == "Bubble":
             if not x_col or not y_col:
                 return None
-            size_c = color_col if (color_col and color_col in df.columns and pd.api.types.is_numeric_dtype(df[color_col])) else None
+            size_c = (
+                color_col
+                if (
+                    color_col
+                    and color_col in df.columns
+                    and pd.api.types.is_numeric_dtype(df[color_col])
+                )
+                else None
+            )
             scatter_df = df.dropna(subset=[x_col, y_col])
             if size_c:
                 scatter_df = scatter_df[scatter_df[size_c] > 0]
@@ -438,6 +501,7 @@ def suggest_best_chart(df: pd.DataFrame, x_col: str | None, y_col: str | None) -
 
 # ------------------------------------------------------------------ UI widget
 
+
 def render_chart_explorer(df: pd.DataFrame, key_prefix: str = "chartexp") -> None:
     """Render the full interactive Chart Explorer widget.
 
@@ -456,7 +520,6 @@ def render_chart_explorer(df: pd.DataFrame, key_prefix: str = "chartexp") -> Non
 
     all_cols = _all_cols(df)
     num_cols = _numeric_cols(df)
-    cat_cols = _categorical_cols(df)
 
     # --- Control row 1: chart type + aggregation --------------------------
     ctrl1, ctrl2 = st.columns([2, 1])
@@ -464,9 +527,7 @@ def render_chart_explorer(df: pd.DataFrame, key_prefix: str = "chartexp") -> Non
         chart_type = st.selectbox(
             "Chart type",
             CHART_TYPES,
-            index=CHART_TYPES.index(
-                st.session_state.get(f"{key_prefix}_chart_type", "Bar")
-            ),
+            index=CHART_TYPES.index(st.session_state.get(f"{key_prefix}_chart_type", "Bar")),
             key=f"{key_prefix}_chart_type",
             help="Select how to visualize your data.",
         )
@@ -474,9 +535,7 @@ def render_chart_explorer(df: pd.DataFrame, key_prefix: str = "chartexp") -> Non
         agg = st.selectbox(
             "Aggregation",
             ["Sum", "Mean"],
-            index=["Sum", "Mean"].index(
-                st.session_state.get(f"{key_prefix}_agg", "Sum")
-            ),
+            index=["Sum", "Mean"].index(st.session_state.get(f"{key_prefix}_agg", "Sum")),
             key=f"{key_prefix}_agg",
             help="How to aggregate Y values when multiple rows share the same X value.",
             disabled=chart_type in _SINGLE_VAR | _HEATMAP,
@@ -535,7 +594,11 @@ def render_chart_explorer(df: pd.DataFrame, key_prefix: str = "chartexp") -> Non
 
     elif chart_type in _TIMELINE:
         c1, c2, c3 = st.columns(3)
-        date_candidates = [c for c in all_cols if pd.api.types.is_datetime64_any_dtype(df[c]) or "date" in c.lower()]
+        date_candidates = [
+            c
+            for c in all_cols
+            if pd.api.types.is_datetime64_any_dtype(df[c]) or "date" in c.lower()
+        ]
         if len(date_candidates) >= 2:
             def_start, def_end = date_candidates[0], date_candidates[1]
         elif len(date_candidates) == 1:
@@ -705,7 +768,9 @@ def render_chart_explorer(df: pd.DataFrame, key_prefix: str = "chartexp") -> Non
     # --- Recommendation hint ----------------------------------------------
     rec_type = suggest_best_chart(df, x_col, y_col)
     if chart_type != rec_type and x_col and y_col and chart_type not in _HEATMAP | _SINGLE_VAR:
-        st.caption(f"💡 *Chart Intelligence: A **{rec_type}** chart may provide optimal clarity for `{humanize_col(x_col)}` & `{humanize_col(y_col)}`.*")
+        st.caption(
+            f"💡 *Chart Intelligence: A **{rec_type}** chart may provide optimal clarity for `{humanize_col(x_col)}` & `{humanize_col(y_col)}`.*"
+        )
 
     # --- Render the figure ------------------------------------------------
     st.divider()

@@ -7,14 +7,14 @@ Product Catalogs, Sales Leaderboards, Store Snapshots).
 
 from __future__ import annotations
 
-import streamlit as st
+import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
-import pandas as pd
+import streamlit as st
 
 from analytics.profiler import DatasetProfile
 from analytics.snapshot import SnapshotAnalyticsResult
-from ui.components import humanize_col, render_kpi_tile, render_insight_card
+from ui.components import humanize_col, render_insight_card, render_kpi_tile
 
 
 def render_snapshot_executive_view(
@@ -25,7 +25,9 @@ def render_snapshot_executive_view(
     allow_paid: bool = False,
 ) -> None:
     st.header("Executive Summary")
-    st.caption(f"Cross-sectional analysis of {snapshot_res.total_items} {profile.entity_dimension or 'items'}.")
+    st.caption(
+        f"Cross-sectional analysis of {snapshot_res.total_items} {profile.entity_dimension or 'items'}."
+    )
 
     # Top KPI tiles
     kpis = list(snapshot_res.kpis.values())
@@ -101,7 +103,9 @@ def render_snapshot_breakdown_view(
     sel_metric = st.selectbox(
         "Rank entities by",
         metric_options,
-        index=0 if profile.primary_metric not in metric_options else metric_options.index(profile.primary_metric),
+        index=0
+        if profile.primary_metric not in metric_options
+        else metric_options.index(profile.primary_metric),
         key="snapshot_breakdown_metric_sel",
         format_func=humanize_col,
     )
@@ -150,11 +154,19 @@ def render_snapshot_composition_view(
         if profile.primary_metric and profile.primary_metric in df.columns:
             st.subheader(f"{humanize_col(profile.primary_metric)} Share")
             # Build Top 6 + Others
-            sorted_df = df[[entity, profile.primary_metric]].dropna().sort_values(profile.primary_metric, ascending=False)
+            sorted_df = (
+                df[[entity, profile.primary_metric]]
+                .dropna()
+                .sort_values(profile.primary_metric, ascending=False)
+            )
             top_6 = sorted_df.head(6).copy()
-            others_val = sorted_df.iloc[6:][profile.primary_metric].sum() if len(sorted_df) > 6 else 0
+            others_val = (
+                sorted_df.iloc[6:][profile.primary_metric].sum() if len(sorted_df) > 6 else 0
+            )
             if others_val > 0:
-                others_row = pd.DataFrame([{entity: "All Others", profile.primary_metric: others_val}])
+                others_row = pd.DataFrame(
+                    [{entity: "All Others", profile.primary_metric: others_val}]
+                )
                 top_6 = pd.concat([top_6, others_row], ignore_index=True)
 
             fig_donut = px.pie(

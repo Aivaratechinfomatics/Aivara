@@ -7,7 +7,12 @@ from __future__ import annotations
 
 import streamlit as st
 
-from ui.components import build_drivers_figure, build_trend_figure, render_insight_card, render_kpi_tile
+from ui.components import (
+    build_drivers_figure,
+    build_trend_figure,
+    render_insight_card,
+    render_kpi_tile,
+)
 
 
 def render_primary_metric_view(pipeline_result: dict, model: str, allow_paid: bool = False) -> None:
@@ -32,7 +37,9 @@ def render_primary_metric_view(pipeline_result: dict, model: str, allow_paid: bo
         )
         if chart_type == "Bar":
             import plotly.express as px
+
             from ui.components import humanize_col
+
             h_name = humanize_col(primary_name)
             fig = px.bar(
                 trend.series,

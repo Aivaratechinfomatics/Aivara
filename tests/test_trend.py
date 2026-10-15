@@ -4,9 +4,13 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
-import numpy as np
 
-from analytics.trend import build_trend_series, pick_granularity, split_current_prior, _ensure_datetime
+from analytics.trend import (
+    _ensure_datetime,
+    build_trend_series,
+    pick_granularity,
+    split_current_prior,
+)
 
 
 def test_pick_granularity_daily():
@@ -76,10 +80,12 @@ def test_pick_granularity_with_float_date_column_does_not_crash():
 
 def test_build_trend_series_with_string_dates():
     """build_trend_series should handle ISO string date columns from CSV."""
-    df = pd.DataFrame({
-        "date": ["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05"],
-        "revenue": [100.0, 200.0, 150.0, 300.0, 250.0],
-    })
+    df = pd.DataFrame(
+        {
+            "date": ["2024-01-01", "2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05"],
+            "revenue": [100.0, 200.0, 150.0, 300.0, 250.0],
+        }
+    )
     trend = build_trend_series(df, "date", "revenue")
     assert trend is not None
     assert len(trend.series) >= 1

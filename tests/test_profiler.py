@@ -4,13 +4,14 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pandas as pd
-from ingestion.classifier import ColumnClassification, ROLE_DATE, ROLE_DIMENSION, ROLE_METRIC
+
 from analytics.profiler import (
-    PROFILE_TIMESERIES,
     PROFILE_PROJECT,
     PROFILE_SNAPSHOT,
+    PROFILE_TIMESERIES,
     profile_dataset,
 )
+from ingestion.classifier import ROLE_DATE, ROLE_DIMENSION, ROLE_METRIC, ColumnClassification
 
 
 def test_profile_snapshot_inventory():

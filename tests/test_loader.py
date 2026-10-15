@@ -4,6 +4,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import io
+
 import pandas as pd
 
 from ingestion.loader import load_csv, load_excel, load_file
@@ -20,7 +21,14 @@ def test_clean_csv_loads():
     result = _load("clean.csv")
     assert result.success
     assert result.delimiter == ","
-    assert list(result.dataframe.columns) == ["date", "region", "product", "revenue", "cost", "units"]
+    assert list(result.dataframe.columns) == [
+        "date",
+        "region",
+        "product",
+        "revenue",
+        "cost",
+        "units",
+    ]
     assert len(result.dataframe) == 7
 
 
@@ -110,4 +118,3 @@ def test_load_file_routes_xlsx_and_csv():
     assert res_xlsx.success
     assert res_xlsx.delimiter == "excel"
     assert "x" in res_xlsx.dataframe.columns
-

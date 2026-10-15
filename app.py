@@ -9,48 +9,48 @@ from __future__ import annotations
 
 import math
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 import pandas as pd
 import streamlit as st
 
 import config
 from analytics.anomalies import compute_risk_signals
-from analytics.drivers import compute_dimension_drivers, rank_dimensions_by_explanatory_power
+from analytics.domains.commerce import compute_commerce_analytics
+from analytics.domains.feedback import compute_feedback_analytics
+from analytics.domains.finance import compute_finance_analytics
+from analytics.domains.workforce import compute_workforce_analytics
+from analytics.drivers import rank_dimensions_by_explanatory_power
 from analytics.kpis import compute_all_kpis, select_primary_and_secondary_metrics
 from analytics.profiler import (
-    PROFILE_PROJECT,
-    PROFILE_SNAPSHOT,
-    PROFILE_TIMESERIES,
     DOMAIN_COMMERCE,
     DOMAIN_FEEDBACK,
     DOMAIN_FINANCE,
-    DOMAIN_INVENTORY,
-    DOMAIN_PROJECT,
-    DOMAIN_SNAPSHOT,
-    DOMAIN_TIMESERIES,
     DOMAIN_WORKFORCE,
-    DatasetProfile,
+    PROFILE_PROJECT,
+    PROFILE_SNAPSHOT,
     profile_dataset,
 )
 from analytics.snapshot import compute_project_analytics, compute_snapshot_analytics
 from analytics.stats import (
+    compute_concentration_index,
     compute_correlation_matrix,
     extract_key_drivers,
-    compute_concentration_index,
     generate_executive_takeaways,
 )
-from analytics.domains.commerce import compute_commerce_analytics
-from analytics.domains.finance import compute_finance_analytics
-from analytics.domains.workforce import compute_workforce_analytics
-from analytics.domains.feedback import compute_feedback_analytics
 from analytics.trend import build_trend_series, period_label, split_current_prior
 from export.pptx_builder import DeckInputs, KPITileData, ViewExportData, build_deck
-from ingestion.classifier import ROLE_DATE, ROLE_DIMENSION, ROLE_METRIC
+from ingestion.classifier import ROLE_DIMENSION, ROLE_METRIC
 from insight.budget import get_status
 from insight.facts_builder import build_facts_packet
 from ui.chart_builder import render_chart_explorer
 from ui.components import format_number, format_pct_change, mask_secret
+from ui.domain_views import (
+    render_commerce_view,
+    render_feedback_view,
+    render_finance_view,
+    render_workforce_view,
+)
 from ui.drivers_view import render_drivers_view
 from ui.executive_view import render_executive_view
 from ui.project_view import (
@@ -67,12 +67,6 @@ from ui.snapshot_view import (
     render_snapshot_executive_view,
     render_snapshot_outliers_view,
 )
-from ui.domain_views import (
-    render_commerce_view,
-    render_finance_view,
-    render_workforce_view,
-    render_feedback_view,
-)
 from ui.stats_view import render_stats_view
 from ui.upload_page import render_upload_page
 
@@ -87,12 +81,15 @@ def run_pipeline() -> dict:
     """Runs ingestion-classified data through analytics once per session
     state change, caching the result in st.session_state so every tab reads
     consistent numbers and export reuses exactly what was shown on screen."""
-    df = st.session_state.get("dataset") if "dataset" in st.session_state else st.session_state.get("cleaned_df")
+    df = (
+        st.session_state.get("dataset")
+        if "dataset" in st.session_state
+        else st.session_state.get("cleaned_df")
+    )
     classifications = st.session_state["classifications"]
 
     profile = profile_dataset(df, classifications)
 
-    date_cols = _columns_by_role(classifications, ROLE_DATE)
     metric_cols = _columns_by_role(classifications, ROLE_METRIC)
     dimension_cols = _columns_by_role(classifications, ROLE_DIMENSION)
 
@@ -113,23 +110,34 @@ def run_pipeline() -> dict:
         all_dimension_drivers = []
         top_dimension_driver = None
         risk_signals = [
-            {"description": f"{o['item']}: {o['issue']} ({o['detail']})", "severity": o.get("severity", "medium")}
+            {
+                "description": f"{o['item']}: {o['issue']} ({o['detail']})",
+                "severity": o.get("severity", "medium"),
+            }
             for o in snapshot_res.outliers
         ]
         label = "snapshot across entities"
-        facts_packets = {
-            primary_metric: {
-                "dataset_type": "snapshot",
-                "total_items": snapshot_res.total_items,
-                "entity_dimension": profile.entity_dimension,
-                "primary_metric": profile.primary_metric,
-                "pareto_text": snapshot_res.pareto_text,
+        facts_packets = (
+            {
+                primary_metric: {
+                    "dataset_type": "snapshot",
+                    "total_items": snapshot_res.total_items,
+                    "entity_dimension": profile.entity_dimension,
+                    "primary_metric": profile.primary_metric,
+                    "pareto_text": snapshot_res.pareto_text,
+                }
             }
-        } if primary_metric else {}
+            if primary_metric
+            else {}
+        )
 
     elif profile.profile_type == PROFILE_PROJECT:
         assignee_col = next(
-            (d for d in profile.grouping_dimensions if re.search(r"(assign|owner|person|member|resource)", d, re.I)),
+            (
+                d
+                for d in profile.grouping_dimensions
+                if re.search(r"(assign|owner|person|member|resource)", d, re.I)
+            ),
             (profile.grouping_dimensions[0] if profile.grouping_dimensions else None),
         )
         project_res = compute_project_analytics(
@@ -148,7 +156,10 @@ def run_pipeline() -> dict:
         all_dimension_drivers = []
         top_dimension_driver = None
         risk_signals = [
-            {"description": f"{t['task']} ({t.get('project', 'N/A')}): {t['reason']}", "severity": t.get("severity", "high")}
+            {
+                "description": f"{t['task']} ({t.get('project', 'N/A')}): {t['reason']}",
+                "severity": t.get("severity", "high"),
+            }
             for t in project_res.at_risk_tasks
         ]
         label = "portfolio tasks"
@@ -215,7 +226,11 @@ def run_pipeline() -> dict:
     corr_df = compute_correlation_matrix(df, metric_cols)
     corr_drivers = extract_key_drivers(corr_df, primary_metric=profile.primary_metric)
     conc = None
-    if profile.primary_metric and profile.primary_metric in df.columns and pd.api.types.is_numeric_dtype(df[profile.primary_metric]):
+    if (
+        profile.primary_metric
+        and profile.primary_metric in df.columns
+        and pd.api.types.is_numeric_dtype(df[profile.primary_metric])
+    ):
         conc = compute_concentration_index(df[profile.primary_metric])
     executive_takeaways = generate_executive_takeaways(df, profile, corr_drivers, conc)
 
@@ -250,9 +265,13 @@ def render_sidebar() -> str:
     st.sidebar.caption("Local analytics, AI-narrated. Your raw data never leaves this server.")
 
     with st.sidebar.expander("Settings", expanded=False):
-        key_display = mask_secret(config.OPENROUTER_API_KEY) if config.OPENROUTER_API_KEY else "not set"
+        key_display = (
+            mask_secret(config.OPENROUTER_API_KEY) if config.OPENROUTER_API_KEY else "not set"
+        )
         st.write(f"OpenRouter API key: `{key_display}`")
-        st.caption("Set OPENROUTER_API_KEY as an environment variable — never entered or logged here.")
+        st.caption(
+            "Set OPENROUTER_API_KEY as an environment variable — never entered or logged here."
+        )
         model = st.text_input("Model", value=config.DEFAULT_MODEL)
         allow_paid = st.toggle("Allow paid models", value=config.ALLOW_PAID_MODELS_DEFAULT)
         st.caption(
@@ -282,9 +301,7 @@ def render_export_button(pipeline_result: dict) -> None:
                 value_display=format_number(k.current_value, k.unit),
                 delta_display=format_pct_change(k.pct_change, with_sign=True),
                 delta_positive=(
-                    k.pct_change is not None
-                    and not math.isinf(k.pct_change)
-                    and k.pct_change >= 0
+                    k.pct_change is not None and not math.isinf(k.pct_change) and k.pct_change >= 0
                 ),
             )
             for name, k in kpis.items()
@@ -357,7 +374,9 @@ def render_export_button(pipeline_result: dict) -> None:
                     trend_figure=figures.get("Executive_trend"),
                 ),
                 ViewExportData(
-                    view_name=primary_name.replace("_", " ").title() if primary_name else "Primary Metric",
+                    view_name=primary_name.replace("_", " ").title()
+                    if primary_name
+                    else "Primary Metric",
                     kpi_tiles=exec_tiles[:1],
                     trend_figure=figures.get("Revenue_trend"),
                     drivers_table=drivers_table,
@@ -408,15 +427,23 @@ def render_export_button(pipeline_result: dict) -> None:
             )
 
         raw_risks = list(pipeline_result.get("risk_signals", []))
-        if pipeline_result.get("concentration") and pipeline_result["concentration"].risk_level in ("High", "Extreme"):
-            raw_risks.append({
-                "description": pipeline_result["concentration"].narrative,
-                "severity": "high",
-            })
+        if pipeline_result.get("concentration") and pipeline_result["concentration"].risk_level in (
+            "High",
+            "Extreme",
+        ):
+            raw_risks.append(
+                {
+                    "description": pipeline_result["concentration"].narrative,
+                    "severity": "high",
+                }
+            )
         risk_dicts = [
             {"description": s["description"], "severity": s.get("severity", "medium")}
             if isinstance(s, dict)
-            else {"description": getattr(s, "description", str(s)), "severity": getattr(s, "severity", "medium")}
+            else {
+                "description": getattr(s, "description", str(s)),
+                "severity": getattr(s, "severity", "medium"),
+            }
             for s in raw_risks
         ]
 
@@ -435,7 +462,7 @@ def render_export_button(pipeline_result: dict) -> None:
             st.sidebar.error(f"Could not build the PPTX: {exc}")
 
     if "_pptx_buffer" in st.session_state:
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M")
         st.sidebar.download_button(
             "Download PPTX",
             data=st.session_state["_pptx_buffer"],
@@ -464,10 +491,24 @@ def main() -> None:
 
     # ------------------ Dynamic Tab Routing by Domain & Profile ---------------
     if profile.domain_type == DOMAIN_COMMERCE and pipeline_result.get("commerce_res"):
-        tabs = st.tabs(["Executive Summary", "Orders & Customers", "Correlations & Drivers", "Charts", "Risk & Outliers"])
+        tabs = st.tabs(
+            [
+                "Executive Summary",
+                "Orders & Customers",
+                "Correlations & Drivers",
+                "Charts",
+                "Risk & Outliers",
+            ]
+        )
         with tabs[0]:
             if profile.profile_type == PROFILE_SNAPSHOT:
-                render_snapshot_executive_view(pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid)
+                render_snapshot_executive_view(
+                    pipeline_result["df"],
+                    pipeline_result["snapshot_res"],
+                    profile,
+                    model,
+                    allow_paid=allow_paid,
+                )
             else:
                 render_executive_view(pipeline_result, model, allow_paid=allow_paid)
         with tabs[1]:
@@ -483,10 +524,24 @@ def main() -> None:
                 render_risk_view(pipeline_result)
 
     elif profile.domain_type == DOMAIN_FINANCE and pipeline_result.get("finance_res"):
-        tabs = st.tabs(["Executive Summary", "P&L & Budget Variance", "Correlations & Drivers", "Charts", "Risk & Outliers"])
+        tabs = st.tabs(
+            [
+                "Executive Summary",
+                "P&L & Budget Variance",
+                "Correlations & Drivers",
+                "Charts",
+                "Risk & Outliers",
+            ]
+        )
         with tabs[0]:
             if profile.profile_type == PROFILE_SNAPSHOT:
-                render_snapshot_executive_view(pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid)
+                render_snapshot_executive_view(
+                    pipeline_result["df"],
+                    pipeline_result["snapshot_res"],
+                    profile,
+                    model,
+                    allow_paid=allow_paid,
+                )
             else:
                 render_executive_view(pipeline_result, model, allow_paid=allow_paid)
         with tabs[1]:
@@ -502,10 +557,24 @@ def main() -> None:
                 render_risk_view(pipeline_result)
 
     elif profile.domain_type == DOMAIN_WORKFORCE and pipeline_result.get("workforce_res"):
-        tabs = st.tabs(["Executive Summary", "Workforce & Compensation", "Correlations & Drivers", "Charts", "Risk & Outliers"])
+        tabs = st.tabs(
+            [
+                "Executive Summary",
+                "Workforce & Compensation",
+                "Correlations & Drivers",
+                "Charts",
+                "Risk & Outliers",
+            ]
+        )
         with tabs[0]:
             if profile.profile_type == PROFILE_SNAPSHOT:
-                render_snapshot_executive_view(pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid)
+                render_snapshot_executive_view(
+                    pipeline_result["df"],
+                    pipeline_result["snapshot_res"],
+                    profile,
+                    model,
+                    allow_paid=allow_paid,
+                )
             else:
                 render_executive_view(pipeline_result, model, allow_paid=allow_paid)
         with tabs[1]:
@@ -521,10 +590,24 @@ def main() -> None:
                 render_risk_view(pipeline_result)
 
     elif profile.domain_type == DOMAIN_FEEDBACK and pipeline_result.get("feedback_res"):
-        tabs = st.tabs(["Executive Summary", "Survey, NPS & Support", "Correlations & Drivers", "Charts", "Risk & Outliers"])
+        tabs = st.tabs(
+            [
+                "Executive Summary",
+                "Survey, NPS & Support",
+                "Correlations & Drivers",
+                "Charts",
+                "Risk & Outliers",
+            ]
+        )
         with tabs[0]:
             if profile.profile_type == PROFILE_SNAPSHOT:
-                render_snapshot_executive_view(pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid)
+                render_snapshot_executive_view(
+                    pipeline_result["df"],
+                    pipeline_result["snapshot_res"],
+                    profile,
+                    model,
+                    allow_paid=allow_paid,
+                )
             else:
                 render_executive_view(pipeline_result, model, allow_paid=allow_paid)
         with tabs[1]:
@@ -540,29 +623,46 @@ def main() -> None:
                 render_risk_view(pipeline_result)
 
     elif profile.profile_type == PROFILE_PROJECT:
-        tabs = st.tabs(["Portfolio Overview", "Timeline (Gantt)", "Team & Workload", "Charts", "At-Risk Tasks"])
+        tabs = st.tabs(
+            ["Portfolio Overview", "Timeline (Gantt)", "Team & Workload", "Charts", "At-Risk Tasks"]
+        )
         with tabs[0]:
             render_project_overview_view(
-                pipeline_result["df"], pipeline_result["project_res"], profile, model, allow_paid=allow_paid
+                pipeline_result["df"],
+                pipeline_result["project_res"],
+                profile,
+                model,
+                allow_paid=allow_paid,
             )
         with tabs[1]:
             render_project_gantt_view(
                 pipeline_result["df"], pipeline_result["project_res"], profile
             )
         with tabs[2]:
-            render_project_team_view(
-                pipeline_result["df"], pipeline_result["project_res"], profile
-            )
+            render_project_team_view(pipeline_result["df"], pipeline_result["project_res"], profile)
         with tabs[3]:
             render_chart_explorer(pipeline_result["df"])
         with tabs[4]:
             render_project_at_risk_view(pipeline_result["project_res"])
 
     elif profile.profile_type == PROFILE_SNAPSHOT:
-        tabs = st.tabs(["Executive Summary", "Rankings & Breakdown", "Composition", "Correlations & Drivers", "Charts", "Risk & Outliers"])
+        tabs = st.tabs(
+            [
+                "Executive Summary",
+                "Rankings & Breakdown",
+                "Composition",
+                "Correlations & Drivers",
+                "Charts",
+                "Risk & Outliers",
+            ]
+        )
         with tabs[0]:
             render_snapshot_executive_view(
-                pipeline_result["df"], pipeline_result["snapshot_res"], profile, model, allow_paid=allow_paid
+                pipeline_result["df"],
+                pipeline_result["snapshot_res"],
+                profile,
+                model,
+                allow_paid=allow_paid,
             )
         with tabs[1]:
             render_snapshot_breakdown_view(
@@ -589,18 +689,32 @@ def main() -> None:
             render_drivers_view(pipeline_result, key_prefix="operations")
         with tabs[3]:
             st.header("Customers")
-            st.caption("Customer-shaped dimension breakdowns appear here when a customer-like dimension is detected.")
+            st.caption(
+                "Customer-shaped dimension breakdowns appear here when a customer-like dimension is detected."
+            )
             customer_drivers = [
-                d for d in pipeline_result.get("all_dimension_drivers", [])
-                if re.search(r"(customer|client|account|user|buyer|consumer|segment)", d.dimension, re.I)
+                d
+                for d in pipeline_result.get("all_dimension_drivers", [])
+                if re.search(
+                    r"(customer|client|account|user|buyer|consumer|segment)", d.dimension, re.I
+                )
             ]
             if customer_drivers:
-                cust_pipeline_result = {**pipeline_result, "all_dimension_drivers": customer_drivers}
+                cust_pipeline_result = {
+                    **pipeline_result,
+                    "all_dimension_drivers": customer_drivers,
+                }
                 render_drivers_view(cust_pipeline_result, key_prefix="customers")
             else:
-                st.info("No customer-shaped dimension columns (e.g. customer, client, account, user) were detected in this dataset.")
+                st.info(
+                    "No customer-shaped dimension columns (e.g. customer, client, account, user) were detected in this dataset."
+                )
         with tabs[4]:
-            render_chart_explorer(pipeline_result.get("df", st.session_state.get("dataset", __import__("pandas").DataFrame())))
+            render_chart_explorer(
+                pipeline_result.get(
+                    "df", st.session_state.get("dataset", __import__("pandas").DataFrame())
+                )
+            )
         with tabs[5]:
             render_risk_view(pipeline_result)
         with tabs[6]:

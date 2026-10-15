@@ -12,7 +12,9 @@ from ui.components import build_drivers_figure
 
 def render_drivers_view(pipeline_result: dict, key_prefix: str = "drivers") -> None:
     st.header("Operations")
-    st.caption("Which dimensions explain the change, ranked by how concentrated their contribution is.")
+    st.caption(
+        "Which dimensions explain the change, ranked by how concentrated their contribution is."
+    )
 
     all_drivers = pipeline_result.get("all_dimension_drivers", [])
     if not all_drivers:
@@ -20,9 +22,14 @@ def render_drivers_view(pipeline_result: dict, key_prefix: str = "drivers") -> N
         return
 
     for driver in all_drivers:
-        with st.expander(f"{driver.dimension} (concentration score: {driver.concentration_score:.2f})", expanded=(driver is all_drivers[0])):
+        with st.expander(
+            f"{driver.dimension} (concentration score: {driver.concentration_score:.2f})",
+            expanded=(driver is all_drivers[0]),
+        ):
             if driver.contributions:
-                fig = build_drivers_figure(driver.top_positive + driver.top_negative, driver.dimension)
+                fig = build_drivers_figure(
+                    driver.top_positive + driver.top_negative, driver.dimension
+                )
                 st.plotly_chart(fig, width="stretch", key=f"{key_prefix}_{driver.dimension}")
 
             st.write("**Top positive contributors**")
