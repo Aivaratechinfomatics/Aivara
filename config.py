@@ -189,4 +189,4 @@ DEFAULT_NULL_STRINGS: frozenset[str] = frozenset(
 # ---------------------------------------------------------------------------
 
 APP_TITLE = "Aivara Insight Lite"
-APP_TABS = ["Executive", "Revenue", "Operations", "Customers", "Charts", "Risk", "Forecast"]
+APP_TABS = ["Executive", "Revenue", "Operations", "Customers", "Charts", "Risk"]

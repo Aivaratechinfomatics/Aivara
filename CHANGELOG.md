@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 9: App Structure, UX, and UI Tests (Audit §9, Decision D3)**:
+  - Refactored `app.py` into a streamlined top-level orchestrator (< 120 lines; 0 functions > 60 lines) coordinating authentication, ingestion, pipeline execution, tab dispatch, and export presentation.
+  - Table-driven tab architecture (`ui/tabs.py`) using declarative `TabSpec` instances per domain and profile, eliminating duplicated multi-branch tab rendering blocks.
+  - Strongly typed pipeline contracts (`analytics/pipeline.py`): `PipelineResult` dataclass supporting backward-compatible dictionary semantics (`__getitem__`, `get`), alongside modular builders (`build_snapshot_pipeline`, `build_project_pipeline`, `build_timeseries_pipeline`).
+  - Decoupled pure PPTX deck assembly (`export/deck_assembly.py`): pure function `assemble_deck_inputs(...)` mapping pipeline analytics and figures into presentation inputs independently of Streamlit context.
+  - Tab error boundary isolation (`ui/error_boundary.py`): `render_tab_boundary` catching unexpected tab exceptions, generating a unique correlation ID (`uuid4`), logging diagnostics, and presenting friendly alerts without crashing or blanking peer tabs.
+  - Hiding incomplete Forecast tab stub for v1.0 per Decision D3 (`config.APP_TABS` updated).
+  - Eliminated `__import__("pandas")` dynamic import hack across the application.
+  - Interactive headless test suite (`tests/test_ui_apptest.py`) with 8 tests validating tab error boundaries, tab specs, pure deck assembly, and Streamlit AppTest flows.
 - **Phase 8: Export Hardening (Audit §8, Audit 3.7)**:
   - Kaleido rendering timeout protection (`export/chart_images.py`) wrapping `fig.to_image` in `ThreadPoolExecutor` with configurable timeout (`AIVARA_KALEIDO_TIMEOUT`, default 15.0s) to survive headless browser hang modes and raise `TimeoutError`.
   - Graceful slide placeholder card (`_add_chart_placeholder` in `export/pptx_builder.py`, Audit 3.7) displaying a clean warning card ("📊 Chart Preview Unavailable: Offline graphics renderer did not complete") on PowerPoint slides whenever chart rendering times out or crashes.

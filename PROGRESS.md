@@ -144,6 +144,29 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 
 ## Gate Checklists
 
+### Phase 9 Exit Gate
+- [x] `app.py` < 200 lines of routing/wiring (achieved 119 lines); no function > 60 lines.
+- [x] Table-driven tab registry `TabSpec` per profile/domain replaces duplicated blocks (`ui/tabs.py`).
+- [x] Strongly typed `PipelineResult` dataclass in `analytics/pipeline.py` with backward-compatible dict interface.
+- [x] Pure PPTX export deck assembly decoupled from UI wiring (`export/deck_assembly.py`).
+- [x] Tab error boundaries (`ui/error_boundary.py`) ensure an unhandled tab error displays friendly message + correlation ID and does not blank other tabs.
+- [x] Forecast stub tab removed for v1.0 per Decision D3.
+- [x] Removed `__import__("pandas")` from codebase.
+- [x] Streamlit `AppTest` suite (`tests/test_ui_apptest.py`) covers startup, schema confirm, tab rendering, error boundary, and export.
+- [x] mypy clean across `config.py`, `analytics/`, `ingestion/`, `export/`, `insight/`, `ui/`, `app.py` (49 source files).
+- [x] Global gate passes (292/292 tests pass, 81.26% coverage, ruff clean, mypy clean, bandit clean).
+
+### Global Gate (Phase 9 Evaluation)
+- [x] Full test suite passes: 292/292 passed across consecutive runs (0 failures).
+- [x] `ruff check` and `ruff format --check` clean.
+- [x] `mypy` clean on 49 source files.
+- [x] `bandit` scan passes with 0 Medium/High issues.
+- [x] No test makes a real network call (enforced by socket-blocking fixture).
+- [x] No new skips/xfails.
+- [x] Overall coverage met (81.26% repo-wide > 75% threshold; `app.py` 95%, `error_boundary.py` 100%, `pipeline.py` 88%).
+- [x] No secrets, sample customer data, or `.env` content committed.
+- [x] `PROGRESS.md` and `CHANGELOG.md` updated.
+
 ### Phase 8 Exit Gate
 - [x] Kaleido rendering timeout protection (`export/chart_images.py`) with configurable `AIVARA_KALEIDO_TIMEOUT`.
 - [x] Graceful slide placeholder card `_add_chart_placeholder` renders on export failure / timeout (Audit 3.7).
@@ -317,3 +340,4 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2026-10-15 | 6 (State & Concurrency) | 222 | 92.78% | 0 | 0 | 0 |
 | 2026-10-15 | 7 (Security Hardening) | 274 | 77.02% (repo-wide) | 0 | 0 | 0 |
 | 2026-10-16 | 8 (Export Hardening) | 284 | 77.87% (export 91.56%) | 0 | 0 | 0 |
+| 2026-10-16 | 9 (App Structure & UX) | 292 | 81.26% (app 95%) | 0 | 0 | 0 |
