@@ -14,9 +14,11 @@ import threading
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
-from config import BUDGET_STATE_PATH, DAILY_CALL_BUDGET
+import config
+from config import MAX_SESSION_LLM_CALLS
 
 _lock = threading.Lock()
+_session_calls: dict[str, int] = {}
 
 try:
     import tiktoken
@@ -33,6 +35,25 @@ class BudgetStatus:
     daily_budget: int
     remaining: int
     exhausted: bool
+
+
+def can_make_session_call(session_id: str = "default", limit: int = MAX_SESSION_LLM_CALLS) -> bool:
+    """Checks if the given session has calls remaining under the session budget limit."""
+    with _lock:
+        return _session_calls.get(session_id, 0) < limit
+
+
+def record_session_call(session_id: str = "default") -> int:
+    """Increments and returns the session call count."""
+    with _lock:
+        _session_calls[session_id] = _session_calls.get(session_id, 0) + 1
+        return _session_calls[session_id]
+
+
+def reset_session_budget(session_id: str = "default") -> None:
+    """Resets the call counter for a specific session."""
+    with _lock:
+        _session_calls.pop(session_id, None)
 
 
 def estimate_tokens(text: str) -> int:
@@ -68,9 +89,11 @@ def _write_state(path: str, state: dict) -> None:
     os.replace(tmp_path, path)
 
 
-def get_status(
-    path: str = BUDGET_STATE_PATH, daily_budget: int = DAILY_CALL_BUDGET
-) -> BudgetStatus:
+def get_status(path: str | None = None, daily_budget: int | None = None) -> BudgetStatus:
+    if path is None:
+        path = config.BUDGET_STATE_PATH
+    if daily_budget is None:
+        daily_budget = config.DAILY_CALL_BUDGET
     with _lock:
         state = _read_state(path)
         today = _today_key()
@@ -84,13 +107,15 @@ def get_status(
         )
 
 
-def can_make_call(path: str = BUDGET_STATE_PATH, daily_budget: int = DAILY_CALL_BUDGET) -> bool:
+def can_make_call(path: str | None = None, daily_budget: int | None = None) -> bool:
     return not get_status(path, daily_budget).exhausted
 
 
-def record_call(path: str = BUDGET_STATE_PATH) -> BudgetStatus:
+def record_call(path: str | None = None) -> BudgetStatus:
     """Increment today's call counter and persist it. Call this only after a
     call actually succeeds (or is attempted) — never speculatively."""
+    if path is None:
+        path = config.BUDGET_STATE_PATH
     with _lock:
         state = _read_state(path)
         today = _today_key()
@@ -98,7 +123,7 @@ def record_call(path: str = BUDGET_STATE_PATH) -> BudgetStatus:
         # Keep the state file small: drop any days other than today.
         state = {today: state[today]}
         _write_state(path, state)
-        daily_budget = DAILY_CALL_BUDGET
+        daily_budget = config.DAILY_CALL_BUDGET
         calls_today = state[today]
         remaining = max(0, daily_budget - calls_today)
         return BudgetStatus(

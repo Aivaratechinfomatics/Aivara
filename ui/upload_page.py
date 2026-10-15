@@ -18,13 +18,11 @@ from ingestion.classifier import (
     ROLE_TEXT,
     ambiguous_columns,
     apply_overrides,
-    build_llm_classification_payload,
     classify_columns,
 )
 from ingestion.cleaner import clean_dataframe
 from ingestion.loader import load_file
 from insight.cache import clear_view_cache
-from insight.client import BudgetExhaustedError, classify_ambiguous_columns
 
 ALL_ROLES = [ROLE_DATE, ROLE_METRIC, ROLE_DIMENSION, ROLE_ID, ROLE_TEXT]
 
@@ -151,25 +149,6 @@ def render_upload_page() -> bool:
             overrides[c.name] = new_role
 
     st.session_state["overrides"] = overrides
-
-    if ambiguous and st.button(
-        "✨ Auto-classify ambiguous columns with AI", key="auto_classify_ai_btn"
-    ):
-        ambiguous_objs = [c for c in classifications if c.name in ambiguous]
-        payload = build_llm_classification_payload(df, ambiguous_objs)
-        try:
-            llm_results = classify_ambiguous_columns(payload)
-            for item in llm_results:
-                col_name = item.get("column_name")
-                role = item.get("role")
-                if col_name in ambiguous and role in ALL_ROLES:
-                    overrides[col_name] = role
-            st.session_state["overrides"] = overrides
-            st.rerun()
-        except BudgetExhaustedError:
-            st.info("AI classification budget reached — keeping rule-based guesses.")
-        except Exception as exc:
-            st.warning(f"Could not run AI classification: {exc}")
 
     if st.button("Confirm schema and build dashboard", type="primary", key="confirm_schema_btn"):
         final_classifications = apply_overrides(classifications, overrides)

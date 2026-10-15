@@ -59,7 +59,28 @@ INSIGHT_CACHE_PATH = os.environ.get("AIVARA_INSIGHT_CACHE_PATH", ".aivara_insigh
 
 # Prompt version string — bump this whenever prompts.py changes meaningfully,
 # so cache keys don't silently reuse insights generated under an old prompt.
-PROMPT_VERSION = "v1"
+PROMPT_VERSION = "v2"
+
+# ---------------------------------------------------------------------------
+# LLM Privacy & Resilience configuration (Phase 5 / Audit §5)
+# ---------------------------------------------------------------------------
+
+# Pseudonymize category and entity names in outbound facts packets (default ON)
+AIVARA_LLM_REDACT_LABELS: bool = os.environ.get("AIVARA_LLM_REDACT_LABELS", "true").lower() in (
+    "true",
+    "1",
+    "yes",
+)
+
+# Circuit breaker settings for OpenRouter API failures
+CIRCUIT_BREAKER_MAX_FAILURES: int = int(os.environ.get("AIVARA_CB_MAX_FAILURES", "3"))
+CIRCUIT_BREAKER_RESET_TIMEOUT: float = float(os.environ.get("AIVARA_CB_TIMEOUT", "60.0"))
+
+# Per-session call budget cap preventing runaway session usage
+MAX_SESSION_LLM_CALLS: int = int(os.environ.get("AIVARA_SESSION_BUDGET", "20"))
+
+# OpenRouter HTTP request timeout in seconds
+LLM_REQUEST_TIMEOUT_SECONDS: float = float(os.environ.get("AIVARA_LLM_TIMEOUT", "15.0"))
 
 # ---------------------------------------------------------------------------
 # Classification / analytics thresholds (Section 8.2-8.6)

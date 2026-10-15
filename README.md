@@ -100,15 +100,13 @@ aivara-insight-lite/
 └── .env.example
 ```
 
-## Data privacy
+## Data privacy & LLM Egress
 
 - Uploaded CSVs live only in the session's memory/temp storage; raw row-level records are never persisted to a database or disk in v1.
 - Derived aggregated narratives and token usage are cached locally on disk (`.aivara_insight_cache.json`, `.aivara_budget_state.json`) strictly keyed by cryptographic content hashes, while view-level exports remain scoped to in-memory session state.
-- The OpenRouter API key is read from the environment only — never logged,
-  never displayed in full in the UI.
-- Only the small facts packet (a handful of aggregated numbers, typically
-  100–300 tokens) ever leaves the machine, and only when generating an
-  insight — the raw CSV never crosses the network.
+- The OpenRouter API key is read from the environment only — never logged, never displayed in full in the UI.
+- Only the compact facts packet (a handful of aggregated statistics, typically 100–300 tokens) ever leaves the machine, and only when generating an insight — the raw CSV never crosses the network.
+- **Label Redaction & Pseudonymization (Audit 4.5, Decision D5)**: Enabled by default (`AIVARA_LLM_REDACT_LABELS: bool = True` in `config.py`). All entity names, driver categories, and risk items are mapped to generic tokens (e.g. `Category A`, `Category B`, `Entity A`) prior to OpenRouter egress. The LLM processes only anonymized facts; returned narratives are transparently unredacted locally using a private in-memory reverse map before display.
 
 ## Known limitations / out of scope for v1
 

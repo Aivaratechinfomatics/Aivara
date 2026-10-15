@@ -14,7 +14,7 @@ import json
 import os
 import threading
 
-from config import INSIGHT_CACHE_PATH
+import config
 
 _lock = threading.Lock()
 
@@ -40,21 +40,37 @@ def _write_cache(path: str, cache: dict) -> None:
     os.replace(tmp_path, path)
 
 
-def get(cache_key_material: str, path: str = INSIGHT_CACHE_PATH) -> dict | None:
+def get(cache_key_material: str, path: str | None = None) -> dict | None:
     """Returns the cached insight dict (headline/driver/action/raw_text) or
     None if not cached."""
+    if path is None:
+        path = config.INSIGHT_CACHE_PATH
     key = _hash_key(cache_key_material)
     with _lock:
         cache = _read_cache(path)
         return cache.get(key)
 
 
-def set(cache_key_material: str, value: dict, path: str = INSIGHT_CACHE_PATH) -> None:
+def set(cache_key_material: str, value: dict, path: str | None = None) -> None:
+    if path is None:
+        path = config.INSIGHT_CACHE_PATH
     key = _hash_key(cache_key_material)
     with _lock:
         cache = _read_cache(path)
         cache[key] = value
         _write_cache(path, cache)
+
+
+def clear_disk_cache(path: str | None = None) -> None:
+    """Removes the persistent disk cache file."""
+    if path is None:
+        path = config.INSIGHT_CACHE_PATH
+    with _lock:
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+            except OSError:
+                pass
 
 
 _view_cache: dict[str, dict] = {}
@@ -121,6 +137,15 @@ def set_for_view(view_name: str, value: dict, session_id: str | None = None) -> 
 
 def clear_view_cache(session_id: str | None = None) -> None:
     """Clear in-memory view cache for the given session or caller."""
+    if session_id is None:
+        try:
+            import streamlit as st
+
+            if hasattr(st, "session_state") and "_view_insights" in st.session_state:
+                st.session_state["_view_insights"].clear()
+        except Exception:
+            pass
+
     eff_id = session_id if session_id else _get_effective_session_id()
     with _lock:
         keys_to_del = [k for k in _view_cache if k.startswith(f"{eff_id}::")]

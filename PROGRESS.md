@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 2026-10-15   Current phase: 5 — LLM layer: reliability & privacy   Overall: 5/13 phases complete
+Last updated: 2026-10-15   Current phase: 6 — State, concurrency, multi-user   Overall: 6/13 phases complete
 
 > Source of truth for the hardening effort. The agent updates this file at the start of every PLAN, after every significant commit, and at every LOG step. Goal document: `AIVARA_AGENT_PLAN.md`.
 
@@ -13,8 +13,8 @@ Last updated: 2026-10-15   Current phase: 5 — LLM layer: reliability & privacy
 | 2 | Core correctness (audit §1) | done | 2026-10-15 | 2026-10-15 | phase-2-complete |
 | 3 | Ingestion hardening (audit §3) | done | 2026-10-15 | 2026-10-15 | phase-3-complete |
 | 4 | Analytics validity & coverage | done | 2026-10-15 | 2026-10-15 | phase-4-complete |
-| 5 | LLM layer: reliability & privacy | not-started | | | |
-| 6 | State, concurrency, multi-user | not-started | | | |
+| 5 | LLM layer: reliability & privacy | done | 2026-10-15 | 2026-10-15 | phase-5-complete |
+| 6 | State, concurrency, multi-user | in-progress | 2026-10-15 | | |
 | 7 | Security hardening | not-started | | | |
 | 8 | Export hardening | not-started | | | |
 | 9 | App structure, UX, UI tests | not-started | | | |
@@ -112,8 +112,8 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 1.6 Schema gate not reset on new upload | fixed | `ui/upload_page.py`: canonical `reset_dataset_state()` clears confirmed schema; verified by `tests/test_core_correctness.py::test_dataset_reset_clears_all_stale_figures` | Phase 2 |
 | 1.7 Same-name re-upload ignored | fixed | `ui/upload_page.py`: keyed on `hashlib.sha256(file_bytes)`; verified by `tests/test_core_correctness.py::test_dataset_reset_clears_all_stale_figures` | Phase 2 |
 | 1.8 Stale export figures across datasets | fixed | `ui/upload_page.py`: canonical `reset_dataset_state()` clears export cache, PPTX buffer, insights; verified by `tests/test_core_correctness.py::test_dataset_reset_clears_all_stale_figures` | Phase 2 |
-| 2.1 Tier-2 LLM classification unwired | already-fixed | `ui/upload_page.py` lines 101-116: wired to interactive `✨ Auto-classify ambiguous columns with AI` button; slated for removal in Phase 5 per D6 | Phase 5 |
-| 2.2 Paid-model toggle / silent substitution | already-fixed | `app.py` line 257 (`allow_paid` toggle) and `ui/components.py` line 116 (`Used fallback model...` caption) | Phase 5 (regression test) |
+| 2.1 Tier-2 LLM classification unwired | fixed | `insight/client.py`: tier-2 prompt deleted and classification returns empty per Decision D6; verified by `tests/test_insight_reliability.py::test_client_edge_cases_and_redactor_branches` | Phase 5 |
+| 2.2 Paid-model toggle / silent substitution | fixed | `insight/client.py` & `ui/components.py`: honest fallback caption, model transparency in `InsightResult`; verified by `tests/test_insight_reliability.py::test_client_edge_cases_and_redactor_branches` | Phase 5 |
 | 2.3 `MAX_ROWS_FULL_PROCESSING` unused | already-fixed | `ingestion/loader.py` lines 389-393: samples at `MAX_ROWS_FULL_PROCESSING` and appends note | Phase 3 (regression test) |
 | 2.4 Unused constants/functions | already-fixed | `SEVERITY_LOW` used in `anomalies.py`; `estimate_tokens` used in `client.py`; `APP_TABS` used in `app.py` | Phase 4 / Phase 9 |
 | 2.5 Customers tab duplicate of Operations | already-fixed | `app.py` lines 593-601: filters for customer-shaped dimension columns or shows informative empty state | Phase 9 (regression test) |
@@ -124,16 +124,38 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 3.5 Compact dates claimed by numeric pass | fixed | `ingestion/cleaner.py`: date pattern checks before numeric coercion; verified by `tests/test_cleaner.py::test_compact_date_format_coerced_to_datetime_not_numeric` | Phase 3 |
 | 3.6 NaN dimensions dropped silently | fixed | `analytics/drivers.py` & `analytics/anomalies.py`: `.fillna("(missing)")` preserves null dimension groups | Phase 3 |
 | 3.7 Narrow exception handling in export | still-broken | `export/pptx_builder.py` line 341 catches Exception but has no timeout or slide placeholder | Phase 8 |
-| 3.8 LLM sentence-split parsing / bad cache | still-broken | `insight/client.py` line 48 has fallback sentence regex without strict JSON schema validation | Phase 5 |
+| 3.8 LLM sentence-split parsing / bad cache | fixed | `insight/client.py`: strict JSON schema validation, 1-shot repair prompt, faithfulness check, deterministic fallback; verified by `tests/test_insight_reliability.py` | Phase 5 |
 | 4.1 Everything aggregated with `.sum()` | fixed | `analytics/kpis.py`, `trend.py`, `drivers.py`, `snapshot.py`: configurable `agg`, rate metrics default to `mean`; verified by `tests/test_analytics_deep_coverage.py::test_kpi_rate_metric_aggregation_is_mean_not_sum` | Phase 4 |
 | 4.2 Anomalies = structural outliers | fixed | `analytics/anomalies.py`: `detect_temporal_anomalies` rolling baselines, structural outlier labeling; verified by `tests/test_analytics_deep_coverage.py::test_anomalies_temporal_and_severities` | Phase 4 |
 | 4.3 Cache/budget not multi-process safe | still-broken | `insight/budget.py` and `cache.py` use `threading.Lock` rather than multi-process safe locks/SQLite | Phase 6 |
 | 4.4 Dockerfile kaleido libs | still-broken | `Dockerfile` runs as root, unpinned base digest, no HEALTHCHECK | Phase 1 / Phase 10 |
-| 4.5 README privacy overstated | still-broken | `README.md` states "raw data never leaves this server" but facts packets include categorical entity names | Phase 5 / Phase 12 |
+| 4.5 README privacy overstated | fixed | `insight/redactor.py` & `README.md`: label pseudonymization default ON (`AIVARA_LLM_REDACT_LABELS: bool = True`), documented in README; verified by `tests/test_insight_reliability.py` | Phase 5 |
 
 ---
 
 ## Gate Checklists
+
+### Phase 5 Exit Gate
+- [x] Structured JSON output enforced via strict schema validation (`parse_and_validate_insight`).
+- [x] 1-shot repair retry implemented and tested (`build_repair_prompt`).
+- [x] Deterministic template fallback verified (no LLM, no crash, 3 sentences via `insight/fallback.py`).
+- [x] Prompt injection defenses tested against sample malicious payloads (`<business_data>` encapsulation and string sanitization).
+- [x] Faithfulness check rejects synthetic hallucinations in tests (`insight/faithfulness.py`).
+- [x] Model name displayed honestly (shows fallback model or fallback template when active).
+- [x] OpenRouter labels redaction toggle implemented (`AIVARA_LLM_REDACT_LABELS: bool = True`), documented in README.
+- [x] Test coverage on `insight/` >= 80% (achieved 90.19%).
+- [x] Global gate passes (212/212 tests pass, ruff clean, mypy clean, bandit clean).
+
+### Global Gate (Phase 5 Evaluation)
+- [x] Full test suite passes: 212/212 passed across consecutive runs (0 failures).
+- [x] `ruff check` and `ruff format --check` clean.
+- [x] `mypy` clean on 30 core modules.
+- [x] `bandit` scan passes with 0 Medium/High issues.
+- [x] No test makes a real network call (enforced by socket-blocking fixture).
+- [x] No new skips/xfails.
+- [x] Overall coverage met (89.4% overall, `insight/` 90.19% > 80% threshold).
+- [x] No secrets, sample customer data, or `.env` content committed.
+- [x] `PROGRESS.md`, `CHANGELOG.md`, `README.md` updated.
 
 ### Phase 4 Exit Gate
 - [x] Coverage >= 95.0% across `analytics/**` (`analytics/` achieves 95.71% branch coverage).
@@ -217,3 +239,4 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2026-10-15 | 2 (Core Correctness) | 140 | 81.79% | 0 | 0 | 0 |
 | 2026-10-15 | 3 (Ingestion Hardening) | 173 | 85.63% (ingestion 95.73%) | 0 | 0 | 0 |
 | 2026-10-15 | 4 (Analytics Validity) | 194 | 88.54% (analytics 95.71%) | 0 | 0 | 0 |
+| 2026-10-15 | 5 (LLM Reliability & Privacy) | 212 | 89.40% (insight 90.19%) | 0 | 0 | 0 |

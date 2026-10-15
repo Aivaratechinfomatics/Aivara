@@ -121,7 +121,11 @@ def render_insight_card(
                 st.write(result.driver_explanation)
             if result.suggested_action:
                 st.markdown(f"*Next: {result.suggested_action}*")
-            if result.model != model:
+            if getattr(result, "is_fallback", False):
+                st.caption(
+                    f"ℹ️ Generated via deterministic local analytics fallback ({result.model})"
+                )
+            elif result.model != model:
                 st.caption(f"ℹ️ Used fallback model `{result.model}` (free tier)")
         return result
     except BudgetExhaustedError:

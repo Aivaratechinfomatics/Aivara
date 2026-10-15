@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 5: LLM Layer: Reliability & Privacy (Audit §5)**:
+  - Structured JSON output schema enforcement (`headline`, `driver_explanation`, `suggested_action`) with preamble stripping, markdown code-block parsing, and 1-shot repair retry (Audit 3.8).
+  - Local numerical faithfulness verification (`insight/faithfulness.py`) checking cited metrics against facts packet numbers and rejecting hallucinations with fallback reversion.
+  - Data egress control & pseudonymization (`insight/redactor.py`) mapping business categories and entities to generic tokens (`Category A`, `Entity A`) prior to OpenRouter egress, unredacting locally via in-memory map; configured by `AIVARA_LLM_REDACT_LABELS: bool = True` (Audit 4.5, Decision D5).
+  - Prompt injection defense enclosing untrusted data inside `<business_data>` XML tags, stripping control characters and HTML tags, and neutralizing instruction override tokens (`insight/prompts.py`).
+  - OpenRouter client resilience with three-state circuit breaker (`CLOSED`, `OPEN`, `HALF_OPEN`), exponential backoff on HTTP 429 and 5xx errors, and per-session call limits (`MAX_SESSION_LLM_CALLS = 20`).
+  - Offline deterministic template fallback generator (`insight/fallback.py`) producing 3-sentence executive takeaways for KPIs, snapshots, and project portfolios without network or API dependency.
+  - Removed deprecated tier-2 LLM column classification per Decision D6 (Audit 2.1).
+  - Transparent model attribution displaying fallback indicators and actual model identifiers (Audit 2.2).
+  - Dedicated reliability test suite (`tests/test_insight_reliability.py`) achieving 90.19% branch coverage across `insight/`.
 - **Phase 4: Analytics Validity & Coverage (Audit §4)**:
   - Configurable aggregation semantics (`agg`: `sum`, `mean`, `weighted_mean`, `last`) in `analytics/kpis.py`, `trend.py`, `drivers.py`, `snapshot.py`, and `anomalies.py`. Rate/ratio metrics (`rate`, `pct`, `percent`, `ratio`, `avg`, `average`, `score`, `margin`, `nps`, `share`, `yield`) default to `"mean"` instead of being summed (Audit 4.1).
   - Manual aggregation overrides in `DatasetProfile` and UI schema configuration, with aggregation tooltip indicator on KPI tiles.
