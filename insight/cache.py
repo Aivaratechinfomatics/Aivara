@@ -60,10 +60,31 @@ def set(cache_key_material: str, value: dict, path: str = INSIGHT_CACHE_PATH) ->
 _view_cache: dict[str, dict] = {}
 
 
+def _get_effective_session_id(session_id: str | None = None) -> str:
+    if session_id:
+        return session_id
+    try:
+        import streamlit as st
+
+        if hasattr(st, "session_state"):
+            if "_session_id" not in st.session_state:
+                import uuid
+
+                st.session_state["_session_id"] = str(uuid.uuid4())
+            return st.session_state["_session_id"]
+    except Exception:
+        pass
+    return f"thread_{threading.get_ident()}"
+
+
 def get_for_view(view_name: str, session_id: str | None = None) -> dict | None:
     """Convenience lookup used by export/pptx_builder.py. Scoped to session state
-    or in-memory cache to prevent cross-user data leakage across sessions.
+    or session-keyed in-memory cache to prevent cross-user data leakage across sessions.
     Never persisted to the shared disk cache."""
+    if session_id:
+        with _lock:
+            return _view_cache.get(f"{session_id}::{view_name}")
+
     try:
         import streamlit as st
 
@@ -74,13 +95,17 @@ def get_for_view(view_name: str, session_id: str | None = None) -> dict | None:
     except Exception:
         pass
 
+    eff_id = _get_effective_session_id(None)
     with _lock:
-        if session_id:
-            return _view_cache.get(f"{session_id}::{view_name}")
-        return _view_cache.get(view_name)
+        return _view_cache.get(f"{eff_id}::{view_name}")
 
 
 def set_for_view(view_name: str, value: dict, session_id: str | None = None) -> None:
+    if session_id:
+        with _lock:
+            _view_cache[f"{session_id}::{view_name}"] = value
+        return
+
     try:
         import streamlit as st
 
@@ -89,19 +114,15 @@ def set_for_view(view_name: str, value: dict, session_id: str | None = None) -> 
     except Exception:
         pass
 
+    eff_id = _get_effective_session_id(None)
     with _lock:
-        if session_id:
-            _view_cache[f"{session_id}::{view_name}"] = value
-        else:
-            _view_cache[view_name] = value
+        _view_cache[f"{eff_id}::{view_name}"] = value
 
 
 def clear_view_cache(session_id: str | None = None) -> None:
-    """Clear in-memory view cache."""
+    """Clear in-memory view cache for the given session or caller."""
+    eff_id = session_id if session_id else _get_effective_session_id()
     with _lock:
-        if session_id:
-            keys_to_del = [k for k in _view_cache if k.startswith(f"{session_id}::")]
-            for k in keys_to_del:
-                del _view_cache[k]
-        else:
-            _view_cache.clear()
+        keys_to_del = [k for k in _view_cache if k.startswith(f"{eff_id}::")]
+        for k in keys_to_del:
+            del _view_cache[k]

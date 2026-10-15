@@ -66,7 +66,7 @@ def format_number(value: float, unit: str | None = None) -> str:
 def format_pct_change(
     pct_change: float | None, with_arrow: bool = False, with_sign: bool = False
 ) -> str | None:
-    if pct_change is None:
+    if pct_change is None or (isinstance(pct_change, float) and math.isnan(pct_change)):
         return None
     if math.isinf(pct_change):
         return "new" if pct_change > 0 else "n/a (no prior period)"

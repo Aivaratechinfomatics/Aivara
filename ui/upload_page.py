@@ -6,6 +6,8 @@ session state for the dashboard views to consume.
 
 from __future__ import annotations
 
+import hashlib
+
 import streamlit as st
 
 from ingestion.classifier import (
@@ -21,9 +23,32 @@ from ingestion.classifier import (
 )
 from ingestion.cleaner import clean_dataframe
 from ingestion.loader import load_file
+from insight.cache import clear_view_cache
 from insight.client import BudgetExhaustedError, classify_ambiguous_columns
 
 ALL_ROLES = [ROLE_DATE, ROLE_METRIC, ROLE_DIMENSION, ROLE_ID, ROLE_TEXT]
+
+
+def reset_dataset_state() -> None:
+    """Clears all session-state caches, loaded dataframes, classifications,
+    export figures, pptx deck buffers, and view insights so a new dataset
+    operates with a completely clean slate."""
+    keys_to_clear = [
+        "dataset",
+        "cleaned_df",
+        "classifications",
+        "_uploaded_filename",
+        "_uploaded_file_hash",
+        "dataset_name",
+        "schema_confirmed",
+        "overrides",
+        "_export_figures",
+        "_pptx_buffer",
+        "_view_insights",
+    ]
+    for k in keys_to_clear:
+        st.session_state.pop(k, None)
+    clear_view_cache()
 
 
 def render_upload_page() -> bool:
@@ -35,18 +60,15 @@ def render_upload_page() -> bool:
         "summaries are ever sent to the AI insight layer."
     )
 
-    import hashlib
-
-    from insight.cache import clear_view_cache
-
     uploaded = st.file_uploader("Upload a CSV or Excel file", type=["csv", "xlsx", "xls"])
     if uploaded is None:
         return "dataset" in st.session_state
 
     file_bytes = uploaded.getvalue()
-    file_hash = hashlib.md5(file_bytes).hexdigest()
+    file_hash = hashlib.sha256(file_bytes).hexdigest()
 
     if st.session_state.get("_uploaded_file_hash") != file_hash:
+        reset_dataset_state()
         load_result = load_file(file_bytes, filename=uploaded.name)
 
         if not load_result.success:
@@ -68,11 +90,6 @@ def render_upload_page() -> bool:
         st.session_state["_uploaded_file_hash"] = file_hash
         st.session_state["dataset_name"] = uploaded.name
         st.session_state["schema_confirmed"] = False
-        st.session_state.pop("overrides", None)
-        st.session_state.pop("_export_figures", None)
-        st.session_state.pop("_pptx_buffer", None)
-        st.session_state.pop("_view_insights", None)
-        clear_view_cache()
 
     df = st.session_state["dataset"]
     classifications = list(st.session_state["classifications"].values())
