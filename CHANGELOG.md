@@ -8,6 +8,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 7: Security Hardening (Audit §7)**:
+  - Threat Model documentation (`docs/THREAT_MODEL.md`) formalizing system architecture, trust boundaries, asset classification, STRIDE-lite threat analysis, and risk acceptance.
+  - Security & deployment hardening guide (`docs/SECURITY.md`) detailing reverse-proxy integration (Nginx, Caddy, oauth2-proxy), TLS termination, and vulnerability reporting.
+  - Fail-closed authentication gate (`ui/auth.py`, Decision D2) supporting reverse-proxy identity headers (`X-Forwarded-User`, `X-Remote-User`) and app-level constant-time shared-secret verification (`AIVARA_SHARED_SECRET`), halting execution via `st.stop()` when auth is required (`AIVARA_AUTH_REQUIRED=true`).
+  - Spreadsheet / CSV formula injection defense (`export/formula_sanitizer.py`, CWE-1236) neutralizing leading formula characters (`=`, `+`, `-`, `@`, `\t`, `\r`) in PowerPoint slide text and exported dataframes while preserving valid numeric scalars.
+  - Ingestion upload hardening (`ingestion/loader.py`): rejecting executable binaries (PE, ELF, Mach-O, Java class), null-byte streams in text files, and unapproved extensions; filename path traversal sanitization (`sanitize_filename`).
+  - Secrets hardening: centralized masking helper (`mask_secret`), startup placeholder key detection (`is_placeholder_secret`), and deterministic fallback on missing/placeholder keys.
+  - Network egress SSRF defense (`insight/client.py`): allowlist enforcement on `OPENROUTER_BASE_URL` (`openrouter.ai` default) and blocking of loopback, RFC 1918 private subnets, and cloud metadata endpoints (`169.254.169.254`).
+  - Output safety & XSS neutralization in `ui/stats_view.py`: dynamic content escaped via `html.escape` before markdown rendering.
+  - Container hardening (`Dockerfile`, `.dockerignore`, `.streamlit/config.toml`): non-root execution under unprivileged dedicated user `aivara` (UID 10001), Docker `HEALTHCHECK`, XSRF protection enabled, usage telemetry disabled, and build caches excluded.
+  - Dedicated security test suite (`tests/test_security.py`) with 52 comprehensive tests verifying formula injection, auth fail-closed behavior, upload sniffing, SSRF egress rules, and Docker invariants.
 - **Phase 6: State, Concurrency, Multi-User Isolation (Audit §6, Audit 4.3)**:
   - Exhaustive state inventory documentation (`docs/STATE_INVENTORY.md`) classifying every `st.session_state` key, persistent database file, in-memory global, concurrency assumptions, and the zero-raw-data-on-disk invariant.
   - Multi-process safe atomic budget tracking (`insight/budget.py`) using SQLite with Write-Ahead Logging (WAL) and 5000ms busy timeout, replacing JSON files and `threading.Lock`.

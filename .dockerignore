@@ -18,9 +18,14 @@ htmlcov/
 # State and local caches
 .aivara_insight_cache.json*
 .aivara_budget_state.json*
+.aivara_*.db*
+*.db
+*.db-wal
+*.db-shm
 *.log
 *.tmp
 *.pptx
+tests/
 
 # IDEs
 .vscode/

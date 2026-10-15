@@ -239,8 +239,7 @@ def build_drivers_figure(
 
 
 def mask_secret(secret: str, keep: int = 4) -> str:
-    if not secret:
-        return ""
-    if len(secret) <= keep:
-        return "*" * len(secret)
-    return "*" * (len(secret) - keep) + secret[-keep:]
+    """Mask sensitive secret keys for safe display in UI and diagnostics."""
+    import config
+
+    return config.mask_secret(secret, keep=keep)

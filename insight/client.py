@@ -14,17 +14,20 @@ Hardened with:
 
 from __future__ import annotations
 
+import ipaddress
 import json
 import logging
 import random
 import re
 import threading
 import time
+import urllib.parse
 from dataclasses import dataclass
 from typing import Any
 
 import requests
 
+import config
 from config import (
     AIVARA_LLM_REDACT_LABELS,
     ALLOW_PAID_MODELS_DEFAULT,
@@ -179,6 +182,58 @@ def _split_into_sentences(text: str) -> list[str]:
     return parts
 
 
+def validate_llm_base_url(url: str) -> None:
+    """Validate that the LLM egress endpoint is safe and not an SSRF vector.
+
+    Ensures:
+    1. Scheme is 'https' (unless AIVARA_ALLOW_INSECURE_LLM_HOSTS is True).
+    2. Hostname matches allowed hosts in AIVARA_ALLOWED_LLM_HOSTS.
+    3. Hostname does not resolve to private, loopback, link-local, or cloud metadata IPs.
+    """
+    if config.AIVARA_ALLOW_INSECURE_LLM_HOSTS:
+        return
+
+    try:
+        parsed = urllib.parse.urlparse(url)
+    except Exception as exc:
+        raise OpenRouterError(f"Invalid LLM endpoint URL: {exc}") from exc
+
+    scheme = (parsed.scheme or "").lower()
+    if scheme != "https":
+        raise OpenRouterError(
+            f"Insecure LLM endpoint scheme '{scheme}'. Only HTTPS egress is permitted."
+        )
+
+    hostname = (parsed.hostname or "").lower().strip()
+    if not hostname:
+        raise OpenRouterError("Invalid LLM endpoint URL: missing hostname.")
+
+    # Check for direct IP addresses (loopback, private, link-local, cloud metadata)
+    try:
+        ip = ipaddress.ip_address(hostname)
+        if ip.is_loopback or ip.is_private or ip.is_link_local or ip.is_multicast or ip.is_reserved:
+            raise OpenRouterError(f"Egress to private/reserved IP address '{hostname}' is blocked.")
+    except ValueError:
+        pass
+
+    # Block well-known cloud metadata hostnames / localhost aliases
+    if hostname in ("localhost", "metadata.google.internal", "instance-data"):
+        raise OpenRouterError(f"Egress to metadata/local host '{hostname}' is blocked.")
+
+    # Validate against configured allowed hosts
+    allowed = config.AIVARA_ALLOWED_LLM_HOSTS
+    matched = False
+    for allowed_host in allowed:
+        if hostname == allowed_host or hostname.endswith("." + allowed_host):
+            matched = True
+            break
+
+    if not matched:
+        raise OpenRouterError(
+            f"LLM endpoint host '{hostname}' is not in the allowlist ({', '.join(allowed)})."
+        )
+
+
 def _call_openrouter_with_resilience(
     messages: list[dict],
     model: str,
@@ -189,6 +244,10 @@ def _call_openrouter_with_resilience(
     """Executes call to OpenRouter with circuit breaker, timeout, and exponential backoff retry."""
     if not OPENROUTER_API_KEY:
         raise OpenRouterError("OPENROUTER_API_KEY is not set.")
+    if config.is_placeholder_secret(OPENROUTER_API_KEY):
+        raise OpenRouterError("OPENROUTER_API_KEY is configured with a placeholder value.")
+
+    validate_llm_base_url(OPENROUTER_BASE_URL)
 
     if not _circuit_breaker.can_attempt():
         raise OpenRouterError("OpenRouter circuit breaker is OPEN due to repeated failures.")
@@ -244,7 +303,7 @@ def _call_openrouter_with_resilience(
     raise OpenRouterError(f"OpenRouter request failed: {last_error}")
 
 
-# Backward-compatible alias for existing tests
+# Aliases
 _call_openrouter = _call_openrouter_with_resilience
 
 
@@ -324,6 +383,18 @@ def generate_insight(
         )
 
     # 4. Outbound call with resilience
+    if not OPENROUTER_API_KEY or config.is_placeholder_secret(OPENROUTER_API_KEY):
+        h, d, a = generate_deterministic_fallback(facts_packet)
+        return InsightResult(
+            headline=h,
+            driver_explanation=d,
+            suggested_action=a,
+            raw_text="",
+            from_cache=False,
+            model="deterministic/no_api_key",
+            is_fallback=True,
+        )
+
     messages = build_insight_prompt(prepared_packet)
     try:
         raw_text, used_model = _call_openrouter_with_resilience(
@@ -413,6 +484,10 @@ def generate_insight(
         model=used_model,
         is_fallback=False,
     )
+
+
+# Backward-compatible alias
+query_insight = generate_insight
 
 
 def classify_ambiguous_columns(

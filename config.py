@@ -39,6 +39,73 @@ FALLBACK_MODEL = os.environ.get("AIVARA_FALLBACK_MODEL", "meta-llama/llama-3.1-8
 ALLOW_PAID_MODELS_DEFAULT = False
 
 # ---------------------------------------------------------------------------
+# Authentication configuration (Decision D2 & Phase 7)
+# ---------------------------------------------------------------------------
+AIVARA_AUTH_REQUIRED: bool = os.environ.get("AIVARA_AUTH_REQUIRED", "false").lower() in (
+    "true",
+    "1",
+    "yes",
+)
+AIVARA_AUTH_HEADER_USER: str = os.environ.get("AIVARA_AUTH_HEADER_USER", "X-Forwarded-User")
+AIVARA_SHARED_SECRET: str = os.environ.get("AIVARA_SHARED_SECRET", "")
+
+# ---------------------------------------------------------------------------
+# Network Egress & SSRF Security (Phase 7)
+# ---------------------------------------------------------------------------
+AIVARA_ALLOWED_LLM_HOSTS: tuple[str, ...] = tuple(
+    h.strip().lower()
+    for h in os.environ.get("AIVARA_ALLOWED_LLM_HOSTS", "openrouter.ai").split(",")
+    if h.strip()
+)
+AIVARA_ALLOW_INSECURE_LLM_HOSTS: bool = os.environ.get(
+    "AIVARA_ALLOW_INSECURE_LLM_HOSTS", "false"
+).lower() in ("true", "1", "yes")
+
+# Known placeholder keys that must be rejected at startup
+KNOWN_PLACEHOLDER_KEYS: frozenset[str] = frozenset(
+    {
+        "your-openrouter-key",
+        "your_openrouter_key",
+        "sk-placeholder",
+        "changeme",
+        "dummy",
+        "test",
+        "xxx",
+        "placeholder",
+        "none",
+    }
+)
+
+
+def mask_secret(secret: str, keep: int = 4) -> str:
+    """Mask sensitive secret keys for safe display in UI and diagnostics."""
+    if not secret:
+        return ""
+    if len(secret) <= keep:
+        return "*" * len(secret)
+    return "*" * (len(secret) - keep) + secret[-keep:]
+
+
+def is_placeholder_secret(key: str) -> bool:
+    """Return True if the key is empty or matches a known placeholder value."""
+    if not key:
+        return True
+    k = key.strip().lower()
+    if k in KNOWN_PLACEHOLDER_KEYS:
+        return True
+    return k.startswith(("your-", "your_", "sk-xxx", "sk-placeholder"))
+
+
+def validate_openrouter_key(key: str) -> tuple[bool, str]:
+    """Validate OpenRouter API key format and ensure it is not a placeholder."""
+    if not key or not key.strip():
+        return False, "OpenRouter API key is not configured."
+    if is_placeholder_secret(key):
+        return False, "OpenRouter API key is set to a placeholder value and cannot be used."
+    return True, "Key is valid."
+
+
+# ---------------------------------------------------------------------------
 # Budget enforcement (see insight/budget.py)
 # ---------------------------------------------------------------------------
 

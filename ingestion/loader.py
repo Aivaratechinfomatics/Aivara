@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import csv
 import io
+import os
 import re
 from dataclasses import dataclass, field
 from typing import Any
@@ -30,6 +31,41 @@ except ImportError:  # pragma: no cover - optional dependency
 
 CANDIDATE_DELIMITERS = [",", ";", "\t", "|"]
 CANDIDATE_ENCODINGS = ["utf-8", "utf-8-sig"]
+
+# Allowed file extensions for uploaded datasets
+ALLOWED_EXTENSIONS: tuple[str, ...] = (".csv", ".tsv", ".txt", ".xlsx", ".xls")
+
+# Known executable magic byte prefixes to reject
+_EXECUTABLE_MAGIC_PREFIXES: tuple[bytes, ...] = (
+    b"MZ",  # Windows PE executable / DLL
+    b"\x7fELF",  # Linux ELF binary
+    b"\xca\xfe\xba\xbe",  # Java class file / Mach-O fat binary
+    b"\xfe\xed\xfa\xce",  # Mach-O 32-bit binary
+    b"\xfe\xed\xfa\xcf",  # Mach-O 64-bit binary
+    b"\xce\xfa\xed\xfe",  # Mach-O 32-bit (reverse endian)
+    b"\xcf\xfa\xed\xfe",  # Mach-O 64-bit (reverse endian)
+)
+
+
+def sanitize_filename(filename: str | None) -> str:
+    """Sanitize uploaded filenames against path traversal and unsafe characters.
+
+    Strips directory separators ('/' and '\\'), removes '..' sequences,
+    restricts characters to alphanumeric, dots, hyphens, and underscores,
+    and limits maximum length to 200 characters.
+    """
+    if not filename:
+        return "dataset"
+
+    # Strip directory separators (Unix and Windows)
+    clean = os.path.basename(filename.replace("\\", "/"))
+    # Remove any relative path navigation markers
+    clean = re.sub(r"\.\.+", ".", clean)
+    # Restrict to safe characters
+    clean = re.sub(r"[^\w\-. ]", "_", clean).strip(" ._")
+    if not clean:
+        return "dataset"
+    return clean[:200]
 
 
 @dataclass
@@ -368,6 +404,28 @@ def load_csv(file_bytes: bytes, filename: str | None = "uploaded.csv") -> LoadRe
             error=f"File size ({size_mb:.1f} MB) exceeds maximum allowed size of {MAX_UPLOAD_MB} MB.",
         )
 
+    if file_bytes.startswith(_EXECUTABLE_MAGIC_PREFIXES):
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="binary",
+            delimiter=",",
+            header_row=None,
+            notes=["File rejected: executable binary detected."],
+            success=False,
+            error="File rejected: executable binary files are not supported.",
+        )
+
+    if b"\x00" in file_bytes[:8192]:
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="binary",
+            delimiter=",",
+            header_row=None,
+            notes=["File rejected: binary stream or null bytes detected in text file."],
+            success=False,
+            error="File rejected: null bytes detected. Only valid tabular text or Excel files are supported.",
+        )
+
     encoding, enc_notes = _detect_encoding(file_bytes)
     notes.extend(enc_notes)
 
@@ -516,6 +574,17 @@ def load_excel(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
             error=f"File size ({size_mb:.1f} MB) exceeds maximum allowed size of {MAX_UPLOAD_MB} MB.",
         )
 
+    if raw_bytes.startswith(_EXECUTABLE_MAGIC_PREFIXES):
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="binary",
+            delimiter="excel",
+            header_row=None,
+            notes=["File rejected: executable binary detected."],
+            success=False,
+            error="File rejected: executable binary files are not supported.",
+        )
+
     try:
         excel_file = pd.ExcelFile(io.BytesIO(raw_bytes), engine="openpyxl")
         sheet_names = excel_file.sheet_names
@@ -609,6 +678,9 @@ def load_excel(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
 def load_file(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
     """Universal file loader: automatically routes between Excel (.xlsx, .xls)
     and CSV based on file extension and magic byte inspection."""
+    if filename:
+        filename = sanitize_filename(filename)
+
     if not raw_bytes or len(raw_bytes.strip()) == 0:
         return LoadResult(
             dataframe=pd.DataFrame(),
@@ -620,6 +692,33 @@ def load_file(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
             error="Uploaded file is empty (0 bytes).",
         )
 
+    # 1. Reject executable binaries
+    if raw_bytes.startswith(_EXECUTABLE_MAGIC_PREFIXES):
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="binary",
+            delimiter=",",
+            header_row=None,
+            notes=["File rejected: executable binary detected."],
+            success=False,
+            error="File rejected: executable binary files are not supported.",
+        )
+
+    # 2. Reject unsupported extensions if filename given
+    if filename and "." in filename:
+        ext = os.path.splitext(filename)[1].lower()
+        if ext not in ALLOWED_EXTENSIONS:
+            return LoadResult(
+                dataframe=pd.DataFrame(),
+                encoding="unknown",
+                delimiter=",",
+                header_row=None,
+                notes=[f"Unsupported file extension '{ext}'."],
+                success=False,
+                error=f"File extension '{ext}' is not supported. Allowed extensions: {', '.join(ALLOWED_EXTENSIONS)}",
+            )
+
+    # 3. File size limit
     size_mb = len(raw_bytes) / (1024 * 1024)
     if size_mb > MAX_UPLOAD_MB:
         return LoadResult(
@@ -634,14 +733,29 @@ def load_file(raw_bytes: bytes, filename: str | None = None) -> LoadResult:
             error=f"File size ({size_mb:.1f} MB) exceeds maximum allowed size of {MAX_UPLOAD_MB} MB.",
         )
 
+    # 4. Route Excel vs CSV
     is_excel = False
     if (
         filename
         and filename.lower().endswith((".xlsx", ".xls"))
         or raw_bytes.startswith(b"PK\x03\x04")
+        or raw_bytes.startswith(b"\xd0\xcf\x11\xe0")
     ):
         is_excel = True
 
     if is_excel:
         return load_excel(raw_bytes, filename=filename)
+
+    # 5. Reject null bytes in text/CSV files
+    if b"\x00" in raw_bytes[:8192]:
+        return LoadResult(
+            dataframe=pd.DataFrame(),
+            encoding="binary",
+            delimiter=",",
+            header_row=None,
+            notes=["File rejected: binary stream or null bytes detected in text file."],
+            success=False,
+            error="File rejected: null bytes detected. Only valid tabular text or Excel files are supported.",
+        )
+
     return load_csv(raw_bytes, filename=filename)

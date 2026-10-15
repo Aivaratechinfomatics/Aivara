@@ -43,6 +43,7 @@ from export.chart_images import (
     HALF_WIDTH_PX,
     figure_to_png_stream,
 )
+from export.formula_sanitizer import sanitize_for_formula_injection
 from insight import cache as insight_cache
 
 # ---------------------------------------------------------------------------
@@ -206,7 +207,7 @@ def _add_textbox(
     para = tf.paragraphs[0]
     para.alignment = align
     run = para.add_run()
-    run.text = text
+    run.text = str(sanitize_for_formula_injection(text))
     run.font.size = Pt(size)
     run.font.bold = bold
     run.font.color.rgb = color
@@ -304,14 +305,14 @@ def _render_kpi_tiles(
             # Label row
             p_label = tf.paragraphs[0]
             r_label = p_label.add_run()
-            r_label.text = tile.label
+            r_label.text = str(sanitize_for_formula_injection(tile.label))
             r_label.font.size = Pt(10)
             r_label.font.color.rgb = COLOR_MUTED
 
             # Value row
             p_value = tf.add_paragraph()
             r_value = p_value.add_run()
-            r_value.text = tile.value_display
+            r_value.text = str(sanitize_for_formula_injection(tile.value_display))
             r_value.font.size = Pt(20)
             r_value.font.bold = True
             r_value.font.color.rgb = COLOR_BRAND_NAVY
@@ -320,7 +321,7 @@ def _render_kpi_tiles(
             if tile.delta_display:
                 p_delta = tf.add_paragraph()
                 r_delta = p_delta.add_run()
-                r_delta.text = tile.delta_display
+                r_delta.text = str(sanitize_for_formula_injection(tile.delta_display))
                 r_delta.font.size = Pt(11)
                 r_delta.font.bold = True
                 r_delta.font.color.rgb = (

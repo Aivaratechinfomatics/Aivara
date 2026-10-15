@@ -43,6 +43,7 @@ from export.pptx_builder import DeckInputs, KPITileData, ViewExportData, build_d
 from ingestion.classifier import ROLE_DIMENSION, ROLE_METRIC
 from insight.budget import get_status
 from insight.facts_builder import build_facts_packet
+from ui.auth import enforce_authentication
 from ui.chart_builder import render_chart_explorer
 from ui.components import format_number, format_pct_change, mask_secret
 from ui.domain_views import (
@@ -493,6 +494,7 @@ def render_export_button(pipeline_result: dict) -> None:
 
 
 def main() -> None:
+    enforce_authentication()
     model, allow_paid = render_sidebar()
 
     ready = render_upload_page()
