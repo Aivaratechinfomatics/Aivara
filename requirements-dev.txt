@@ -1,5 +1,5 @@
 # Developer, Testing, Linting and Security dependencies for Aivara Insight Lite
-pytest>=7.4.0
+pytest>=9.1.1
 pytest-cov>=4.1.0
 ruff>=0.5.0
 mypy>=1.10.0
