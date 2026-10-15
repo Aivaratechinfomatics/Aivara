@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 10: Observability, Configuration, and Deployment (Audit §10)**:
+  - Strongly typed `Settings` object (`config.py`) with `from_env()` factory and validation rules (`Settings.validate()`) verifying positive budgets, timeouts, upload caps, and valid environment profiles (`dev`, `prod`, `staging`).
+  - Semver `__version__ = "0.9.0"` defined in `config.py` and displayed in the sidebar settings footer alongside application mode.
+  - Structured JSON logging (`infra/logger.py`) with `RedactingJsonFormatter` injecting standard fields (`timestamp`, `level`, `logger`, `message`, `correlation_id`) for log aggregators (Datadog, Elasticsearch, CloudWatch).
+  - Active secret redaction filter (`redact_secrets`) intercepting OpenRouter keys, bearer tokens, and shared secrets from all log messages.
+  - Dedicated LLM call audit logger (`aivara.audit.llm` via `log_llm_call_audit`) tracking model name, prompt tokens, completion tokens, and daily budget remaining without logging raw prompt or completion content.
+  - Production `docker-compose.yml` with persistent named volume `aivara_data` for SQLite stores, resource limits (2 CPU, 2048M RAM), restart policy, and healthcheck.
+  - Documented environment template `.env.example` cataloging all configuration parameters.
+  - Automated smoke test script `scripts/smoke_container.py` performing HTTP health endpoint checks (`/_stcore/health`) and root page availability validation.
+  - Operational runbook (`docs/RUNBOOK.md`) covering startup/shutdown, health verification, secret rotation, cache/budget management, SQLite online backup/restore, and common incident mitigations.
+  - Configuration reference (`docs/CONFIGURATION.md`) detailing environment variables, defaults, types, and validation constraints.
+  - Observability test suite (`tests/test_observability.py`) with 10 comprehensive tests validating settings validation, secret redaction, audit logging, and smoke test checks.
 - **Phase 9: App Structure, UX, and UI Tests (Audit §9, Decision D3)**:
   - Refactored `app.py` into a streamlined top-level orchestrator (< 120 lines; 0 functions > 60 lines) coordinating authentication, ingestion, pipeline execution, tab dispatch, and export presentation.
   - Table-driven tab architecture (`ui/tabs.py`) using declarative `TabSpec` instances per domain and profile, eliminating duplicated multi-branch tab rendering blocks.

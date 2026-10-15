@@ -286,6 +286,21 @@ def _call_openrouter_with_resilience(
             data = resp.json()
             content = data["choices"][0]["message"]["content"]
             _circuit_breaker.record_success()
+
+            # Record audit event (token consumption, model, budget remaining)
+            try:
+                from infra.logger import log_llm_call_audit
+                from insight.budget import get_status
+
+                usage = data.get("usage", {})
+                p_tokens = int(usage.get("prompt_tokens", 0))
+                c_tokens = int(usage.get("completion_tokens", 0))
+                b_status = get_status()
+                remaining = max(0, b_status.daily_budget - b_status.calls_made_today)
+                log_llm_call_audit(actual_model, p_tokens, c_tokens, remaining)
+            except Exception:
+                pass
+
             return content, actual_model
 
         except (requests.RequestException, KeyError, IndexError, json.JSONDecodeError) as exc:

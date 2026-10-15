@@ -1,0 +1,39 @@
+services:
+  aivara:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: aivara_app
+    restart: unless-stopped
+    ports:
+      - "8501:8501"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - AIVARA_ENV=prod
+      - AIVARA_BUDGET_DB_PATH=/app/data/aivara_budget.db
+      - AIVARA_CACHE_DB_PATH=/app/data/aivara_cache.db
+      - AIVARA_AUTH_REQUIRED=${AIVARA_AUTH_REQUIRED:-false}
+      - AIVARA_SHARED_SECRET=${AIVARA_SHARED_SECRET:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+    volumes:
+      - aivara_data:/app/data
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8501/_stcore/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+volumes:
+  aivara_data:
+    driver: local

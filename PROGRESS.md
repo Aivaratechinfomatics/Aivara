@@ -144,6 +144,29 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 
 ## Gate Checklists
 
+### Phase 10 Exit Gate
+- [x] Strongly typed `Settings` dataclass with `validate()` and `.from_env()` startup validation (`config.py`).
+- [x] Semver `__version__ = "0.9.0"` defined in `config.py` and displayed in sidebar.
+- [x] Structured JSON logging (`infra/logger.py`) with active secret and API key redaction.
+- [x] Dedicated LLM call audit logger (`aivara.audit.llm`) tracking model, token usage, and budget balance without capturing prompt or completion content.
+- [x] Production `docker-compose.yml` with persistent volume `aivara_data`, resource limits, and health check.
+- [x] Documented environment template `.env.example`.
+- [x] Automated smoke script `scripts/smoke_container.py` checking health and app endpoints.
+- [x] Comprehensive documentation: `docs/CONFIGURATION.md` and `docs/RUNBOOK.md`.
+- [x] Observability test suite (`tests/test_observability.py`) with 10 passing tests.
+- [x] Global gate passes (302/302 tests pass, 81.33% coverage, ruff clean, mypy clean, bandit clean).
+
+### Global Gate (Phase 10 Evaluation)
+- [x] Full test suite passes: 302/302 passed across consecutive runs (0 failures).
+- [x] `ruff check` and `ruff format --check` clean.
+- [x] `mypy` clean on 56 source files.
+- [x] `bandit` scan passes with 0 Medium/High issues.
+- [x] No test makes a real network call (enforced by socket-blocking fixture).
+- [x] No new skips/xfails.
+- [x] Overall coverage met (81.33% repo-wide > 75% threshold).
+- [x] No secrets, sample customer data, or `.env` content committed.
+- [x] `PROGRESS.md`, `CHANGELOG.md`, `docs/CONFIGURATION.md`, `docs/RUNBOOK.md` updated.
+
 ### Phase 9 Exit Gate
 - [x] `app.py` < 200 lines of routing/wiring (achieved 119 lines); no function > 60 lines.
 - [x] Table-driven tab registry `TabSpec` per profile/domain replaces duplicated blocks (`ui/tabs.py`).
@@ -341,3 +364,4 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2026-10-15 | 7 (Security Hardening) | 274 | 77.02% (repo-wide) | 0 | 0 | 0 |
 | 2026-10-16 | 8 (Export Hardening) | 284 | 77.87% (export 91.56%) | 0 | 0 | 0 |
 | 2026-10-16 | 9 (App Structure & UX) | 292 | 81.26% (app 95%) | 0 | 0 | 0 |
+| 2026-10-16 | 10 (Observability & Deployment) | 302 | 81.33% | 0 | 0 | 0 |

@@ -53,6 +53,7 @@ def render_sidebar() -> tuple[str, bool]:
             min(1.0, status.calls_made_today / max(1, status.daily_budget)),
             text=f"LLM calls today: {status.calls_made_today}/{status.daily_budget}",
         )
+        st.caption(f"Aivara v{config.__version__} ({config.AIVARA_ENV})")
 
     return model, allow_paid
 

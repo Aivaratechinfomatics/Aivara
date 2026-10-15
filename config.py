@@ -9,6 +9,7 @@ full anywhere in the UI (see ui/components.py for the masking helper).
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 
 try:
     from dotenv import load_dotenv  # python-dotenv
@@ -19,6 +20,9 @@ except ImportError:
     # (e.g. inside Docker where env vars are injected directly).
     pass
 
+
+__version__ = "0.9.0"
+AIVARA_ENV: str = os.environ.get("AIVARA_ENV", "prod").lower()
 
 # ---------------------------------------------------------------------------
 # OpenRouter / LLM configuration
@@ -190,3 +194,105 @@ DEFAULT_NULL_STRINGS: frozenset[str] = frozenset(
 
 APP_TITLE = "Aivara Insight Lite"
 APP_TABS = ["Executive", "Revenue", "Operations", "Customers", "Charts", "Risk"]
+
+
+# ---------------------------------------------------------------------------
+# Typed Settings & Startup Validation (Phase 10)
+# ---------------------------------------------------------------------------
+
+
+@dataclass(frozen=True)
+class Settings:
+    """Strongly typed application settings with validation (Phase 10)."""
+
+    version: str = __version__
+    env: str = AIVARA_ENV
+    openrouter_api_key: str = OPENROUTER_API_KEY
+    openrouter_base_url: str = OPENROUTER_BASE_URL
+    default_model: str = DEFAULT_MODEL
+    fallback_model: str = FALLBACK_MODEL
+    daily_budget: int = DAILY_CALL_BUDGET
+    max_output_tokens: int = MAX_OUTPUT_TOKENS
+    budget_db_path: str = BUDGET_DB_PATH
+    cache_db_path: str = CACHE_DB_PATH
+    cache_enabled: bool = AIVARA_CACHE_ENABLED
+    cache_ttl_days: int = AIVARA_CACHE_TTL_DAYS
+    cache_max_entries: int = AIVARA_CACHE_MAX_ENTRIES
+    max_upload_mb: int = MAX_UPLOAD_MB
+    max_columns: int = MAX_COLUMNS
+    auth_required: bool = AIVARA_AUTH_REQUIRED
+    auth_header_user: str = AIVARA_AUTH_HEADER_USER
+    shared_secret: str = AIVARA_SHARED_SECRET
+    allowed_llm_hosts: tuple[str, ...] = AIVARA_ALLOWED_LLM_HOSTS
+    redact_labels: bool = AIVARA_LLM_REDACT_LABELS
+    session_budget: int = MAX_SESSION_LLM_CALLS
+    llm_timeout: float = LLM_REQUEST_TIMEOUT_SECONDS
+
+    @classmethod
+    def from_env(cls) -> Settings:
+        """Construct Settings directly from current environment variables."""
+        return cls(
+            version=__version__,
+            env=os.environ.get("AIVARA_ENV", "prod").lower(),
+            openrouter_api_key=os.environ.get("OPENROUTER_API_KEY", ""),
+            openrouter_base_url=os.environ.get(
+                "OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1/chat/completions"
+            ),
+            default_model=os.environ.get("AIVARA_MODEL", "openrouter/auto"),
+            fallback_model=os.environ.get(
+                "AIVARA_FALLBACK_MODEL", "meta-llama/llama-3.1-8b-instruct:free"
+            ),
+            daily_budget=int(os.environ.get("AIVARA_DAILY_BUDGET", "30")),
+            max_output_tokens=int(os.environ.get("AIVARA_MAX_OUTPUT_TOKENS", "150")),
+            budget_db_path=os.environ.get("AIVARA_BUDGET_DB_PATH", ".aivara_budget.db"),
+            cache_db_path=os.environ.get("AIVARA_CACHE_DB_PATH", ".aivara_cache.db"),
+            cache_enabled=os.environ.get("AIVARA_CACHE_ENABLED", "true").lower()
+            in ("true", "1", "yes"),
+            cache_ttl_days=int(os.environ.get("AIVARA_CACHE_TTL_DAYS", "7")),
+            cache_max_entries=int(os.environ.get("AIVARA_CACHE_MAX_ENTRIES", "1000")),
+            max_upload_mb=int(os.environ.get("AIVARA_MAX_UPLOAD_MB", "100")),
+            max_columns=int(os.environ.get("AIVARA_MAX_COLUMNS", "500")),
+            auth_required=os.environ.get("AIVARA_AUTH_REQUIRED", "false").lower()
+            in ("true", "1", "yes"),
+            auth_header_user=os.environ.get("AIVARA_AUTH_HEADER_USER", "X-Forwarded-User"),
+            shared_secret=os.environ.get("AIVARA_SHARED_SECRET", ""),
+            allowed_llm_hosts=tuple(
+                h.strip().lower()
+                for h in os.environ.get("AIVARA_ALLOWED_LLM_HOSTS", "openrouter.ai").split(",")
+                if h.strip()
+            ),
+            redact_labels=os.environ.get("AIVARA_LLM_REDACT_LABELS", "true").lower()
+            in ("true", "1", "yes"),
+            session_budget=int(os.environ.get("AIVARA_SESSION_BUDGET", "20")),
+            llm_timeout=float(os.environ.get("AIVARA_LLM_TIMEOUT", "15.0")),
+        )
+
+    def validate(self) -> list[str]:
+        """Validate settings integrity; returns list of error messages."""
+        errors: list[str] = []
+        if self.daily_budget <= 0:
+            errors.append("AIVARA_DAILY_BUDGET must be greater than 0.")
+        if self.max_upload_mb <= 0:
+            errors.append("AIVARA_MAX_UPLOAD_MB must be greater than 0.")
+        if self.max_columns <= 0:
+            errors.append("AIVARA_MAX_COLUMNS must be greater than 0.")
+        if self.cache_ttl_days <= 0:
+            errors.append("AIVARA_CACHE_TTL_DAYS must be greater than 0.")
+        if self.cache_max_entries <= 0:
+            errors.append("AIVARA_CACHE_MAX_ENTRIES must be greater than 0.")
+        if self.session_budget <= 0:
+            errors.append("AIVARA_SESSION_BUDGET must be greater than 0.")
+        if self.llm_timeout <= 0:
+            errors.append("AIVARA_LLM_TIMEOUT must be greater than 0.")
+        if self.env not in ("dev", "development", "staging", "prod", "production", "test"):
+            errors.append(f"Invalid AIVARA_ENV '{self.env}'. Must be dev, staging, prod, or test.")
+        return errors
+
+
+def load_settings() -> Settings:
+    """Load, validate, and return the application Settings instance."""
+    settings = Settings.from_env()
+    errors = settings.validate()
+    if errors:
+        raise ValueError(f"Invalid configuration: {'; '.join(errors)}")
+    return settings
