@@ -21,7 +21,7 @@ except ImportError:
     pass
 
 
-__version__ = "0.9.0"
+__version__ = "1.0.0"
 AIVARA_ENV: str = os.environ.get("AIVARA_ENV", "prod").lower()
 
 # ---------------------------------------------------------------------------

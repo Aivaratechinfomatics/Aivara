@@ -32,6 +32,7 @@ screenshots/
 scripts/*
 !scripts/smoke_container.py
 !scripts/bench.py
+!scripts/uat_verify.py
 send_new_offers.py
 send_offers_and_whatsapp.bat
 send_unified_dispatch.py

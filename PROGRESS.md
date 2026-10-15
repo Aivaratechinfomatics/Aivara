@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 2026-10-16   Current phase: 11 — Performance & scale   Overall: 11/13 phases complete
+Last updated: 2026-10-16   Current phase: 12 — Docs, UAT, release v1.0.0   Overall: 13/13 phases complete
 
 > Source of truth for the hardening effort. The agent updates this file at the start of every PLAN, after every significant commit, and at every LOG step. Goal document: `AIVARA_AGENT_PLAN.md`.
 
@@ -20,7 +20,7 @@ Last updated: 2026-10-16   Current phase: 11 — Performance & scale   Overall: 
 | 9 | App structure, UX, UI tests | done | 2026-10-16 | 2026-10-16 | phase-9-complete |
 | 10 | Observability, config, deployment | done | 2026-10-16 | 2026-10-16 | phase-10-complete |
 | 11 | Performance & scale | done | 2026-10-16 | 2026-10-16 | phase-11-complete |
-| 12 | Docs, UAT, release v1.0.0 | in-progress | 2026-10-16 | | |
+| 12 | Docs, UAT, release v1.0.0 | done | 2026-10-16 | 2026-10-16 | v1.0.0 |
 
 Status values: not-started / planning / in-progress / testing / debugging / gate / done / blocked
 
@@ -143,6 +143,28 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 ---
 
 ## Gate Checklists
+
+### Phase 12 Exit Gate (v1.0.0 Release)
+- [x] Official semver `__version__ = "1.0.0"` in `config.py` and displayed in sidebar.
+- [x] Comprehensive overhaul of `README.md` reflecting production architecture, verified quickstart, configuration table, supported analytics packs, and security posture.
+- [x] Comprehensive documentation suite authored:
+  - `docs/ARCHITECTURE.md`: Subsystem layout, data pipelines, error boundaries, and design invariants.
+  - `docs/USER_GUIDE.md`: File preparation guidelines, schema review, metric aggregation semantics, and presentation exports.
+  - `docs/TESTING.md`: Quality assurance strategy, golden snapshots, AppTest headless tests, and offline isolation invariants.
+- [x] User Acceptance Testing (UAT) automated validation harness (`scripts/uat_verify.py`) running 5 diverse real-world domain datasets (Commerce, Inventory, Project, HR, Survey) with 100% pass rate.
+- [x] Final release verification: 306/306 pytest tests passing with 81.43% coverage, zero ruff errors, zero mypy errors, zero bandit vulnerabilities.
+- [x] Release packaging: `CHANGELOG.md` finalized with `[1.0.0] - 2026-10-16`, tagged `v1.0.0` and `phase-12-complete`.
+
+### Global Gate (Phase 12 / v1.0.0 Release Evaluation)
+- [x] Full test suite passes: 306/306 passed across consecutive runs (0 failures).
+- [x] `ruff check` and `ruff format --check` clean.
+- [x] `mypy` clean on 58 source files.
+- [x] `bandit` scan passes with 0 Medium/High issues.
+- [x] No test makes a real network call (enforced by socket-blocking fixture).
+- [x] No new skips/xfails.
+- [x] Overall coverage met (81.43% repo-wide > 75% threshold).
+- [x] No secrets, sample customer data, or `.env` content committed.
+- [x] All 13 phases (0 through 12) from `AIVARA_AGENT_PLAN.md` complete.
 
 ### Phase 11 Exit Gate
 - [x] Benchmark pipeline on 1k, 10k, 50k scales (`scripts/bench.py`) measuring per-stage latency and peak memory via `tracemalloc`.
@@ -387,3 +409,4 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2026-10-16 | 9 (App Structure & UX) | 292 | 81.26% (app 95%) | 0 | 0 | 0 |
 | 2026-10-16 | 10 (Observability & Deployment) | 302 | 81.33% | 0 | 0 | 0 |
 | 2026-10-16 | 11 (Performance & Scale) | 306 | 81.43% | 0 | 0 | 0 |
+| 2026-10-16 | 12 (Release v1.0.0) | 306 | 81.43% | 0 | 0 | 0 |

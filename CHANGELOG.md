@@ -5,9 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-10-16
 
 ### Added
+- **Phase 12: Docs, UAT, and Release v1.0.0 (Audit §12)**:
+  - Official production release version bump to `1.0.0` in `config.py` (`__version__ = "1.0.0"`).
+  - Complete overhaul of `README.md` reflecting production architecture, verified quickstart, configuration matrix, and security guarantees.
+  - Authored comprehensive documentation suite:
+    - `docs/ARCHITECTURE.md`: Subsystem layout, data pipelines, error boundaries, and design invariants.
+    - `docs/USER_GUIDE.md`: File preparation guidelines, schema review, metric aggregation semantics, and presentation exports.
+    - `docs/TESTING.md`: Quality assurance strategy, golden snapshots, AppTest headless tests, and offline isolation invariants.
+  - Automated User Acceptance Testing (UAT) verification harness `scripts/uat_verify.py` validating 5 diverse real-world domain datasets (Sales Time Series, Inventory Snapshot, Project Tracking, HR Workforce Roster, and Customer Feedback/NPS) through the complete analytical and export stack.
+  - All 13 phases (0 through 12) from `AIVARA_AGENT_PLAN.md` fully completed and validated.
 - **Phase 11: Performance & Scale (Audit §11)**:
   - Benchmark test harness `scripts/bench.py` profiling latency and memory usage across 1k, 10k, 50k, 100k rows and concurrent user sessions.
   - Empirical verification of latency SLA: 10,000 rows end-to-end pipeline processing completes in 4.9 seconds (< 10s SLA).
