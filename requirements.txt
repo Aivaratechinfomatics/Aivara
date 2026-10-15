@@ -7,5 +7,5 @@ python-pptx==1.0.2
 requests==2.32.3
 python-dotenv==1.0.1
 charset-normalizer==3.3.2
-tiktoken==0.7.0
+tiktoken==0.14.0
 openpyxl==3.1.5
