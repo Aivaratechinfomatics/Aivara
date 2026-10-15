@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 8: Export Hardening (Audit §8, Audit 3.7)**:
+  - Kaleido rendering timeout protection (`export/chart_images.py`) wrapping `fig.to_image` in `ThreadPoolExecutor` with configurable timeout (`AIVARA_KALEIDO_TIMEOUT`, default 15.0s) to survive headless browser hang modes and raise `TimeoutError`.
+  - Graceful slide placeholder card (`_add_chart_placeholder` in `export/pptx_builder.py`, Audit 3.7) displaying a clean warning card ("📊 Chart Preview Unavailable: Offline graphics renderer did not complete") on PowerPoint slides whenever chart rendering times out or crashes.
+  - Degraded and empty deck resilience: empty view lists in `build_toc_slide` and `build_executive_summary_slide` render informative empty state notices ("No domain views selected for export") without crashing or creating blank bounding boxes.
+  - Large drivers table stress resilience: 50+ category drivers tables safely truncated to top 10 contributors, preventing shape overlapping and slide layout blowouts.
+  - OpenXML zip structure validation ensuring generated decks strictly conform to PowerPoint PPTX zip container structures (`[Content_Types].xml`, `_rels/.rels`, `ppt/presentation.xml`, slide parts).
+  - Number consistency verification: asserting exact correspondence between formatted pipeline display values and slide text across KPI tiles and deltas.
+  - Total offline isolation guarantee: verified zero network calls and zero imports of `insight.client` across the `export/` package.
+  - Dedicated export hardening test suite (`tests/test_export_hardening.py`) with 10 comprehensive tests achieving 91.56% coverage across `export/`.
 - **Phase 7: Security Hardening (Audit §7)**:
   - Threat Model documentation (`docs/THREAT_MODEL.md`) formalizing system architecture, trust boundaries, asset classification, STRIDE-lite threat analysis, and risk acceptance.
   - Security & deployment hardening guide (`docs/SECURITY.md`) detailing reverse-proxy integration (Nginx, Caddy, oauth2-proxy), TLS termination, and vulnerability reporting.

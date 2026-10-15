@@ -26,6 +26,7 @@ Production-grade improvements (v2):
 from __future__ import annotations
 
 import io
+import logging
 import textwrap
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -344,6 +345,49 @@ def _render_kpi_tiles(
 # ---------------------------------------------------------------------------
 
 
+logger = logging.getLogger(__name__)
+
+
+def _add_chart_placeholder(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    reason: str = "Chart preview unavailable",
+) -> None:
+    """Render a styled placeholder card on the slide when a chart cannot be rendered.
+
+    Prevents empty slide voids and provides transparent degradation info (Audit 3.7).
+    """
+    _add_rect(slide, left, top, width, height, fill=COLOR_KPI_BG, line=COLOR_KPI_BORDER)
+    pad_h = max(0.2, (height - 1.0) / 2.0)
+    _add_textbox(
+        slide,
+        "📊 Chart Preview Unavailable",
+        left=left + 0.2,
+        top=top + pad_h,
+        width=width - 0.4,
+        height=0.4,
+        size=14,
+        bold=True,
+        color=COLOR_MUTED,
+        align=PP_ALIGN.CENTER,
+    )
+    _add_textbox(
+        slide,
+        "Offline graphics renderer did not complete. Figures are preserved in the presentation.",
+        left=left + 0.2,
+        top=top + pad_h + 0.45,
+        width=width - 0.4,
+        height=0.4,
+        size=10,
+        bold=False,
+        color=COLOR_MUTED,
+        align=PP_ALIGN.CENTER,
+    )
+
+
 def _place_chart(
     slide,
     fig,
@@ -367,8 +411,12 @@ def _place_chart(
     """
     try:
         stream = figure_to_png_stream(fig, width=render_width_px, height=render_height_px)
-    except Exception:
-        return  # fail soft — never crash the export
+    except Exception as exc:
+        logger.warning(
+            "Could not export chart to PNG (%s); rendering placeholder note on slide.", exc
+        )
+        _add_chart_placeholder(slide, left, top, max_width, max_height, reason=str(exc))
+        return
 
     aspect = render_width_px / render_height_px  # e.g. 1920/1080 ≈ 1.778
 
@@ -394,8 +442,13 @@ def _place_chart(
             width=Inches(img_w),
             height=Inches(img_h),
         )
-    except Exception:
-        pass  # defensive — never crash
+    except Exception as exc:
+        logger.warning("Could not add picture shape to slide (%s); rendering placeholder.", exc)
+        _add_chart_placeholder(slide, left, top, max_width, max_height, reason=str(exc))
+
+
+# Compatibility alias
+_add_chart_to_slide = _place_chart
 
 
 # ---------------------------------------------------------------------------
@@ -493,6 +546,20 @@ def build_toc_slide(
     slide = _blank_slide(prs)
     _add_slide_title(slide, "Contents")
 
+    if not views:
+        _add_textbox(
+            slide,
+            "No domain views selected for export.",
+            left=MARGIN_L,
+            top=CONTENT_TOP + 0.30,
+            width=CONTENT_W,
+            height=0.45,
+            size=13,
+            color=COLOR_MUTED,
+        )
+        _add_footer(slide, slide_number, total_slides)
+        return
+
     col_count = 2
     col_w = CONTENT_W / col_count - 0.20
     items_per_col = max(1, (len(views) + col_count - 1) // col_count)
@@ -552,7 +619,6 @@ def build_executive_summary_slide(
 
     # Gather up to 8 KPI tiles from all views
     all_tiles = [t for v in views for t in v.kpi_tiles][:8]
-    tile_bottom = _render_kpi_tiles(slide, all_tiles, top=CONTENT_TOP)
 
     # Insight text below the tiles
     primary_insight = None
@@ -560,6 +626,22 @@ def build_executive_summary_slide(
         primary_insight = _cached_insight(v.view_name)
         if primary_insight:
             break
+
+    if not all_tiles and not primary_insight:
+        _add_textbox(
+            slide,
+            "No executive summary KPIs or insights available for this export.",
+            left=MARGIN_L,
+            top=CONTENT_TOP + 0.30,
+            width=CONTENT_W,
+            height=0.45,
+            size=13,
+            color=COLOR_MUTED,
+        )
+        _add_footer(slide, slide_number, total_slides)
+        return
+
+    tile_bottom = _render_kpi_tiles(slide, all_tiles, top=CONTENT_TOP)
 
     if primary_insight:
         y = tile_bottom + 0.10
@@ -655,6 +737,45 @@ def build_view_slide(prs: Any, view: ViewExportData, slide_number: int, total_sl
             max_height=avail_h,
             render_width_px=FULL_WIDTH_PX,
             render_height_px=FULL_HEIGHT_PX,
+        )
+    elif insight:
+        # Full-width text panel
+        y = chart_top + 0.10
+        text_items = [
+            (insight.get("headline"), 16, True, COLOR_BRAND_NAVY),
+            (insight.get("driver_explanation"), 12, False, COLOR_TEXT),
+            (
+                "Next: " + insight["suggested_action"] if insight.get("suggested_action") else None,
+                12,
+                True,
+                COLOR_BRAND_TEAL,
+            ),
+        ]
+        for text, size, bold, color in text_items:
+            if text:
+                h = 0.85 if bold else 0.75
+                _add_textbox(
+                    slide,
+                    text,
+                    left=MARGIN_L,
+                    top=y,
+                    width=CONTENT_W,
+                    height=h,
+                    size=size,
+                    bold=bold,
+                    color=color,
+                )
+                y += h + 0.10
+    elif not view.kpi_tiles:
+        _add_textbox(
+            slide,
+            "No data or charts available for this view.",
+            left=MARGIN_L,
+            top=CONTENT_TOP + 0.30,
+            width=CONTENT_W,
+            height=0.45,
+            size=13,
+            color=COLOR_MUTED,
         )
 
     _add_footer(slide, slide_number, total_slides)

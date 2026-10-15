@@ -132,7 +132,7 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 3.4 Partial coercion not reported | fixed | `ingestion/cleaner.py`: reports unparsed counts in `CleanReport.coercion_failures`; verified by `tests/test_cleaner.py::test_partial_coercion_reports_failure_count` | Phase 3 |
 | 3.5 Compact dates claimed by numeric pass | fixed | `ingestion/cleaner.py`: date pattern checks before numeric coercion; verified by `tests/test_cleaner.py::test_compact_date_format_coerced_to_datetime_not_numeric` | Phase 3 |
 | 3.6 NaN dimensions dropped silently | fixed | `analytics/drivers.py` & `analytics/anomalies.py`: `.fillna("(missing)")` preserves null dimension groups | Phase 3 |
-| 3.7 Narrow exception handling in export | still-broken | `export/pptx_builder.py` line 341 catches Exception but has no timeout or slide placeholder | Phase 8 |
+| 3.7 Narrow exception handling in export | fixed | `export/chart_images.py` ThreadPoolExecutor timeout & `pptx_builder.py` `_add_chart_placeholder`; verified by `tests/test_export_hardening.py` | Phase 8 |
 | 3.8 LLM sentence-split parsing / bad cache | fixed | `insight/client.py`: strict JSON schema validation, 1-shot repair prompt, faithfulness check, deterministic fallback; verified by `tests/test_insight_reliability.py` | Phase 5 |
 | 4.1 Everything aggregated with `.sum()` | fixed | `analytics/kpis.py`, `trend.py`, `drivers.py`, `snapshot.py`: configurable `agg`, rate metrics default to `mean`; verified by `tests/test_analytics_deep_coverage.py::test_kpi_rate_metric_aggregation_is_mean_not_sum` | Phase 4 |
 | 4.2 Anomalies = structural outliers | fixed | `analytics/anomalies.py`: `detect_temporal_anomalies` rolling baselines, structural outlier labeling; verified by `tests/test_analytics_deep_coverage.py::test_anomalies_temporal_and_severities` | Phase 4 |
@@ -143,6 +143,28 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 ---
 
 ## Gate Checklists
+
+### Phase 8 Exit Gate
+- [x] Kaleido rendering timeout protection (`export/chart_images.py`) with configurable `AIVARA_KALEIDO_TIMEOUT`.
+- [x] Graceful slide placeholder card `_add_chart_placeholder` renders on export failure / timeout (Audit 3.7).
+- [x] Degraded & empty deck resilience: empty view lists in `build_toc_slide` and `build_executive_summary_slide` render informative notes without error.
+- [x] Large drivers table stress resilience: 50+ category drivers tables safely truncated to top 10 contributors.
+- [x] OpenXML presentation zip structure integrity verified via `zipfile.ZipFile`.
+- [x] Number consistency verification: asserting exact correspondence between formatted pipeline display values and slide text across KPI tiles and deltas.
+- [x] Total offline isolation guarantee: verified zero network calls and zero imports of `insight.client` across the `export/` package.
+- [x] Dedicated export hardening test suite (`tests/test_export_hardening.py`) passing (10/10).
+- [x] Global gate passes (284/284 tests pass, ruff clean, mypy clean, bandit clean).
+
+### Global Gate (Phase 8 Evaluation)
+- [x] Full test suite passes: 284/284 passed across consecutive runs (0 failures).
+- [x] `ruff check` and `ruff format --check` clean.
+- [x] `mypy` clean on 44 source files.
+- [x] `bandit` scan passes with 0 Medium/High issues.
+- [x] No test makes a real network call (enforced by socket-blocking fixture).
+- [x] No new skips/xfails.
+- [x] Overall coverage met (77.87% repo-wide, `export/` 91.56%).
+- [x] No secrets, sample customer data, or `.env` content committed.
+- [x] `PROGRESS.md` and `CHANGELOG.md` updated.
 
 ### Phase 7 Exit Gate
 - [x] Threat model committed (`docs/THREAT_MODEL.md`) and each identified threat has a mitigation or accepted-risk entry.
@@ -294,3 +316,4 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2026-10-15 | 5 (LLM Reliability & Privacy) | 212 | 89.40% (insight 90.19%) | 0 | 0 | 0 |
 | 2026-10-15 | 6 (State & Concurrency) | 222 | 92.78% | 0 | 0 | 0 |
 | 2026-10-15 | 7 (Security Hardening) | 274 | 77.02% (repo-wide) | 0 | 0 | 0 |
+| 2026-10-16 | 8 (Export Hardening) | 284 | 77.87% (export 91.56%) | 0 | 0 | 0 |

@@ -15,7 +15,9 @@ never loses resolution.
 
 from __future__ import annotations
 
+import concurrent.futures
 import io
+import os
 
 # Full-slide render target: 1920 × 1080 corresponds to the 16:9 slide at
 # 144 dpi (1920 / 13.33 = 144). scale=2 doubles that to ~288 dpi — crisp
@@ -33,6 +35,7 @@ TALL_WIDTH_PX = 900
 TALL_HEIGHT_PX = 820
 
 DEFAULT_SCALE = 2
+KALEIDO_TIMEOUT_SECONDS: float = float(os.environ.get("AIVARA_KALEIDO_TIMEOUT", "15.0"))
 
 
 def figure_to_png_bytes(
@@ -40,18 +43,25 @@ def figure_to_png_bytes(
     width: int = FULL_WIDTH_PX,
     height: int = FULL_HEIGHT_PX,
     scale: int = DEFAULT_SCALE,
+    timeout: float = KALEIDO_TIMEOUT_SECONDS,
 ) -> bytes:
     """Render a Plotly figure to PNG bytes via the kaleido engine, fully
-    offline. Raises RuntimeError with a clear message if kaleido isn't
-    available, rather than a cryptic import error deep in export flow."""
+    offline. Wraps rendering in a timeout to survive kaleido hang modes."""
+
+    def _render() -> bytes:
+        return fig.to_image(format="png", width=width, height=height, scale=scale)
+
     try:
-        png_bytes = fig.to_image(format="png", width=width, height=height, scale=scale)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+            future = executor.submit(_render)
+            return future.result(timeout=timeout)
+    except concurrent.futures.TimeoutError as exc:
+        raise TimeoutError(f"Plotly figure export timed out after {timeout:.1f} seconds.") from exc
     except Exception as exc:
         raise RuntimeError(
             "Could not export chart to PNG — is the 'kaleido' package installed? "
             f"Original error: {exc}"
         ) from exc
-    return png_bytes
 
 
 def figure_to_png_stream(fig, **kwargs) -> io.BytesIO:

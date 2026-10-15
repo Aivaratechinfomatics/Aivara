@@ -93,7 +93,7 @@ def render_upload_page() -> bool:
     classifications = list(st.session_state["classifications"].values())
 
     # Data Quality Summary Panel
-    clean_report = st.session_state.get("_clean_report")
+    saved_clean_report = st.session_state.get("_clean_report")
     load_notes = st.session_state.get("_load_notes", [])
     clean_messages = st.session_state.get("_clean_messages", [])
 
@@ -101,19 +101,20 @@ def render_upload_page() -> bool:
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Rows Loaded", f"{len(df):,}")
         m2.metric("Columns", len(df.columns))
-        m3.metric("Flagged Duplicates", getattr(clean_report, "duplicate_rows_flagged", 0))
-        m4.metric("Normalized Nulls", getattr(clean_report, "total_nulls_found", 0))
+        m3.metric("Flagged Duplicates", getattr(saved_clean_report, "duplicate_rows_flagged", 0))
+        m4.metric("Normalized Nulls", getattr(saved_clean_report, "total_nulls_found", 0))
 
-        if clean_report and (
-            clean_report.empty_rows_removed > 0 or clean_report.empty_columns_removed > 0
+        if saved_clean_report and (
+            saved_clean_report.empty_rows_removed > 0
+            or saved_clean_report.empty_columns_removed > 0
         ):
             st.caption(
-                f"🧹 Dropped {clean_report.empty_rows_removed} fully empty row(s) and {clean_report.empty_columns_removed} spacer column(s)."
+                f"🧹 Dropped {saved_clean_report.empty_rows_removed} fully empty row(s) and {saved_clean_report.empty_columns_removed} spacer column(s)."
             )
 
-        if clean_report and getattr(clean_report, "coercion_failures", None):
+        if saved_clean_report and getattr(saved_clean_report, "coercion_failures", None):
             st.warning("⚠️ Unparsed values during type coercion:")
-            for c_fail, count in clean_report.coercion_failures.items():
+            for c_fail, count in saved_clean_report.coercion_failures.items():
                 st.write(
                     f"- **{c_fail}**: {count} cell(s) could not be parsed and were converted to empty/null."
                 )
