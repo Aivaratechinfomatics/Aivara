@@ -1,6 +1,6 @@
 # Aivara — Autonomous Tabular Analytics & Executive Deck Generation
 
-> 🎓 **Announcement**: **Internship Batch for this project starting 19 Oct 2026.** Applications are open via the [DBERT Internship Portal](https://internship.dbert.online/).
+> 🎓 **Announcement**: **Internship Batch for this project starting 19 Oct 2026.** Apply online at [aivaratech.online/internships](https://aivaratech.online/internships).
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](config.py)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
@@ -8,6 +8,21 @@
 [![Security](https://img.shields.io/badge/security-hardened-brightgreen.svg)](docs/SECURITY.md)
 
 **Aivara** is an autonomous business intelligence platform designed to transform raw, messy business spreadsheets into executive-ready dashboards and branded 16:9 widescreen PowerPoint presentation decks — with complete data privacy and local computation.
+
+---
+
+## 🚀 About Aivara Tech
+
+**Aivaratech Infomatics** ([aivaratech.online](https://aivaratech.online/)) builds practical technology across AI, data analytics, business intelligence, automation, RPA, and software engineering.
+
+Our flagship operational product, **Aivara Insight**, is dedicated to pioneering autonomous tabular reasoning engines and boardroom-ready presentation automation for modern enterprises. Built with a compute-first, privacy-by-design architecture, Aivara transforms raw tabular spreadsheets into executive-grade visual stories and verified analytical insights with zero cloud data leaks.
+
+### Connect & Opportunities with Aivara Tech
+- 🌐 **Official Website**: [aivaratech.online](https://aivaratech.online/)
+- 💼 **Apply for Internship**: [aivaratech.online/internships](https://aivaratech.online/internships)
+- 🎓 **Upcoming Internship Batch**: Starting **19 Oct 2026** (2-month structured live engineering & BI tracks, senior technical mentorship, verified GitHub contribution credits, and Certificate of Completion/LOR)
+- 🏛️ **DBERT AI Venture Studio**: [dbert.online](https://dbert.online/)
+- 📂 **Explore Enterprise Solutions**: [dbert.online/startups/portfolio](https://dbert.online/startups/portfolio)
 
 ---
 
@@ -71,7 +86,7 @@ A complete **1080p Full HD live video demonstration** (101 seconds) walks throug
 
 - **Universal Demo Video**: [demo_output/aivara_v1_demo.mp4](demo_output/aivara_v1_demo.mp4)
 - **High-Definition Slide Deck Presentation**: [demo_output/Aivara_Executive_Presentation.pptx](demo_output/Aivara_Executive_Presentation.pptx)
-- **Visual Walkthrough & Screenshot Gallery**: See the detailed walkthrough in [`walkthrough.md`](docs/USER_GUIDE.md).
+- **Visual Walkthrough & Screenshot Gallery**: See the detailed walkthrough in [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md).
 
 ---
 
@@ -113,17 +128,6 @@ DBERT (Digital Blinc Education Research & Technology) incubates transformative A
 - 📂 **Startup Portfolio**: [dbert.online/startups/portfolio](https://dbert.online/startups/portfolio)
 - 🎓 **DBERT Fellowship Program**: [dbert.online/learners/fellowship](https://dbert.online/learners/fellowship)
 - 💼 **Internship Portal**: [internship.dbert.online](https://internship.dbert.online/)
-
----
-
-## 🚀 About Aivara Tech
-
-**Aivara Tech** is dedicated to pioneering autonomous data intelligence, tabular reasoning engines, and boardroom-ready presentation automation for modern enterprises. Built with a compute-first, privacy-by-design architecture, Aivara transforms raw tabular spreadsheets into executive-grade visual stories and verified analytical insights.
-
-- 🎓 **Internship Batch**: Internship Batch for this project starting **19 Oct 2026**
-- 🌐 **DBERT AI Venture Studio**: [dbert.online](https://dbert.online/)
-- 💼 **Apply for Internship**: [internship.dbert.online](https://internship.dbert.online/)
-- 📂 **Explore Enterprise Solutions**: [dbert.online/startups/portfolio](https://dbert.online/startups/portfolio)
 
 ---
 
