@@ -51,11 +51,22 @@ DAILY_CALL_BUDGET = int(os.environ.get("AIVARA_DAILY_BUDGET", "30"))
 # Per-call cap on generated tokens, to bound both cost and rambling output.
 MAX_OUTPUT_TOKENS = int(os.environ.get("AIVARA_MAX_OUTPUT_TOKENS", "150"))
 
-# Where the daily call counter is persisted so it survives app restarts.
-BUDGET_STATE_PATH = os.environ.get("AIVARA_BUDGET_STATE_PATH", ".aivara_budget_state.json")
+# Where the daily call counter is persisted (multi-process safe SQLite WAL store).
+BUDGET_DB_PATH: str = os.environ.get("AIVARA_BUDGET_DB_PATH", ".aivara_budget.db")
+BUDGET_STATE_PATH: str = os.environ.get("AIVARA_BUDGET_STATE_PATH", BUDGET_DB_PATH)
 
-# Where the facts-hash -> LLM response cache is persisted for the session.
-INSIGHT_CACHE_PATH = os.environ.get("AIVARA_INSIGHT_CACHE_PATH", ".aivara_insight_cache.json")
+# Where the facts-hash -> LLM response cache is persisted (multi-process safe SQLite WAL store).
+CACHE_DB_PATH: str = os.environ.get("AIVARA_CACHE_DB_PATH", ".aivara_cache.db")
+INSIGHT_CACHE_PATH: str = os.environ.get("AIVARA_INSIGHT_CACHE_PATH", CACHE_DB_PATH)
+
+# Cache controls (Phase 6 / Audit §6)
+AIVARA_CACHE_ENABLED: bool = os.environ.get("AIVARA_CACHE_ENABLED", "true").lower() in (
+    "true",
+    "1",
+    "yes",
+)
+AIVARA_CACHE_TTL_DAYS: int = int(os.environ.get("AIVARA_CACHE_TTL_DAYS", "7"))
+AIVARA_CACHE_MAX_ENTRIES: int = int(os.environ.get("AIVARA_CACHE_MAX_ENTRIES", "1000"))
 
 # Prompt version string — bump this whenever prompts.py changes meaningfully,
 # so cache keys don't silently reuse insights generated under an old prompt.

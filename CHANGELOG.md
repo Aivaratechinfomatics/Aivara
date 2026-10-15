@@ -8,6 +8,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Phase 6: State, Concurrency, Multi-User Isolation (Audit §6, Audit 4.3)**:
+  - Exhaustive state inventory documentation (`docs/STATE_INVENTORY.md`) classifying every `st.session_state` key, persistent database file, in-memory global, concurrency assumptions, and the zero-raw-data-on-disk invariant.
+  - Multi-process safe atomic budget tracking (`insight/budget.py`) using SQLite with Write-Ahead Logging (WAL) and 5000ms busy timeout, replacing JSON files and `threading.Lock`.
+  - Atomic `check_and_increment_daily(path, limit)` executing an atomic `BEGIN IMMEDIATE` transaction, eliminating Time-of-Check-to-Time-of-Use (TOCTOU) race conditions across concurrent processes and worker threads.
+  - Persistent insight cache (`insight/cache.py`) backed by SQLite WAL with automatic TTL-based expiration (`AIVARA_CACHE_TTL_DAYS`, default 7) and LRU capacity bounds (`AIVARA_CACHE_MAX_ENTRIES`, default 1000).
+  - Cache zero-persistence mode toggleable via `AIVARA_CACHE_ENABLED=false` for regulated or zero-disk-retention environments.
+  - Automatic corruption recovery in SQLite cache and budget stores gracefully replacing corrupt database files without process crashing or unhandled exceptions.
+  - Concurrency test suite (`tests/test_concurrency.py`) with 10 comprehensive tests validating multi-threaded and multi-process cross-process exhaustion (50 threads / 50 workers across 4 child Python processes), atomic budget increments, TTL expiration, LRU pruning, corruption recovery, zero persistence, session isolation, and the zero raw row data persistence invariant.
 - **Phase 5: LLM Layer: Reliability & Privacy (Audit §5)**:
   - Structured JSON output schema enforcement (`headline`, `driver_explanation`, `suggested_action`) with preamble stripping, markdown code-block parsing, and 1-shot repair retry (Audit 3.8).
   - Local numerical faithfulness verification (`insight/faithfulness.py`) checking cited metrics against facts packet numbers and rejecting hallucinations with fallback reversion.

@@ -2,14 +2,14 @@
 insight/budget.py — token estimation, call counting, budget enforcement.
 
 Hard ceiling enforced in code, not just documented: tracks calls made in the
-current UTC day, persisted to a small local file so it survives app
-restarts, and refuses to call the LLM past the configured ceiling.
+current UTC day, persisted to a multi-process safe SQLite WAL store so it survives
+app restarts and prevents concurrent over-budget races across workers and processes (Audit 4.3).
 """
 
 from __future__ import annotations
 
-import json
 import os
+import sqlite3
 import threading
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -72,63 +72,135 @@ def _today_key() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%d")
 
 
-def _read_state(path: str) -> dict:
-    if not os.path.exists(path):
-        return {}
+def _get_sqlite_connection(path: str) -> sqlite3.Connection:
+    """Returns a configured SQLite connection with WAL mode and busy timeout.
+    Recovers from database corruption by recreating a clean store."""
+    dir_name = os.path.dirname(path)
+    if dir_name:
+        os.makedirs(dir_name, exist_ok=True)
+
+    def _try_open(db_path: str) -> sqlite3.Connection:
+        conn = sqlite3.connect(db_path, timeout=10.0, isolation_level=None)
+        try:
+            conn.execute("PRAGMA journal_mode=WAL")
+            conn.execute("PRAGMA busy_timeout=5000")
+            conn.execute(
+                "CREATE TABLE IF NOT EXISTS daily_budget (day TEXT PRIMARY KEY, calls_made INTEGER NOT NULL)"
+            )
+            return conn
+        except Exception:
+            conn.close()
+            raise
+
     try:
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-    except (json.JSONDecodeError, OSError):
-        return {}
+        return _try_open(path)
+    except (sqlite3.DatabaseError, OSError):
+        # Database corrupted or non-SQLite: remove and recreate fresh store
+        if os.path.exists(path):
+            try:
+                os.remove(path)
+            except OSError:
+                pass
+        return _try_open(path)
 
 
-def _write_state(path: str, state: dict) -> None:
-    tmp_path = f"{path}.tmp"
-    with open(tmp_path, "w", encoding="utf-8") as f:
-        json.dump(state, f)
-    os.replace(tmp_path, path)
+def check_and_increment_daily(
+    path: str | None = None, limit: int | None = None
+) -> tuple[bool, int, int]:
+    """Atomically checks if calls_made < limit and increments calls_made if permitted.
+    Eliminates TOCTOU races in multi-process/multi-thread deployments.
+
+    Returns:
+        (allowed: bool, calls_made_today: int, remaining: int)
+    """
+    if path is None:
+        path = config.BUDGET_DB_PATH
+    if limit is None:
+        limit = config.DAILY_CALL_BUDGET
+    today = _today_key()
+
+    with _lock:
+        conn = _get_sqlite_connection(path)
+        try:
+            cursor = conn.cursor()
+            cursor.execute("BEGIN IMMEDIATE")
+            cursor.execute("SELECT calls_made FROM daily_budget WHERE day = ?", (today,))
+            row = cursor.fetchone()
+            current_calls = row[0] if row else 0
+
+            if current_calls >= limit:
+                cursor.execute("COMMIT")
+                return False, current_calls, 0
+
+            new_calls = current_calls + 1
+            cursor.execute(
+                "INSERT INTO daily_budget (day, calls_made) VALUES (?, ?) "
+                "ON CONFLICT(day) DO UPDATE SET calls_made = ?",
+                (today, new_calls, new_calls),
+            )
+            # Prune previous dates to keep database tiny
+            cursor.execute("DELETE FROM daily_budget WHERE day != ?", (today,))
+            cursor.execute("COMMIT")
+            remaining = max(0, limit - new_calls)
+            return True, new_calls, remaining
+        except Exception:
+            try:
+                conn.execute("ROLLBACK")
+            except Exception:
+                pass
+            raise
+        finally:
+            conn.close()
 
 
 def get_status(path: str | None = None, daily_budget: int | None = None) -> BudgetStatus:
+    """Reads current daily budget status safely from SQLite."""
     if path is None:
-        path = config.BUDGET_STATE_PATH
+        path = config.BUDGET_DB_PATH
     if daily_budget is None:
         daily_budget = config.DAILY_CALL_BUDGET
-    with _lock:
-        state = _read_state(path)
-        today = _today_key()
-        calls_today = int(state.get(today, 0))
-        remaining = max(0, daily_budget - calls_today)
+    today = _today_key()
+
+    if not os.path.exists(path):
         return BudgetStatus(
-            calls_made_today=calls_today,
+            calls_made_today=0,
             daily_budget=daily_budget,
-            remaining=remaining,
-            exhausted=remaining <= 0,
+            remaining=daily_budget,
+            exhausted=daily_budget <= 0,
         )
+
+    with _lock:
+        conn = _get_sqlite_connection(path)
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT calls_made FROM daily_budget WHERE day = ?", (today,))
+            row = cursor.fetchone()
+            calls_today = row[0] if row else 0
+            remaining = max(0, daily_budget - calls_today)
+            return BudgetStatus(
+                calls_made_today=calls_today,
+                daily_budget=daily_budget,
+                remaining=remaining,
+                exhausted=remaining <= 0,
+            )
+        finally:
+            conn.close()
 
 
 def can_make_call(path: str | None = None, daily_budget: int | None = None) -> bool:
+    """Checks whether at least one call remains under the daily budget ceiling."""
     return not get_status(path, daily_budget).exhausted
 
 
 def record_call(path: str | None = None) -> BudgetStatus:
-    """Increment today's call counter and persist it. Call this only after a
-    call actually succeeds (or is attempted) — never speculatively."""
+    """Increments the call counter atomically and returns updated BudgetStatus."""
     if path is None:
-        path = config.BUDGET_STATE_PATH
-    with _lock:
-        state = _read_state(path)
-        today = _today_key()
-        state[today] = int(state.get(today, 0)) + 1
-        # Keep the state file small: drop any days other than today.
-        state = {today: state[today]}
-        _write_state(path, state)
-        daily_budget = config.DAILY_CALL_BUDGET
-        calls_today = state[today]
-        remaining = max(0, daily_budget - calls_today)
-        return BudgetStatus(
-            calls_made_today=calls_today,
-            daily_budget=daily_budget,
-            remaining=remaining,
-            exhausted=remaining <= 0,
-        )
+        path = config.BUDGET_DB_PATH
+    allowed, calls_today, remaining = check_and_increment_daily(path)
+    daily_budget = config.DAILY_CALL_BUDGET
+    return BudgetStatus(
+        calls_made_today=calls_today,
+        daily_budget=daily_budget,
+        remaining=remaining,
+        exhausted=remaining <= 0,
+    )

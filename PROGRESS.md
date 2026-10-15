@@ -1,6 +1,6 @@
 # Progress
 
-Last updated: 2026-10-15   Current phase: 6 — State, concurrency, multi-user   Overall: 6/13 phases complete
+Last updated: 2026-10-15   Current phase: 7 — Security hardening   Overall: 7/13 phases complete
 
 > Source of truth for the hardening effort. The agent updates this file at the start of every PLAN, after every significant commit, and at every LOG step. Goal document: `AIVARA_AGENT_PLAN.md`.
 
@@ -14,8 +14,8 @@ Last updated: 2026-10-15   Current phase: 6 — State, concurrency, multi-user  
 | 3 | Ingestion hardening (audit §3) | done | 2026-10-15 | 2026-10-15 | phase-3-complete |
 | 4 | Analytics validity & coverage | done | 2026-10-15 | 2026-10-15 | phase-4-complete |
 | 5 | LLM layer: reliability & privacy | done | 2026-10-15 | 2026-10-15 | phase-5-complete |
-| 6 | State, concurrency, multi-user | in-progress | 2026-10-15 | | |
-| 7 | Security hardening | not-started | | | |
+| 6 | State, concurrency, multi-user | done | 2026-10-15 | 2026-10-15 | phase-6-complete |
+| 7 | Security hardening | in-progress | 2026-10-15 | | |
 | 8 | Export hardening | not-started | | | |
 | 9 | App structure, UX, UI tests | not-started | | | |
 | 10 | Observability, config, deployment | not-started | | | |
@@ -26,38 +26,37 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 
 ---
 
-## Current Phase Detail — Phase 4: Analytics Validity & Coverage (Complete)
+## Current Phase Detail — Phase 6: State, Concurrency, Multi-User (Complete)
 
 ### Plan (written before coding)
 - **Tasks**:
-  - [x] 4.1 Aggregation semantics: introduce `agg` per metric (`sum` | `mean` | `weighted_mean` | `last`), heuristic default for rate/ratio metrics (`conversion_rate`), manual override support, apply across KPIs, trend, drivers, anomalies.
-  - [x] 4.2 Anomaly detection: augment cross-sectional category outliers with temporal rolling baseline anomalies when history exists; label static snapshot outliers as "structural outlier"; standardize `SEVERITY_LOW`, `SEVERITY_MEDIUM`, `SEVERITY_HIGH`.
-  - [x] Statistical discovery engine: enforce minimum sample size $n \ge 5$ in correlation, add "correlation ≠ causation" caption, guard divide-by-zero in concentration index.
-  - [x] Domain modules: hand-computed expectations and edge case tests for `commerce.py`, `finance.py` (budget variance sign convention), `workforce.py` (point-in-time headcount), `feedback.py` (NPS and CSAT formulas).
-  - [x] Customers/Operations tabs separation check.
-- **Risks**: Modifying aggregation in `kpis.py` and `trend.py` could affect existing golden tests if any golden dataset uses rate metrics. Re-baseline golden tests only if mathematically justified per Audit 4.1.
-- **Test strategy**: Create `tests/test_domain_hand_computed.py` with hand-verified calculations. Expand existing tests in `test_kpis.py`, `test_trend.py`, `test_drivers.py`, `test_anomalies.py`, `test_stats.py`. Target `>= 95.0%` coverage across `analytics/`.
+  - [x] State inventory: Document every `st.session_state` key, persistent store, and concurrency expectation in `docs/STATE_INVENTORY.md`.
+  - [x] Atomic budget store: Migrate `insight/budget.py` to SQLite with WAL mode and `check_and_increment_daily` atomic transaction to eliminate TOCTOU race conditions.
+  - [x] Persistent cache store: Migrate `insight/cache.py` to SQLite with WAL mode, TTL-based expiration (`AIVARA_CACHE_TTL_DAYS`), LRU capacity pruning (`AIVARA_CACHE_MAX_ENTRIES`), and zero-persistence mode (`AIVARA_CACHE_ENABLED=false`).
+  - [x] Resilient recovery: Automatic corruption recovery for SQLite stores.
+  - [x] Zero raw row persistence invariant: Verify no raw data rows are persisted to disk.
+  - [x] Multi-process & multi-threaded concurrency tests: 50 concurrent threads and 50 workers across 4 separate Python processes in `tests/test_concurrency.py`.
+- **Risks**: Windows file locking on corrupted SQLite files; TOCTOU race conditions during daily budget rollover; cross-process file locks.
+- **Test strategy**: Create `tests/test_concurrency.py` covering multi-process budget exhaustion, cache TTL/LRU, corruption recovery, zero-persistence mode, session isolation, and disk invariants.
 
 ### Work Log (append-only, newest last)
-- 2026-10-15 22:35: Created Phase 4 implementation plan artifact.
-- 2026-10-15 22:36: Beginning Phase 4 development.
-- 2026-10-15 22:42: Implemented aggregation semantics in `analytics/kpis.py`, `trend.py`, `drivers.py`, `snapshot.py`, `anomalies.py`, and `app.py`. Added tooltip indicator on KPI tiles.
-- 2026-10-15 22:45: Implemented temporal anomaly detection `detect_temporal_anomalies` with rolling baselines and zero-variance floor; standardized severity tiers end-to-end.
-- 2026-10-15 22:47: Enforced statistical floor $n \ge 5$ in correlation matrix, added causation caveat to executive takeaways, fixed expense sign convention in `finance.py`.
-- 2026-10-15 22:48: Documented Decision D11 in `DECISIONS.md` and re-baselined golden datasets with verified identical numerical behavior.
-- 2026-10-15 23:01: Built `tests/test_domain_hand_computed.py` and `tests/test_analytics_deep_coverage.py`. Achieved 95.71% coverage across `analytics/`. All 194 tests pass.
-- 2026-10-15 23:02: Verified ruff linting, ruff formatting, mypy (27 files), and bandit security scan clean.
+- 2026-10-15 23:15: Created Phase 6 implementation plan artifact (`phase_6_state_concurrency_multi_user.md`).
+- 2026-10-15 23:20: Authored exhaustive state inventory in `docs/STATE_INVENTORY.md`.
+- 2026-10-15 23:25: Migrated `insight/budget.py` to SQLite WAL store with atomic `check_and_increment_daily()` transaction.
+- 2026-10-15 23:30: Migrated `insight/cache.py` to SQLite WAL store with TTL pruning, LRU cap, zero-persistence toggle, and Windows-safe corruption recovery.
+- 2026-10-15 23:35: Implemented comprehensive concurrency test suite `tests/test_concurrency.py` (10 tests including 50-worker multi-process load).
+- 2026-10-15 23:38: Verified all 222 tests pass; static checks (ruff, mypy, bandit) completely clean.
 
 ### Test Results
-- 2026-10-15 23:01: `python -m pytest tests/test_analytics_deep_coverage.py tests/test_anomalies.py tests/test_domains.py tests/test_domain_hand_computed.py tests/test_drivers.py tests/test_core_correctness.py tests/test_golden.py --cov=analytics` -> 52 passed, 95.71% coverage
-- 2026-10-15 23:02: `python -m pytest tests/ -q` -> 194 passed
-- 2026-10-15 23:02: `python -m ruff check .` & `python -m ruff format --check` -> Clean
-- 2026-10-15 23:02: `python -m mypy config.py analytics/ ingestion/ export/ insight/` -> Clean (27 files)
-- 2026-10-15 23:02: `python -m bandit -r analytics/ ingestion/ export/ insight/ ui/ config.py -ll` -> Clean (0 Medium, 0 High)
+- 2026-10-15 23:38: `python -m pytest tests/test_concurrency.py tests/test_budget.py tests/test_insight.py tests/test_insight_reliability.py` -> 35 passed
+- 2026-10-15 23:42: `python -m pytest tests/ --cov=config --cov=analytics --cov=ingestion --cov=export --cov=insight` -> 222 passed, 92.78% overall coverage
+- 2026-10-15 23:42: `python -m ruff check .` & `python -m ruff format --check .` -> Clean
+- 2026-10-15 23:42: `python -m mypy config.py analytics/ ingestion/ export/ insight/` -> Clean (30 files)
+- 2026-10-15 23:42: `python -m bandit -r analytics/ ingestion/ export/ insight/ ui/ config.py -ll` -> Clean (0 Medium, 0 High)
 
 ### Debug Log
-- `tests/test_golden.py`: `project_sample.csv` failed due to non-deterministic `Timestamp.now()` overdue check on 2024 tasks in `analytics/snapshot.py` -> Reverted overdue date logic to deterministic long-duration unstarted task check -> Resolved (attempt 1/3).
-- `tests/test_analytics_deep_coverage.py`: Missing branch in Excel serial parsing due to pandas converting numeric series to 1970 timestamp nanoseconds -> Enhanced Excel serial number boundary range (1000..100000) check -> Resolved (attempt 1/3).
+- `insight/cache.py`: On Windows, `PermissionError: [WinError 32]` occurs if attempting `os.remove` or `os.replace` on a corrupt SQLite file while the connection is still referenced -> Explicitly closed connection before file removal in corruption recovery -> Resolved (attempt 1/3).
+- `tests/test_safety_harness.py`: Legacy test checks `test_budget_state.json` in `config.BUDGET_STATE_PATH` -> SQLite natively handles `.json` file paths; kept test paths compatible -> Resolved (attempt 1/3).
 
 ---
 
@@ -127,13 +126,33 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 3.8 LLM sentence-split parsing / bad cache | fixed | `insight/client.py`: strict JSON schema validation, 1-shot repair prompt, faithfulness check, deterministic fallback; verified by `tests/test_insight_reliability.py` | Phase 5 |
 | 4.1 Everything aggregated with `.sum()` | fixed | `analytics/kpis.py`, `trend.py`, `drivers.py`, `snapshot.py`: configurable `agg`, rate metrics default to `mean`; verified by `tests/test_analytics_deep_coverage.py::test_kpi_rate_metric_aggregation_is_mean_not_sum` | Phase 4 |
 | 4.2 Anomalies = structural outliers | fixed | `analytics/anomalies.py`: `detect_temporal_anomalies` rolling baselines, structural outlier labeling; verified by `tests/test_analytics_deep_coverage.py::test_anomalies_temporal_and_severities` | Phase 4 |
-| 4.3 Cache/budget not multi-process safe | still-broken | `insight/budget.py` and `cache.py` use `threading.Lock` rather than multi-process safe locks/SQLite | Phase 6 |
+| 4.3 Cache/budget not multi-process safe | fixed | `insight/budget.py` and `cache.py` migrated to SQLite WAL with atomic check-and-increment and busy timeout; verified by `tests/test_concurrency.py` | Phase 6 |
 | 4.4 Dockerfile kaleido libs | still-broken | `Dockerfile` runs as root, unpinned base digest, no HEALTHCHECK | Phase 1 / Phase 10 |
 | 4.5 README privacy overstated | fixed | `insight/redactor.py` & `README.md`: label pseudonymization default ON (`AIVARA_LLM_REDACT_LABELS: bool = True`), documented in README; verified by `tests/test_insight_reliability.py` | Phase 5 |
 
 ---
 
 ## Gate Checklists
+
+### Phase 6 Exit Gate
+- [x] State inventory complete and committed to docs (`docs/STATE_INVENTORY.md`).
+- [x] Concurrency tests pass: 10/10 concurrency tests pass including multi-threaded and multi-process cross-process exhaustion.
+- [x] Multi-user isolation verified: Session-scoped caches and dataset states cannot leak across concurrent sessions.
+- [x] Atomic budget enforcement: SQLite WAL store with `check_and_increment_daily` prevents TOCTOU over-limit calls under load.
+- [x] Zero raw row persistence invariant holds across cache, budget, and exports.
+- [x] SQLite corruption recovery verified under invalid/corrupt database files.
+- [x] Global gate passes (222/222 tests pass, ruff clean, mypy clean, bandit clean).
+
+### Global Gate (Phase 6 Evaluation)
+- [x] Full test suite passes: 222/222 passed across consecutive runs (0 failures).
+- [x] `ruff check` and `ruff format --check` clean.
+- [x] `mypy` clean on 30 core modules.
+- [x] `bandit` scan passes with 0 Medium/High issues.
+- [x] No test makes a real network call (enforced by socket-blocking fixture).
+- [x] No new skips/xfails.
+- [x] Overall coverage met (92.78% > 75% threshold).
+- [x] No secrets, sample customer data, or `.env` content committed.
+- [x] `PROGRESS.md`, `CHANGELOG.md`, `docs/STATE_INVENTORY.md` updated.
 
 ### Phase 5 Exit Gate
 - [x] Structured JSON output enforced via strict schema validation (`parse_and_validate_insight`).
@@ -240,3 +259,4 @@ Status values: not-started / planning / in-progress / testing / debugging / gate
 | 2026-10-15 | 3 (Ingestion Hardening) | 173 | 85.63% (ingestion 95.73%) | 0 | 0 | 0 |
 | 2026-10-15 | 4 (Analytics Validity) | 194 | 88.54% (analytics 95.71%) | 0 | 0 | 0 |
 | 2026-10-15 | 5 (LLM Reliability & Privacy) | 212 | 89.40% (insight 90.19%) | 0 | 0 | 0 |
+| 2026-10-15 | 6 (State & Concurrency) | 222 | 92.78% | 0 | 0 | 0 |
