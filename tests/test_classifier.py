@@ -99,3 +99,124 @@ def test_progress_rate_metric_detected():
     cmap = {c.name: c for c in classified}
     assert cmap["progress"].role == ROLE_METRIC
     assert cmap["progress"].is_rate is True
+
+
+def test_classifier_ambiguous_and_payload_and_overrides():
+    from ingestion.classifier import (
+        ROLE_TEXT,
+        ambiguous_columns,
+        apply_overrides,
+        build_llm_classification_payload,
+        classify_columns,
+    )
+
+    df = pd.DataFrame(
+        {
+            "id": range(10),
+            "free_text": [
+                "quick",
+                "brown",
+                "fox",
+                "jumps",
+                "over",
+                "lazy",
+                "dog",
+                "lorem",
+                "ipsum",
+                "dolor",
+            ],
+            "ambig_date": [
+                "2024-01-01",
+                "2024-01-02",
+                "not_date",
+                "not_date",
+                "not_date",
+                "not_date",
+                "not_date",
+                "not_date",
+                "not_date",
+                "not_date",
+            ],
+        }
+    )
+    classified = classify_columns(df)
+    ambig = ambiguous_columns(classified, threshold=0.8)
+    assert len(ambig) > 0
+
+    payload = build_llm_classification_payload(df, ambig, n_samples=3)
+    assert len(payload) == len(ambig)
+    assert "column_name" in payload[0]
+    assert "sample_values" in payload[0]
+
+    # Test apply_overrides
+    overrides = {ambig[0].name: ROLE_TEXT}
+    overridden = apply_overrides(classified, overrides)
+    omap = {c.name: c for c in overridden}
+    assert omap[ambig[0].name].role == ROLE_TEXT
+    assert omap[ambig[0].name].confidence == 1.0
+
+
+def test_classifier_low_confidence_date_name_match():
+    # 5 out of 10 parse as dates and column name has "date"
+    df = pd.DataFrame(
+        {
+            "ship_date": [
+                "2024-01-01",
+                "2024-01-02",
+                "2024-01-03",
+                "2024-01-04",
+                "2024-01-05",
+                "unknown",
+                "pending",
+                "delayed",
+                "tbd",
+                "na",
+            ],
+            "val": range(10),
+        }
+    )
+    classified = classify_columns(df)
+    cmap = {c.name: c for c in classified}
+    assert cmap["ship_date"].role == ROLE_DATE
+    assert cmap["ship_date"].confidence <= 0.6
+
+
+def test_classifier_near_unique_string_id_large_dataset():
+    # >100 rows, unique_ratio >= 0.95, no explicit "id" in name
+    df = pd.DataFrame(
+        {
+            "serial_number_code": [f"SN-{i:05d}" for i in range(120)],
+            "val": range(120),
+        }
+    )
+    classified = classify_columns(df)
+    cmap = {c.name: c for c in classified}
+    assert cmap["serial_number_code"].role == ROLE_ID
+
+
+def test_classifier_remaining_branches():
+    from ingestion.classifier import ROLE_ID, ROLE_TEXT, classify_columns
+
+    # Ignore _is_duplicate
+    df = pd.DataFrame({"_is_duplicate": [False, True], "val": [1, 2]})
+    classified = classify_columns(df)
+    assert len(classified) == 1
+    assert classified[0].name == "val"
+
+    # String column that doesn't match id, label, date, or low cardinality -> ROLE_TEXT
+    df_text = pd.DataFrame(
+        {
+            "free_notes": [f"Rambling text value {i % 250}" for i in range(500)],
+        }
+    )
+    c_text = classify_columns(df_text)
+    assert c_text[0].role == ROLE_TEXT
+
+    # ID near unique ratio floor without id or code in name
+    df_id = pd.DataFrame(
+        {
+            "token_sequence": [f"TK_{i:04d}" for i in range(150)],
+        }
+    )
+    c_id = classify_columns(df_id)
+    assert c_id[0].role == ROLE_ID

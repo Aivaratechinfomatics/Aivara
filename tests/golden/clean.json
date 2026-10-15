@@ -39,7 +39,7 @@
     "**Portfolio Scale**: Analyzed 7 records totaling **$67.0k** in Revenue (average **9,571.43** per entry).",
     "**Top Contributor**: Leading entity is **Widget A**, generating 55.2% of total revenue.",
     "**Concentration Alert**: High concentration: top 20% of entries account for 40.3% of total (Gini: 0.17, HHI: 1,557).",
-    "**Key Discovered Driver**: Strong positive driver: Higher Units strongly associates with higher Revenue (r = +1.00)."
+    "**Key Discovered Driver**: Strong positive driver: Higher Units strongly associates with higher Revenue (r = +1.00). (Note: Correlation indicates statistical association, not direct causation.)"
   ],
   "kpis": {
     "cost": {

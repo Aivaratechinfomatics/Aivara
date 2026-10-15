@@ -42,6 +42,7 @@ def compute_finance_analytics(
     actual_col: str | None = None,
     budget_col: str | None = None,
     variance_col: str | None = None,
+    is_cost: bool | None = None,
 ) -> FinanceAnalyticsResult:
     """Analyzes budget vs actuals, line items, and computes bridge waterfall data."""
     cols = df.columns
@@ -86,6 +87,14 @@ def compute_finance_analytics(
             None,
         )
 
+    # Infer if this represents expenses/costs
+    if is_cost is None:
+        cost_pats = ("cost", "expense", "spend", "cogs", "opex", "capex", "disbursement")
+        col_names = " ".join(
+            str(c) for c in [actual_col, budget_col, account_col] if c is not None
+        ).lower()
+        is_cost = any(p in col_names for p in cost_pats)
+
     # Compute actual and budget totals
     total_act = float(df[actual_col].dropna().sum()) if actual_col else 0.0
     total_bud = float(df[budget_col].dropna().sum()) if budget_col else 0.0
@@ -96,7 +105,7 @@ def compute_finance_analytics(
         var_abs = total_act - total_bud
 
     var_pct = (var_abs / total_bud * 100.0) if total_bud != 0 else 0.0
-    is_favorable = var_abs >= 0
+    is_favorable = (var_abs <= 0) if is_cost else (var_abs >= 0)
 
     # Line item table
     table_df = pd.DataFrame()
@@ -132,10 +141,16 @@ def compute_finance_analytics(
         for _, row in grouped.iterrows():
             item_name = str(row[account_col])
             diff = float(row[var_col_name])
-            if diff > 0:
-                favorable_items.append((item_name, diff))
-            elif diff < 0:
-                unfavorable_items.append((item_name, diff))
+            if is_cost:
+                if diff < 0:
+                    favorable_items.append((item_name, abs(diff)))
+                elif diff > 0:
+                    unfavorable_items.append((item_name, diff))
+            else:
+                if diff > 0:
+                    favorable_items.append((item_name, diff))
+                elif diff < 0:
+                    unfavorable_items.append((item_name, diff))
 
         # Build Waterfall Steps
         if budget_col:

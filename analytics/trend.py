@@ -13,6 +13,8 @@ from dataclasses import dataclass
 
 import pandas as pd
 
+from analytics.kpis import get_metric_aggregation
+
 GRANULARITY_ORDER = ["D", "W", "M"]
 RATE_NAME_PATTERN = re.compile(r"(rate|pct|percent|ratio|avg|average|score|margin)", re.I)
 
@@ -34,18 +36,18 @@ def _ensure_datetime(dates: pd.Series) -> pd.Series:
     # Try generic parsing first (handles ISO strings, YYYYMMDD strings, etc.)
     try:
         converted = pd.to_datetime(dates, errors="coerce")
-        # If too many NaTs, try treating numeric values as Excel serial dates
-        nat_frac = converted.isna().mean()
-        if nat_frac > 0.5 and pd.api.types.is_numeric_dtype(dates):
-            # Excel serial: days since 1899-12-30
-            try:
-                excel_converted = pd.to_datetime(
-                    dates, unit="D", origin="1899-12-30", errors="coerce"
-                )
-                if excel_converted.notna().mean() > converted.notna().mean():
-                    converted = excel_converted
-            except Exception:
-                pass
+        if pd.api.types.is_numeric_dtype(dates):
+            s_num = dates.dropna()
+            if not s_num.empty and s_num.min() >= 1000 and s_num.max() <= 100000:
+                # Excel serial: days since 1899-12-30
+                try:
+                    excel_converted = pd.to_datetime(
+                        dates, unit="D", origin="1899-12-30", errors="coerce"
+                    )
+                    if excel_converted.notna().mean() >= converted.notna().mean():
+                        converted = excel_converted
+                except Exception:
+                    pass
         return converted
     except Exception:
         return pd.Series([pd.NaT] * len(dates), index=dates.index)
@@ -79,7 +81,11 @@ def pick_granularity(dates: pd.Series) -> str:
 
 
 def build_trend_series(
-    df: pd.DataFrame, date_col: str, metric_col: str, granularity: str | None = None
+    df: pd.DataFrame,
+    date_col: str,
+    metric_col: str,
+    granularity: str | None = None,
+    agg: str | None = None,
 ) -> TrendResult | None:
     working = df[[date_col, metric_col]].copy()
     # Always coerce the date column to proper datetime so resample() works.
@@ -93,9 +99,14 @@ def build_trend_series(
 
     freq_map = {"D": "D", "W": "W-MON", "M": "MS"}
     working = working.set_index(date_col)
-    is_rate = bool(RATE_NAME_PATTERN.search(metric_col))
+    resolved_agg = get_metric_aggregation(metric_col, override=agg)
     resampler = working[metric_col].resample(freq_map[granularity])
-    resampled = (resampler.mean() if is_rate else resampler.sum()).reset_index()
+    if resolved_agg == "mean":
+        resampled = resampler.mean().reset_index()
+    elif resolved_agg == "last":
+        resampled = resampler.last().reset_index()
+    else:
+        resampled = resampler.sum().reset_index()
     resampled.columns = ["period", "value"]
     resampled = resampled.sort_values("period").reset_index(drop=True)
 

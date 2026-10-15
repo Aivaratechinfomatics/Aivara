@@ -57,11 +57,11 @@ it does not need to survive a process restart the way the budget counter does).
 
 ```python
 if date_col and metric_cols:
-    primary_for_trend = metric_cols[0]          # <- first column in CSV/classifier order
+    primary_for_trend = metric_cols[0]  # <- first column in CSV/classifier order
     trend = build_trend_series(df, date_col, primary_for_trend)
 ...
 kpis = compute_all_kpis(df_current, df_prior, metric_cols)
-primary_metric = next(iter(kpis), None)          # <- metric with the largest |sum|
+primary_metric = next(iter(kpis), None)  # <- metric with the largest |sum|
 ```
 
 `primary_for_trend` is whichever metric column happens to appear first; `primary_metric`
@@ -314,7 +314,9 @@ doesn't have.
 ```python
 with tabs[3]:
     st.header("Customers")
-    st.caption("Customer-shaped dimension breakdowns appear here when a customer-like dimension is detected.")
+    st.caption(
+        "Customer-shaped dimension breakdowns appear here when a customer-like dimension is detected."
+    )
     render_drivers_view(pipeline_result)
 ```
 

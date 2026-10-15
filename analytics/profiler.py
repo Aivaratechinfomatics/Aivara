@@ -13,11 +13,15 @@ Inspects classified columns and data properties to automatically detect:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 import pandas as pd
 
-from analytics.kpis import is_rate_metric, select_primary_and_secondary_metrics
+from analytics.kpis import (
+    get_metric_aggregation,
+    is_rate_metric,
+    select_primary_and_secondary_metrics,
+)
 from ingestion.classifier import (
     ROLE_DATE,
     ROLE_DIMENSION,
@@ -85,6 +89,7 @@ class DatasetProfile:
     n_cols: int
     summary_label: str
     domain_type: str = DOMAIN_SNAPSHOT
+    metric_aggregations: dict[str, str] = field(default_factory=dict)
 
 
 def _detect_domain_type(
@@ -272,4 +277,5 @@ def profile_dataset(
         n_cols=n_cols,
         summary_label=summary_label,
         domain_type=domain_type,
+        metric_aggregations={m: get_metric_aggregation(m) for m in metric_cols},
     )

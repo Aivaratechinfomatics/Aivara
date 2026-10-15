@@ -5,9 +5,120 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [1.0.0] - 2026-10-16
 
 ### Added
+- **Phase 12: Docs, UAT, and Release v1.0.0 (Audit §12)**:
+  - Official production release version bump to `1.0.0` in `config.py` (`__version__ = "1.0.0"`).
+  - Complete overhaul of `README.md` reflecting production architecture, verified quickstart, configuration matrix, and security guarantees.
+  - Authored comprehensive documentation suite:
+    - `docs/ARCHITECTURE.md`: Subsystem layout, data pipelines, error boundaries, and design invariants.
+    - `docs/USER_GUIDE.md`: File preparation guidelines, schema review, metric aggregation semantics, and presentation exports.
+    - `docs/TESTING.md`: Quality assurance strategy, golden snapshots, AppTest headless tests, and offline isolation invariants.
+  - Automated User Acceptance Testing (UAT) verification harness `scripts/uat_verify.py` validating 5 diverse real-world domain datasets (Sales Time Series, Inventory Snapshot, Project Tracking, HR Workforce Roster, and Customer Feedback/NPS) through the complete analytical and export stack.
+  - All 13 phases (0 through 12) from `AIVARA_AGENT_PLAN.md` fully completed and validated.
+- **Phase 11: Performance & Scale (Audit §11)**:
+  - Benchmark test harness `scripts/bench.py` profiling latency and memory usage across 1k, 10k, 50k, 100k rows and concurrent user sessions.
+  - Empirical verification of latency SLA: 10,000 rows end-to-end pipeline processing completes in 4.9 seconds (< 10s SLA).
+  - Empirical verification of memory bound: 50,000 rows peak RAM footprint remains under 10 MB (< 500 MB limit).
+  - Concurrent user session throughput verification: 5 concurrent worker sessions executing 10,000 rows in 10.85s (~4,609 rows/sec).
+  - Ingress guard tests asserting `MAX_ROWS_FULL_PROCESSING = 500,000` samples oversized datasets deterministically with load notes and zero unhandled exceptions.
+  - Concurrency safety test verifying thread safety across simultaneous pipeline executions.
+  - Comprehensive performance documentation `docs/PERFORMANCE.md` detailing benchmarks, latency breakdowns, memory consumption, concurrency scaling, and deployment hardware profiles.
+  - Performance test suite (`tests/test_performance.py`) with 4 passing regression tests.
+- **Phase 10: Observability, Configuration, and Deployment (Audit §10)**:
+  - Strongly typed `Settings` object (`config.py`) with `from_env()` factory and validation rules (`Settings.validate()`) verifying positive budgets, timeouts, upload caps, and valid environment profiles (`dev`, `prod`, `staging`).
+  - Semver `__version__ = "0.9.0"` defined in `config.py` and displayed in the sidebar settings footer alongside application mode.
+  - Structured JSON logging (`infra/logger.py`) with `RedactingJsonFormatter` injecting standard fields (`timestamp`, `level`, `logger`, `message`, `correlation_id`) for log aggregators (Datadog, Elasticsearch, CloudWatch).
+  - Active secret redaction filter (`redact_secrets`) intercepting OpenRouter keys, bearer tokens, and shared secrets from all log messages.
+  - Dedicated LLM call audit logger (`aivara.audit.llm` via `log_llm_call_audit`) tracking model name, prompt tokens, completion tokens, and daily budget remaining without logging raw prompt or completion content.
+  - Production `docker-compose.yml` with persistent named volume `aivara_data` for SQLite stores, resource limits (2 CPU, 2048M RAM), restart policy, and healthcheck.
+  - Documented environment template `.env.example` cataloging all configuration parameters.
+  - Automated smoke test script `scripts/smoke_container.py` performing HTTP health endpoint checks (`/_stcore/health`) and root page availability validation.
+  - Operational runbook (`docs/RUNBOOK.md`) covering startup/shutdown, health verification, secret rotation, cache/budget management, SQLite online backup/restore, and common incident mitigations.
+  - Configuration reference (`docs/CONFIGURATION.md`) detailing environment variables, defaults, types, and validation constraints.
+  - Observability test suite (`tests/test_observability.py`) with 10 comprehensive tests validating settings validation, secret redaction, audit logging, and smoke test checks.
+- **Phase 9: App Structure, UX, and UI Tests (Audit §9, Decision D3)**:
+  - Refactored `app.py` into a streamlined top-level orchestrator (< 120 lines; 0 functions > 60 lines) coordinating authentication, ingestion, pipeline execution, tab dispatch, and export presentation.
+  - Table-driven tab architecture (`ui/tabs.py`) using declarative `TabSpec` instances per domain and profile, eliminating duplicated multi-branch tab rendering blocks.
+  - Strongly typed pipeline contracts (`analytics/pipeline.py`): `PipelineResult` dataclass supporting backward-compatible dictionary semantics (`__getitem__`, `get`), alongside modular builders (`build_snapshot_pipeline`, `build_project_pipeline`, `build_timeseries_pipeline`).
+  - Decoupled pure PPTX deck assembly (`export/deck_assembly.py`): pure function `assemble_deck_inputs(...)` mapping pipeline analytics and figures into presentation inputs independently of Streamlit context.
+  - Tab error boundary isolation (`ui/error_boundary.py`): `render_tab_boundary` catching unexpected tab exceptions, generating a unique correlation ID (`uuid4`), logging diagnostics, and presenting friendly alerts without crashing or blanking peer tabs.
+  - Hiding incomplete Forecast tab stub for v1.0 per Decision D3 (`config.APP_TABS` updated).
+  - Eliminated `__import__("pandas")` dynamic import hack across the application.
+  - Interactive headless test suite (`tests/test_ui_apptest.py`) with 8 tests validating tab error boundaries, tab specs, pure deck assembly, and Streamlit AppTest flows.
+- **Phase 8: Export Hardening (Audit §8, Audit 3.7)**:
+  - Kaleido rendering timeout protection (`export/chart_images.py`) wrapping `fig.to_image` in `ThreadPoolExecutor` with configurable timeout (`AIVARA_KALEIDO_TIMEOUT`, default 15.0s) to survive headless browser hang modes and raise `TimeoutError`.
+  - Graceful slide placeholder card (`_add_chart_placeholder` in `export/pptx_builder.py`, Audit 3.7) displaying a clean warning card ("📊 Chart Preview Unavailable: Offline graphics renderer did not complete") on PowerPoint slides whenever chart rendering times out or crashes.
+  - Degraded and empty deck resilience: empty view lists in `build_toc_slide` and `build_executive_summary_slide` render informative empty state notices ("No domain views selected for export") without crashing or creating blank bounding boxes.
+  - Large drivers table stress resilience: 50+ category drivers tables safely truncated to top 10 contributors, preventing shape overlapping and slide layout blowouts.
+  - OpenXML zip structure validation ensuring generated decks strictly conform to PowerPoint PPTX zip container structures (`[Content_Types].xml`, `_rels/.rels`, `ppt/presentation.xml`, slide parts).
+  - Number consistency verification: asserting exact correspondence between formatted pipeline display values and slide text across KPI tiles and deltas.
+  - Total offline isolation guarantee: verified zero network calls and zero imports of `insight.client` across the `export/` package.
+  - Dedicated export hardening test suite (`tests/test_export_hardening.py`) with 10 comprehensive tests achieving 91.56% coverage across `export/`.
+- **Phase 7: Security Hardening (Audit §7)**:
+  - Threat Model documentation (`docs/THREAT_MODEL.md`) formalizing system architecture, trust boundaries, asset classification, STRIDE-lite threat analysis, and risk acceptance.
+  - Security & deployment hardening guide (`docs/SECURITY.md`) detailing reverse-proxy integration (Nginx, Caddy, oauth2-proxy), TLS termination, and vulnerability reporting.
+  - Fail-closed authentication gate (`ui/auth.py`, Decision D2) supporting reverse-proxy identity headers (`X-Forwarded-User`, `X-Remote-User`) and app-level constant-time shared-secret verification (`AIVARA_SHARED_SECRET`), halting execution via `st.stop()` when auth is required (`AIVARA_AUTH_REQUIRED=true`).
+  - Spreadsheet / CSV formula injection defense (`export/formula_sanitizer.py`, CWE-1236) neutralizing leading formula characters (`=`, `+`, `-`, `@`, `\t`, `\r`) in PowerPoint slide text and exported dataframes while preserving valid numeric scalars.
+  - Ingestion upload hardening (`ingestion/loader.py`): rejecting executable binaries (PE, ELF, Mach-O, Java class), null-byte streams in text files, and unapproved extensions; filename path traversal sanitization (`sanitize_filename`).
+  - Secrets hardening: centralized masking helper (`mask_secret`), startup placeholder key detection (`is_placeholder_secret`), and deterministic fallback on missing/placeholder keys.
+  - Network egress SSRF defense (`insight/client.py`): allowlist enforcement on `OPENROUTER_BASE_URL` (`openrouter.ai` default) and blocking of loopback, RFC 1918 private subnets, and cloud metadata endpoints (`169.254.169.254`).
+  - Output safety & XSS neutralization in `ui/stats_view.py`: dynamic content escaped via `html.escape` before markdown rendering.
+  - Container hardening (`Dockerfile`, `.dockerignore`, `.streamlit/config.toml`): non-root execution under unprivileged dedicated user `aivara` (UID 10001), Docker `HEALTHCHECK`, XSRF protection enabled, usage telemetry disabled, and build caches excluded.
+  - Dedicated security test suite (`tests/test_security.py`) with 52 comprehensive tests verifying formula injection, auth fail-closed behavior, upload sniffing, SSRF egress rules, and Docker invariants.
+- **Phase 6: State, Concurrency, Multi-User Isolation (Audit §6, Audit 4.3)**:
+  - Exhaustive state inventory documentation (`docs/STATE_INVENTORY.md`) classifying every `st.session_state` key, persistent database file, in-memory global, concurrency assumptions, and the zero-raw-data-on-disk invariant.
+  - Multi-process safe atomic budget tracking (`insight/budget.py`) using SQLite with Write-Ahead Logging (WAL) and 5000ms busy timeout, replacing JSON files and `threading.Lock`.
+  - Atomic `check_and_increment_daily(path, limit)` executing an atomic `BEGIN IMMEDIATE` transaction, eliminating Time-of-Check-to-Time-of-Use (TOCTOU) race conditions across concurrent processes and worker threads.
+  - Persistent insight cache (`insight/cache.py`) backed by SQLite WAL with automatic TTL-based expiration (`AIVARA_CACHE_TTL_DAYS`, default 7) and LRU capacity bounds (`AIVARA_CACHE_MAX_ENTRIES`, default 1000).
+  - Cache zero-persistence mode toggleable via `AIVARA_CACHE_ENABLED=false` for regulated or zero-disk-retention environments.
+  - Automatic corruption recovery in SQLite cache and budget stores gracefully replacing corrupt database files without process crashing or unhandled exceptions.
+  - Concurrency test suite (`tests/test_concurrency.py`) with 10 comprehensive tests validating multi-threaded and multi-process cross-process exhaustion (50 threads / 50 workers across 4 child Python processes), atomic budget increments, TTL expiration, LRU pruning, corruption recovery, zero persistence, session isolation, and the zero raw row data persistence invariant.
+- **Phase 5: LLM Layer: Reliability & Privacy (Audit §5)**:
+  - Structured JSON output schema enforcement (`headline`, `driver_explanation`, `suggested_action`) with preamble stripping, markdown code-block parsing, and 1-shot repair retry (Audit 3.8).
+  - Local numerical faithfulness verification (`insight/faithfulness.py`) checking cited metrics against facts packet numbers and rejecting hallucinations with fallback reversion.
+  - Data egress control & pseudonymization (`insight/redactor.py`) mapping business categories and entities to generic tokens (`Category A`, `Entity A`) prior to OpenRouter egress, unredacting locally via in-memory map; configured by `AIVARA_LLM_REDACT_LABELS: bool = True` (Audit 4.5, Decision D5).
+  - Prompt injection defense enclosing untrusted data inside `<business_data>` XML tags, stripping control characters and HTML tags, and neutralizing instruction override tokens (`insight/prompts.py`).
+  - OpenRouter client resilience with three-state circuit breaker (`CLOSED`, `OPEN`, `HALF_OPEN`), exponential backoff on HTTP 429 and 5xx errors, and per-session call limits (`MAX_SESSION_LLM_CALLS = 20`).
+  - Offline deterministic template fallback generator (`insight/fallback.py`) producing 3-sentence executive takeaways for KPIs, snapshots, and project portfolios without network or API dependency.
+  - Removed deprecated tier-2 LLM column classification per Decision D6 (Audit 2.1).
+  - Transparent model attribution displaying fallback indicators and actual model identifiers (Audit 2.2).
+  - Dedicated reliability test suite (`tests/test_insight_reliability.py`) achieving 90.19% branch coverage across `insight/`.
+- **Phase 4: Analytics Validity & Coverage (Audit §4)**:
+  - Configurable aggregation semantics (`agg`: `sum`, `mean`, `weighted_mean`, `last`) in `analytics/kpis.py`, `trend.py`, `drivers.py`, `snapshot.py`, and `anomalies.py`. Rate/ratio metrics (`rate`, `pct`, `percent`, `ratio`, `avg`, `average`, `score`, `margin`, `nps`, `share`, `yield`) default to `"mean"` instead of being summed (Audit 4.1).
+  - Manual aggregation overrides in `DatasetProfile` and UI schema configuration, with aggregation tooltip indicator on KPI tiles.
+  - Category-vs-own-history temporal anomaly detection (`detect_temporal_anomalies`) in `analytics/anomalies.py` using rolling baselines and zero-variance baseline floor (Audit 4.2).
+  - Relabeled cross-sectional snapshot anomalies as `"structural outlier"` and standardized severity tiers (`SEVERITY_LOW`, `SEVERITY_MEDIUM`, `SEVERITY_HIGH`) across temporal anomalies, group outliers, and period swings.
+  - Statistical discovery safeguards: sample size threshold $n \ge 5$ in `compute_correlation_matrix()` to suppress spurious drivers on tiny datasets, explicit `"Correlation indicates statistical association, not direct causation"` disclaimer in driver narratives, and divide-by-zero guards in concentration index.
+  - Financial domain mathematical correctness: expense/cost variance convention (`is_cost`) in `analytics/domains/finance.py` ensuring expense overruns are unfavorable and savings under budget are favorable.
+  - Dedicated hand-computed verification test suite (`tests/test_domain_hand_computed.py`) hand-checking commerce AOV/basket/repeat rate, finance revenue/cost variances, workforce headcount/median/turnover, and feedback NPS/CSAT.
+  - Deep analytics branch test suite (`tests/test_analytics_deep_coverage.py`) achieving 95.71% coverage across `analytics/`.
+- **Phase 3: Ingestion Hardening (Audit §3)**:
+  - Enforced upload file size limit `MAX_UPLOAD_MB` (100 MB default) across `load_file`, `load_csv`, and `load_excel`.
+  - Enforced table column width limit `MAX_COLUMNS` (500 default) preventing denial-of-service memory spikes on wide/malformed sheets.
+  - Added empty file guards returning friendly errors without crashing or raising unhandled exceptions.
+  - Active CSV bad line tracking with `on_bad_lines=bad_line_handler` reporting skipped malformed lines in `LoadResult.notes` (Audit 3.1).
+  - Proper percent scaling dividing percent-formatted columns by 100 with `%` unit tagging (Audit 3.2).
+  - Normalized null strings using centralized `DEFAULT_NULL_STRINGS` in `config.py` (Audit 3.3).
+  - Enhanced numeric coercion tracking failed coercion counts per column in `CleanReport.coercion_failures` and `CleanReport.total_nulls_found` (Audit 3.4).
+  - Compact date priority detection before numeric coercion for compact date strings like `YYYYMMDD` (Audit 3.5).
+  - Preserved missing dimension values with explicit `(missing)` bucket preventing silent drop of data points (Audit 3.6).
+  - Header normalization and deduplication (`col`, `col_2`, ...) with trimming, whitespace normalization, and blank column labeling (`column_{i+1}`).
+  - Interactive Data Quality & Ingestion Summary panel in `ui/upload_page.py` showing rows, columns, duplicate rows, coerced nulls, and coercion failure breakdowns.
+  - Expanded test suites in `tests/test_cleaner.py`, `tests/test_loader.py` (including Hypothesis fuzzing), and `tests/test_classifier.py` achieving 95.73% coverage on `ingestion/`.
+- **Phase 2: Core Correctness (Audit §1)**:
+  - Multi-session isolation in `insight/cache.py` eliminating cross-user view narrative leaks.
+  - Canonical state reset function `reset_dataset_state()` in `ui/upload_page.py` invoked upon file upload and hash changes.
+  - Hardened SHA-256 content hashing in upload workflow for secure re-upload cache detection.
+  - Guarded `format_pct_change` against `math.isnan` and infinite values in `ui/components.py`.
+  - Comprehensive correctness test suite in `tests/test_core_correctness.py` covering:
+    - Multi-session view cache isolation (Audit 1.1).
+    - Trend metric column order independence (Audit 1.2).
+    - Offsetting category contributions when net delta is zero (Audit 1.3).
+    - Signed infinities and `format_pct_change` edge cases (Audit 1.4, 1.5).
+    - Dataset re-upload state resetting across all figures and insights (Audit 1.6, 1.7, 1.8).
+    - Screen == Facts == PPTX number consistency invariant across all golden datasets.
 - **Phase 1: Tooling, CI, Repo Hygiene**:
   - `pyproject.toml` with `ruff`, `mypy`, `pytest`, and branch `coverage` configurations.
   - `requirements-dev.txt` for development, linting, typing, and security audit dependencies.

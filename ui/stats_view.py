@@ -10,6 +10,8 @@ Renders:
 
 from __future__ import annotations
 
+import html
+
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -58,12 +60,15 @@ def render_stats_view(df: pd.DataFrame, profile) -> None:
                 badge = (
                     "🟢 Positive Driver" if "positive" in driver.strength else "🔴 Inverse Driver"
                 )
+                esc_badge = html.escape(badge)
+                esc_narrative = html.escape(driver.narrative)
+                border_color = "#1a73e8" if "positive" in driver.strength else "#ea4335"
                 st.markdown(
                     f"""
-                    <div style="background-color: rgba(26,115,232,0.05); padding: 14px; border-radius: 8px; border-left: 4px solid {"#1a73e8" if "positive" in driver.strength else "#ea4335"}; margin-bottom: 12px;">
-                        <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #5f6368;">{badge}</span>
+                    <div style="background-color: rgba(26,115,232,0.05); padding: 14px; border-radius: 8px; border-left: 4px solid {border_color}; margin-bottom: 12px;">
+                        <span style="font-size: 11px; font-weight: bold; text-transform: uppercase; color: #5f6368;">{esc_badge}</span>
                         <div style="font-size: 18px; font-weight: bold; margin: 4px 0;">r = {driver.correlation:+.2f}</div>
-                        <div style="font-size: 13px; color: #3c4043;">{driver.narrative}</div>
+                        <div style="font-size: 13px; color: #3c4043;">{esc_narrative}</div>
                     </div>
                     """,
                     unsafe_allow_html=True,

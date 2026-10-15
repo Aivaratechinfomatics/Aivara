@@ -66,7 +66,7 @@ def format_number(value: float, unit: str | None = None) -> str:
 def format_pct_change(
     pct_change: float | None, with_arrow: bool = False, with_sign: bool = False
 ) -> str | None:
-    if pct_change is None:
+    if pct_change is None or (isinstance(pct_change, float) and math.isnan(pct_change)):
         return None
     if math.isinf(pct_change):
         return "new" if pct_change > 0 else "n/a (no prior period)"
@@ -82,8 +82,15 @@ def render_kpi_tile(kpi: KPIResult, unit: str | None = None) -> None:
     display_unit = unit or kpi.unit
     value_str = format_number(kpi.current_value, display_unit)
     delta_str = format_pct_change(kpi.pct_change, with_arrow=True)
+    agg_desc = getattr(kpi, "agg", "sum")
+    help_tooltip = f"Calculated using {agg_desc.upper()} aggregation."
 
-    st.metric(label=kpi.name.replace("_", " ").title(), value=value_str, delta=delta_str)
+    st.metric(
+        label=kpi.name.replace("_", " ").title(),
+        value=value_str,
+        delta=delta_str,
+        help=help_tooltip,
+    )
 
 
 def render_insight_card(
@@ -114,7 +121,11 @@ def render_insight_card(
                 st.write(result.driver_explanation)
             if result.suggested_action:
                 st.markdown(f"*Next: {result.suggested_action}*")
-            if result.model != model:
+            if getattr(result, "is_fallback", False):
+                st.caption(
+                    f"ℹ️ Generated via deterministic local analytics fallback ({result.model})"
+                )
+            elif result.model != model:
                 st.caption(f"ℹ️ Used fallback model `{result.model}` (free tier)")
         return result
     except BudgetExhaustedError:
@@ -228,8 +239,7 @@ def build_drivers_figure(
 
 
 def mask_secret(secret: str, keep: int = 4) -> str:
-    if not secret:
-        return ""
-    if len(secret) <= keep:
-        return "*" * len(secret)
-    return "*" * (len(secret) - keep) + secret[-keep:]
+    """Mask sensitive secret keys for safe display in UI and diagnostics."""
+    import config
+
+    return config.mask_secret(secret, keep=keep)

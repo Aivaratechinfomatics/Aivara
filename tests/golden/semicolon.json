@@ -28,8 +28,7 @@
   "executive_takeaways": [
     "**Portfolio Scale**: Analyzed 4 records totaling **$19.2k** in Sales (average **4,800.00** per entry).",
     "**Top Contributor**: Leading entity is **East**, generating 57.8% of total sales.",
-    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 31.8% of total (Gini: 0.10, HHI: 2,579).",
-    "**Key Discovered Driver**: Strong positive driver: Higher Cost strongly associates with higher Sales (r = +0.99)."
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 31.8% of total (Gini: 0.10, HHI: 2,579)."
   ],
   "kpis": {
     "cost": {

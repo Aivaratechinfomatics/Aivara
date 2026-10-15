@@ -28,8 +28,7 @@
   "executive_takeaways": [
     "**Portfolio Scale**: Analyzed 3 records totaling **$27.0k** in Revenue (average **9,000.00** per entry).",
     "**Top Contributor**: Leading entity is **Widget A**, generating 37.0% of total revenue.",
-    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 37.0% of total (Gini: 0.05, HHI: 3,361).",
-    "**Key Discovered Driver**: Strong positive driver: Higher Units strongly associates with higher Revenue (r = +1.00)."
+    "**Concentration Alert**: Extreme portfolio concentration: top 20% of entries account for 37.0% of total (Gini: 0.05, HHI: 3,361)."
   ],
   "kpis": {
     "revenue": {

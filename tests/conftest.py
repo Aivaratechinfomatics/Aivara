@@ -60,11 +60,15 @@ def isolate_budget_and_cache(tmp_path, monkeypatch):
 
     monkeypatch.setenv("AIVARA_BUDGET_STATE_PATH", test_budget_path)
     monkeypatch.setenv("AIVARA_INSIGHT_CACHE_PATH", test_cache_path)
+    monkeypatch.setenv("AIVARA_BUDGET_DB_PATH", test_budget_path)
+    monkeypatch.setenv("AIVARA_CACHE_DB_PATH", test_cache_path)
 
     import config
 
     monkeypatch.setattr(config, "BUDGET_STATE_PATH", test_budget_path)
     monkeypatch.setattr(config, "INSIGHT_CACHE_PATH", test_cache_path)
+    monkeypatch.setattr(config, "BUDGET_DB_PATH", test_budget_path)
+    monkeypatch.setattr(config, "CACHE_DB_PATH", test_cache_path)
 
     yield {
         "budget_path": test_budget_path,

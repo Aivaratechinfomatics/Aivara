@@ -18,6 +18,7 @@ This document tracks key architectural decisions for Aivara Insight Lite as outl
 | D8 | Hosting Target & CI/CD Deployment | Accepted (Default) | Docker + Compose, no auto-deploy | Multi-stage Docker container with docker-compose.yml; CI verifies build & health | Phase 10 |
 | D9 | Supported Ingestion Scale Limits | Accepted (Default) | 500k rows / 100 MB | 500,000 rows max; 100 MB file size limit; reject larger with actionable message | Phase 3 |
 | D10 | LLM Provider Support | Accepted (Default) | OpenRouter only (swappable adapter) | OpenRouter client with clean adapter interface for future local/cloud providers | Phase 5 |
+| D11 | Statistical Validity & Golden Re-baselining | Accepted | Re-baseline with justification | Enforce $n \ge 5$ min sample for correlations, append causation disclaimer, re-baseline golden tests | Phase 4 |
 
 ---
 
@@ -62,3 +63,7 @@ This document tracks key architectural decisions for Aivara Insight Lite as outl
 ### D10: LLM Provider Architecture
 - **Context:** Need predictable API behavior while preserving future extensibility.
 - **Decision:** Standardize on OpenRouter as the primary gateway, structured behind a clean provider interface.
+
+### D11: Statistical Validity & Golden Re-baselining (Audit §4)
+- **Context:** Prior golden characterization snapshots included spurious correlation drivers derived from tiny sample sizes (such as `semicolon.csv` with 4 rows) and lacked statistical causation disclaimers in executive takeaways.
+- **Decision:** Enforce minimum sample size $n \ge 5$ in `compute_correlation_matrix` and append explicit note `(Note: Correlation indicates statistical association, not direct causation.)` in `extract_key_drivers`. Re-baseline the golden dataset characterization test suite with `UPDATE_GOLDEN=1`. Verified that all KPI numerical calculations, column classifications, and dataset shapes remain identical.

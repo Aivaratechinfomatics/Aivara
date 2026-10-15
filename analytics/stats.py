@@ -44,8 +44,11 @@ class AnomalyAttribution:
     category_share_of_outliers: float
 
 
-def compute_correlation_matrix(df: pd.DataFrame, numeric_cols: list[str]) -> pd.DataFrame:
-    """Computes a clean Pearson correlation matrix for valid numeric columns."""
+def compute_correlation_matrix(
+    df: pd.DataFrame, numeric_cols: list[str], min_samples: int = 5
+) -> pd.DataFrame:
+    """Computes a clean Pearson correlation matrix for valid numeric columns.
+    Enforces a minimum sample size to avoid spurious correlations on tiny datasets."""
     valid_cols = [
         c
         for c in numeric_cols
@@ -55,6 +58,9 @@ def compute_correlation_matrix(df: pd.DataFrame, numeric_cols: list[str]) -> pd.
         return pd.DataFrame()
 
     sub_df = df[valid_cols].dropna(how="all")
+    if len(sub_df.dropna()) < min_samples:
+        return pd.DataFrame()
+
     corr = sub_df.corr(method="pearson")
     return corr.fillna(0.0)
 
@@ -105,22 +111,19 @@ def extract_key_drivers(
 
 def _build_relationship(col_a: str, col_b: str, r: float, human_fn) -> DriverRelationship:
     ha, hb = human_fn(col_a), human_fn(col_b)
+    disclaimer = " (Note: Correlation indicates statistical association, not direct causation.)"
     if r >= 0.75:
         strength = "strong positive"
-        narrative = f"Strong positive driver: Higher {hb} strongly associates with higher {ha} (r = {r:+.2f})."
+        narrative = f"Strong positive driver: Higher {hb} strongly associates with higher {ha} (r = {r:+.2f}).{disclaimer}"
     elif r >= 0.45:
         strength = "moderate positive"
-        narrative = (
-            f"Moderate positive relationship: {hb} moves in tandem with {ha} (r = {r:+.2f})."
-        )
+        narrative = f"Moderate positive relationship: {hb} moves in tandem with {ha} (r = {r:+.2f}).{disclaimer}"
     elif r <= -0.75:
         strength = "strong negative"
-        narrative = f"Strong inverse driver: Higher {hb} strongly associates with lower {ha} (r = {r:+.2f})."
+        narrative = f"Strong inverse driver: Higher {hb} strongly associates with lower {ha} (r = {r:+.2f}).{disclaimer}"
     else:
         strength = "moderate negative"
-        narrative = (
-            f"Moderate inverse relationship: Higher {hb} tends to reduce {ha} (r = {r:+.2f})."
-        )
+        narrative = f"Moderate inverse relationship: Higher {hb} tends to reduce {ha} (r = {r:+.2f}).{disclaimer}"
 
     return DriverRelationship(
         metric_a=col_a,
@@ -142,8 +145,9 @@ def compute_concentration_index(series: pd.Series | np.ndarray) -> Concentration
     # Keep only non-negative values
     vals = vals[vals >= 0]
     n = len(vals)
+    val_sum = float(vals.sum()) if n > 0 else 0.0
 
-    if n < 2 or vals.sum() == 0:
+    if n < 2 or val_sum <= 0.0 or not np.isfinite(val_sum):
         return ConcentrationResult(
             gini=0.0,
             hhi=0.0,
@@ -303,8 +307,9 @@ def generate_executive_takeaways(
         grouped = df.groupby(entity_dim)[primary_m].sum().sort_values(ascending=False)
         if not grouped.empty:
             top_entity = grouped.index[0]
-            top_val = grouped.iloc[0]
-            pct = (top_val / max(1, grouped.sum())) * 100.0
+            top_val = float(grouped.iloc[0])
+            tot = float(grouped.sum())
+            pct = (top_val / tot * 100.0) if tot > 0 else 0.0
             takeaways.append(
                 f"**Top Contributor**: Leading entity is **{top_entity}**, generating {pct:.1f}% of total {primary_m.replace('_', ' ')}."
             )

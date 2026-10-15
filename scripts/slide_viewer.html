@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Aivara Executive Presentation Showcase</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --border: rgba(255, 255, 255, 0.12);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.35);
+      --text-main: #f9fafb;
+      --text-muted: #9ca3af;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 0%, #1e293b 0%, #090d16 80%);
+      color: var(--text-main);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+    }
+
+    header {
+      padding: 18px 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      background: rgba(17, 24, 39, 0.7);
+      backdrop-filter: blur(16px);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo-badge {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, #2563eb, #7c3aed);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 20px;
+      color: white;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+
+    .brand-text h1 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .status-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: rgba(16, 185, 129, 0.12);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #34d399;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: #10b981;
+      border-radius: 50%;
+      box-shadow: 0 0 10px #10b981;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 36px 32px;
+      gap: 20px;
+    }
+
+    .slide-tabs {
+      display: flex;
+      gap: 8px;
+      background: rgba(17, 24, 39, 0.85);
+      padding: 6px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      background: var(--accent);
+      color: white;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .slide-viewport {
+      position: relative;
+      width: 100%;
+      max-width: 1360px;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 1;
+      transition: opacity 0.22s ease-in-out;
+    }
+
+    .slide-img.fade {
+      opacity: 0.1;
+    }
+
+    .controls-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1360px;
+      padding: 8px 6px;
+    }
+
+    .btn-nav {
+      background: rgba(30, 41, 59, 0.8);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 10px 22px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-nav:hover {
+      background: rgba(51, 65, 85, 0.9);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .btn-nav:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .slide-caption-box {
+      text-align: center;
+    }
+
+    .slide-title-display {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f3f4f6;
+    }
+
+    .slide-meta-display {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand-group">
+      <div class="logo-badge">A</div>
+      <div class="brand-text">
+        <h1>Aivara Executive Presentation (.pptx)</h1>
+        <p>16:9 Widescreen • Vector Layout • Zero External Dependencies</p>
+      </div>
+    </div>
+    <div class="status-badge">
+      <div class="status-dot"></div>
+      <span>Ready for Boardroom Distribution</span>
+    </div>
+  </header>
+
+  <main>
+    <div class="slide-tabs" id="tabContainer">
+      <!-- Tabs injected by JS -->
+    </div>
+
+    <div class="slide-viewport">
+      <img id="slideImg" class="slide-img" src="slides/Slide1.JPG" alt="Slide Preview">
+    </div>
+
+    <div class="controls-bar">
+      <button id="prevBtn" class="btn-nav" onclick="prevSlide()">← Previous</button>
+
+      <div class="slide-caption-box">
+        <div id="slideTitle" class="slide-title-display">Slide 1: Cover Title & Metadata</div>
+        <div id="slideMeta" class="slide-meta-display">SLIDE 1 OF 8 • 16:9 WIDESCREEN</div>
+      </div>
+
+      <button id="nextBtn" class="btn-nav" onclick="nextSlide()">Next →</button>
+    </div>
+  </main>
+
+  <script>
+    const SLIDES = [
+      { num: 1, title: "Executive Cover & Metadata", file: "slides/Slide1.JPG", note: "Auto-generated cover with ISO timestamp & run correlation" },
+      { num: 2, title: "Executive Summary & Key Takeaways", file: "slides/Slide2.JPG", note: "Synthesized executive bullets and high-level findings" },
+      { num: 3, title: "KPI Scorecards & Period Deltas", file: "slides/Slide3.JPG", note: "Primary metric cards with Period-over-Period variance" },
+      { num: 4, title: "Domain Deep-Dive Analytics", file: "slides/Slide4.JPG", note: "Domain-specific breakdowns, distributions & ratings" },
+      { num: 5, title: "Key Drivers & Explanatory Factors", file: "slides/Slide5.JPG", note: "Pearson correlation matrix and dimensional drivers" },
+      { num: 6, title: "Risk Radar & Anomaly Detection", file: "slides/Slide6.JPG", note: "Rolling baseline anomalies (|z| ≥ 2.5) & concentration" },
+      { num: 7, title: "Security & Formula Neutralization", file: "slides/Slide7.JPG", note: "Verified sanitization against spreadsheet formula injection" },
+      { num: 8, title: "Appendix & Methodology Sign-off", file: "slides/Slide8.JPG", note: "Execution trace, row counts & audit confirmation" }
+    ];
+
+    let currentSlide = 1;
+
+    function buildTabs() {
+      const container = document.getElementById('tabContainer');
+      container.innerHTML = '';
+      SLIDES.forEach((s) => {
+        const btn = document.createElement('button');
+        btn.className = `tab-btn ${s.num === currentSlide ? 'active' : ''}`;
+        btn.textContent = `${s.num}. ${s.title.split('&')[0].trim()}`;
+        btn.onclick = () => setSlide(s.num);
+        btn.id = `tab-${s.num}`;
+        container.appendChild(btn);
+      });
+    }
+
+    function setSlide(num) {
+      if (num < 1 || num > SLIDES.length) return;
+      currentSlide = num;
+      const s = SLIDES[num - 1];
+
+      const img = document.getElementById('slideImg');
+      img.classList.add('fade');
+      setTimeout(() => {
+        img.src = s.file;
+        img.classList.remove('fade');
+      }, 120);
+
+      document.getElementById('slideTitle').textContent = `Slide ${s.num}: ${s.title}`;
+      document.getElementById('slideMeta').textContent = `SLIDE ${s.num} OF ${SLIDES.length} • ${s.note.toUpperCase()}`;
+
+      document.querySelectorAll('.tab-btn').forEach((btn, idx) => {
+        btn.classList.toggle('active', idx + 1 === num);
+      });
+
+      document.getElementById('prevBtn').disabled = num === 1;
+      document.getElementById('nextBtn').disabled = num === SLIDES.length;
+    }
+
+    function prevSlide() {
+      if (currentSlide > 1) setSlide(currentSlide - 1);
+    }
+
+    function nextSlide() {
+      if (currentSlide < SLIDES.length) setSlide(currentSlide + 1);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') nextSlide();
+      if (e.key === 'ArrowLeft') prevSlide();
+    });
+
+    // Check URL params for slide number
+    const urlParams = new URLSearchParams(window.location.search);
+    const initialSlide = parseInt(urlParams.get('slide') || '1', 10);
+    buildTabs();
+    setSlide(initialSlide);
+
+    // Expose setSlide globally for Playwright
+    window.setSlide = setSlide;
+  </script>
+</body>
+</html>
