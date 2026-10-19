@@ -1,0 +1,21 @@
+Date,Customer_Segment,Feedback_Channel,NPS_Score,CSAT_Rating,Response_Time_Hours,Sentiment
+2026-07-02,Enterprise,In-App Survey,9,5,1.2,Promoter
+2026-07-06,Mid-Market,Email,8,4,4.5,Passive
+2026-07-11,SMB,Live Chat,6,3,0.8,Detractor
+2026-07-16,Enterprise,Executive QBR,10,5,2.0,Promoter
+2026-07-22,SMB,Support Portal,7,4,6.1,Passive
+2026-08-03,Enterprise,Email,10,5,1.5,Promoter
+2026-08-08,Mid-Market,Live Chat,5,2,3.2,Detractor
+2026-08-14,SMB,In-App Survey,8,4,0.5,Passive
+2026-08-19,Enterprise,Executive QBR,9,5,1.8,Promoter
+2026-08-25,Mid-Market,Support Portal,4,2,8.4,Detractor
+2026-09-02,Enterprise,In-App Survey,10,5,0.9,Promoter
+2026-09-07,SMB,Email,7,3,5.0,Passive
+2026-09-12,Mid-Market,Live Chat,9,4,1.1,Promoter
+2026-09-18,Enterprise,Executive QBR,8,4,2.5,Passive
+2026-09-24,SMB,Support Portal,3,1,12.0,Detractor
+2026-10-02,Enterprise,In-App Survey,10,5,0.7,Promoter
+2026-10-07,Mid-Market,Email,8,4,3.8,Passive
+2026-10-12,Enterprise,Executive QBR,10,5,1.4,Promoter
+2026-10-16,SMB,Live Chat,9,5,0.4,Promoter
+2026-10-19,Mid-Market,Support Portal,6,3,7.2,Detractor

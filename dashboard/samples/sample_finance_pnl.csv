@@ -1,0 +1,21 @@
+Date,Department,Expense_Category,Actual_Spend,Budget_Allocation,Variance_Amount,Variance_Pct
+2026-07-01,R&D,Cloud Infrastructure,42500,40000,2500,6.25
+2026-07-05,Sales,Travel & Client Dinners,18200,20000,-1800,-9.00
+2026-07-10,Marketing,Digital Ad Campaigns,65000,60000,5000,8.33
+2026-07-15,G&A,Software Licenses,14800,15000,-200,-1.33
+2026-07-20,Operations,Logistics & Freight,28400,25000,3400,13.60
+2026-08-01,R&D,AI Model Inference,58900,50000,8900,17.80
+2026-08-05,Sales,Incentive Commissions,34100,30000,4100,13.67
+2026-08-10,Marketing,SEO & Content Agency,21000,22000,-1000,-4.55
+2026-08-15,G&A,Legal & Compliance,19500,18000,1500,8.33
+2026-08-20,Operations,Facilities & Leases,31200,31000,200,0.65
+2026-09-01,R&D,Engineering Contractors,62000,60000,2000,3.33
+2026-09-05,Sales,Enterprise Prospecting,15400,16000,-600,-3.75
+2026-09-10,Marketing,Quarterly Launch Summit,78000,70000,8000,11.43
+2026-09-15,G&A,Payroll Administration,12800,13000,-200,-1.54
+2026-09-20,Operations,Warehouse Utilities,24500,25000,-500,-2.00
+2026-10-01,R&D,Cloud Infrastructure,46200,42000,4200,10.00
+2026-10-05,Sales,Direct Sales Outreach,22100,20000,2100,10.50
+2026-10-10,Marketing,Global PR Release,38500,35000,3500,10.00
+2026-10-15,G&A,Executive Advisory,17400,16000,1400,8.75
+2026-10-18,Operations,Cold Storage Equipment,29600,28000,1600,5.71

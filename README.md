@@ -4,7 +4,7 @@
 
 [![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)](config.py)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
-[![Tests](https://img.shields.io/badge/tests-305%20passed-brightgreen.svg)](tests/)
+[![Tests](https://img.shields.io/badge/tests-323%20passed-brightgreen.svg)](tests/)
 [![Security](https://img.shields.io/badge/security-hardened-brightgreen.svg)](docs/SECURITY.md)
 
 **Aivara** is an autonomous business intelligence platform designed to transform raw, messy business spreadsheets into executive-ready dashboards and branded 16:9 widescreen PowerPoint presentation decks — with complete data privacy and local computation.
@@ -150,10 +150,46 @@ cp .env.example .env
 ```
 
 ### 4. Running the Local Application
+
+Aivara features dual analytical frontends to suit different analytical and presentation workflows:
+
+#### Option A: Power BI Executive Canvas (Industrial BI Standard)
 ```bash
+# Windows launcher:
+run_dashboard.bat
+
+# Or direct command (FastAPI analytical backend & static server):
+python dashboard_server.py
+```
+Open your browser to **`http://localhost:3000`** to experience:
+- **Industrial Power BI Viewport Shell**: Strict 100vh layout with a pinned top ribbon (`84px`), permanently pinned bottom signature page tabs (`36px`), and independent internal vertical canvas scrolling with 10px custom scrollbars.
+- **Dynamic Slicers**: Active date range slicers (`7D`, `30D`, `90D`, `YTD`, `ALL`) filtering against dataset timestamps, categorical dimension slicer pills, and secondary tier selector with dynamic row-level re-aggregation.
+- **Page 1 — Executive Overview**: Multi-row KPI cards, reactive SVG visuals (Clustered Column, Line, Area, Stacked Bar) with tooltip inspection, ranked Pareto distribution bars, and AI narrative takeaways.
+- **Page 2 — Decomposition Tree (AI Visual)**: Interactive multi-level dimensional drill down with expandable sub-branches and percentage share progress bars (zero alert stubs).
+- **Page 3 — Financial Matrix Table**: Hierarchical table with collapsible parent chevrons (`▼` / `▶`), in-cell conditional data bars, budget variance comparison, and YoY % indicators.
+- **Page 4 — Statistical Anomaly Detector**: Rolling-baseline outlier tracker flagging records with $|z| \ge 2.50\sigma$.
+- **Page 5 — Power Query Schema Review Gate**: Review and override inferred semantic roles (`metric`, `dimension`, `date`, `id`) and aggregation policies (`sum` vs `mean`).
+- **Page 6 — Boardroom 16:9 Presentation Suite**: Interactive slide carousel preview and one-click export of an 8-slide, 16:9 widescreen presentation deck (`.pptx`).
+- **Dockable Visualizations & Data Fields Panes**: 24-visual icon grid picker with automatic navigation to canvas, and Data Fields tree with dynamic metric/dimension re-aggregation upon click.
+- **Universal File Ingestion**: Drag-and-drop ingestion powered by an RFC 4180-compliant tolerant CSV parser (quoted strings, multiple delimiters) and server-side pandas/Excel parsing.
+- **Preloaded Domain Models**: Commerce (`clean.csv`), Operations (`Inventory-Records-Sample-Data.xlsx`), Project Portfolio (`Project-Management-Sample-Data.xlsx`), Finance (`sample_finance_pnl.csv`), and Feedback (`sample_customer_nps.csv`).
+- **Non-Blocking Toast System**: Instant visual feedback for file profiling, uploads, filters, and deck compilation.
+
+#### Option B: Streamlit Analytical Dashboard
+```bash
+# Windows
+run.bat
+
+# Or direct command:
 streamlit run app.py
 ```
-Open your browser to `http://localhost:8501`.
+Open your browser to **`http://localhost:8501`**.
+
+#### Option C: Launch Both Frontends Simultaneously
+```bash
+run_all.bat
+```
+Launches both the FastAPI Power BI Gateway (Port 3000) and Streamlit dashboard (Port 8501) with one click.
 
 ### 5. Verification Checklist for Interns
 Follow this checklist when reviewing features and testing changes:
@@ -179,8 +215,17 @@ Follow this checklist when reviewing features and testing changes:
 ### 6. Executing the Quality & Regression Battery
 Before submitting pull requests, interns must ensure all automated quality gates pass:
 ```bash
-# Run complete test suite (all 305 tests must pass)
+# Run complete test suite (all tests must pass)
 pytest tests/ -v
+
+# Run Power BI dashboard audit verification (12 checks for all 13 audited defects)
+pytest tests/test_audit_13_bugs.py -v
+
+# Run Power BI frontend assets and API gateway tests
+pytest tests/test_dashboard_frontend.py -v
+
+# Run Chromium headless browser Playwright end-to-end interactive verification
+pytest tests/test_playwright_e2e.py -v
 
 # Run headless UI AppTest verification
 pytest tests/test_ui_apptest.py -v
@@ -218,16 +263,17 @@ To safeguard core analytical algorithms, proprietary heuristic engines, and inst
 
 ---
 
-## 🏛️ Built by DBERT AI Venture Studio
+## 🏛️ Built by Aivara Technologies & DBERT AI Venture Studio
 
-Gayatri School OS was architected and built by the engineering squad at [DBERT](https://dbert.online/startups/portfolio/gayatri-ai) — India's premier AI Venture Studio, Delhi.
+**Aivara Insight** was architected and built by the engineering squad at [Aivara Technologies](https://aivaratech.online/) in partnership with [DBERT](https://dbert.online/) — India's premier AI Venture Studio, Delhi.
 
-DBERT (Digital Blinc Education Research & Technology) incubates transformative AI products, ships institutional enterprise platforms, and trains top-tier engineers. Gayatri is developed under the DBERT Internship Program, Batch Aug–Oct 2026.
+DBERT (Digital Blinc Education Research & Technology) incubates transformative AI products, ships institutional enterprise platforms, and trains top-tier engineers. Aivara is actively developed under the Aivara Engineering & Analytics Internship Program, Batch Oct–Dec 2026.
 
-- 🌐 **Website**: [dbert.online](https://dbert.online/)
+- 🌐 **Aivara Website**: [aivaratech.online](https://aivaratech.online/)
+- 🌐 **DBERT Website**: [dbert.online](https://dbert.online/)
 - 📂 **Startup Portfolio**: [dbert.online/startups/portfolio](https://dbert.online/startups/portfolio)
 - 🎓 **DBERT Fellowship Program**: [dbert.online/learners/fellowship](https://dbert.online/learners/fellowship)
-- 💼 **Internship Portal**: [internship.dbert.online](https://internship.dbert.online/)
+- 💼 **Internship Portal**: [aivaratech.online/internships](https://aivaratech.online/internships)
 
 ---
 

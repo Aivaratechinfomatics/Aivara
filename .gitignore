@@ -52,7 +52,44 @@ send_unified_dispatch.py
 send_whatsapp_messages.py
 start.bat
 website/
-whatsapp_dispatch*.csv
+# Databases, recipient dispatch data & local scratch
+*.db
+*.sqlite
+*.sqlite3
+certificate_*.csv
+whatsapp_*.csv
+outbox_backup.json
+WhatsApp*
+scratch_*.py
+data/
+
+# Operational CRM, email bots & dispatch scripts with live credentials
+email_bot_*.py
+email_reply_daemon.py
+outlook_email_service.py
+unified_master_bot.py
+test_email_bot.py
+test_unified_bot.py
+send_*.py
+verify_*.py
+ingest_*.py
+inspect_*.py
+flush_*.py
+list_*.py
+resend_*.py
+check_*.py
+analyze_*.py
+find_*.py
+export_today_csv.py
+prepare_cpanel_upload.bat
+run_certificate_dispatch.bat
+run_email_bot.bat
+run_unified_bot.bat
+sync_once.bat
+verify_database.bat
+preview_live_emails.py
+test_certificate_dispatch.py
+.agents/
 
 # IDEs and editors
 .vscode/
