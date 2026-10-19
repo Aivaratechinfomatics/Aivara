@@ -22,6 +22,8 @@ htmlcov/
 *.tmp
 *.pptx
 !demo_output/*.pptx
+*.mp4
+*.webm
 
 # Workspace scratch, sessions & external dispatch tools
 .chrome_session*/
@@ -36,9 +38,12 @@ scripts/*
 !scripts/smoke_container.py
 !scripts/bench.py
 !scripts/uat_verify.py
+!scripts/record_demo.py
 !scripts/record_demo_video.py
 !scripts/transcode_video.py
 !scripts/slide_viewer.html
+dashboard/demo/*.mp4
+dashboard/demo/*.webm
 demo_output/*
 !demo_output/aivara_v1_demo.mp4
 !demo_output/aivara_v1_demo.webm
