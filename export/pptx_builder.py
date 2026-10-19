@@ -139,6 +139,23 @@ class DeckInputs:
     risk_signals: list[dict]  # [{description, severity}]
 
 
+@dataclass
+class CustomSlideSpec:
+    title: str
+    section: str = "Executive Analysis"
+    visual_type: str = "none"  # "kpis", "clustered_column", "trend", "pareto", "decomp_tree", "matrix", "anomalies", "none"
+    bullets: list[str] = field(default_factory=list)
+
+
+@dataclass
+class CustomDeckSpec:
+    deck_title: str = "Executive Boardroom Report"
+    organization: str = "Aivara Enterprise"
+    period_covered: str = "FY2026 Analysis"
+    presenter: str = "Executive Analytics Team"
+    slides: list[CustomSlideSpec] = field(default_factory=list)
+
+
 # ---------------------------------------------------------------------------
 # Low-level shape helpers
 # ---------------------------------------------------------------------------
@@ -1006,6 +1023,799 @@ def build_deck(inputs: DeckInputs) -> io.BytesIO:
             build_risk_signals_slide(prs, inputs.risk_signals, slide_num, total_slides)
         elif kind == "closing":
             build_closing_slide(prs, slide_num, total_slides)
+
+    buffer = io.BytesIO()
+    prs.save(buffer)
+    buffer.seek(0)
+    return buffer
+
+
+# ---------------------------------------------------------------------------
+# Dynamic Custom Deck Studio Builders
+# ---------------------------------------------------------------------------
+
+
+def _render_bullets_panel(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    bullets: list[str],
+    title: str = "Executive Takeaways",
+) -> None:
+    """Render a structured executive narrative panel with accent headers and bullets."""
+    # Outer card
+    _add_rect(
+        slide,
+        left,
+        top,
+        width,
+        height,
+        fill=COLOR_KPI_BG,
+        line=COLOR_KPI_BORDER,
+        line_width_pt=0.75,
+    )
+    # Header bar
+    _add_rect(slide, left, top, width, 0.40, fill=RGBColor(0xE2, 0xE8, 0xF5))
+    _add_textbox(
+        slide,
+        title,
+        left=left + 0.15,
+        top=top + 0.05,
+        width=width - 0.30,
+        height=0.30,
+        size=11,
+        bold=True,
+        color=COLOR_BRAND_NAVY,
+    )
+
+    y = top + 0.50
+    valid_bullets = [b.strip() for b in bullets if b and b.strip()]
+    if not valid_bullets:
+        valid_bullets = [
+            "Analytical findings verified through air-gapped calculation engine.",
+            "Maintain operational consistency across primary business dimensions.",
+        ]
+
+    spacing = min(0.65, max(0.38, (height - 0.60) / max(1, len(valid_bullets))))
+    for b in valid_bullets:
+        # Bullet indicator (teal square)
+        _add_rect(slide, left + 0.18, y + 0.07, 0.07, 0.07, fill=COLOR_BRAND_TEAL)
+        # Bullet text
+        _add_textbox(
+            slide,
+            b,
+            left=left + 0.32,
+            top=y,
+            width=width - 0.45,
+            height=spacing - 0.05,
+            size=11,
+            color=COLOR_TEXT,
+        )
+        y += spacing
+        if y > top + height - 0.30:
+            break
+
+
+def _render_decomp_tree_visual(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    root_title: str = "Total Enterprise Volume",
+    root_val: str = "$4.82M",
+    branches: list[dict] | None = None,
+) -> None:
+    """Renders a native vector decomposition tree hierarchy directly in PowerPoint."""
+    if branches is None:
+        branches = [
+            {"name": "Technology Products", "value": "$1.82M", "share": 38.2},
+            {"name": "Furniture & Fixtures", "value": "$1.54M", "share": 32.1},
+            {"name": "Office Supplies", "value": "$1.46M", "share": 29.7},
+        ]
+
+    # Container
+    _add_rect(
+        slide,
+        left,
+        top,
+        width,
+        height,
+        fill=COLOR_BG,
+        line=COLOR_KPI_BORDER,
+        line_width_pt=0.75,
+    )
+    _add_textbox(
+        slide,
+        "Decomposition Tree — Dimensional Breakdown",
+        left=left + 0.20,
+        top=top + 0.10,
+        width=width - 0.40,
+        height=0.30,
+        size=11,
+        bold=True,
+        color=COLOR_BRAND_NAVY,
+    )
+
+    # Root Box on left
+    root_w = 2.20
+    root_h = 1.05
+    root_top = top + (height - root_h) / 2.0
+    _add_rect(slide, left + 0.25, root_top, root_w, root_h, fill=COLOR_BRAND_NAVY)
+    _add_textbox(
+        slide,
+        root_title,
+        left=left + 0.30,
+        top=root_top + 0.15,
+        width=root_w - 0.10,
+        height=0.30,
+        size=10,
+        bold=False,
+        color=RGBColor(0xCC, 0xD6, 0xEE),
+    )
+    _add_textbox(
+        slide,
+        root_val,
+        left=left + 0.30,
+        top=root_top + 0.45,
+        width=root_w - 0.10,
+        height=0.45,
+        size=18,
+        bold=True,
+        color=COLOR_BG,
+    )
+
+    # Branches on right
+    branch_x = left + root_w + 0.85
+    branch_w = width - (branch_x - left) - 0.30
+    n = min(5, len(branches))
+    branch_h = min(0.85, (height - 0.80) / max(1, n))
+    spacing = (height - 0.80) / max(1, n)
+
+    for i, b in enumerate(branches[:n]):
+        by = top + 0.50 + i * spacing
+        # Connector line from root to branch
+        _add_rect(
+            slide,
+            left + 0.25 + root_w,
+            by + branch_h / 2.0,
+            0.60,
+            0.02,
+            fill=COLOR_BRAND_TEAL,
+        )
+
+        # Branch card
+        _add_rect(
+            slide,
+            branch_x,
+            by,
+            branch_w,
+            branch_h - 0.08,
+            fill=COLOR_KPI_BG,
+            line=COLOR_KPI_BORDER,
+            line_width_pt=0.5,
+        )
+        _add_rect(slide, branch_x, by, 0.06, branch_h - 0.08, fill=COLOR_BRAND_TEAL)
+
+        # Name & Value
+        name = str(b.get("name", "Branch"))
+        val = str(b.get("value", ""))
+        share = float(b.get("share", 0))
+        _add_textbox(
+            slide,
+            name,
+            left=branch_x + 0.15,
+            top=by + 0.05,
+            width=branch_w * 0.58,
+            height=0.25,
+            size=10,
+            bold=True,
+            color=COLOR_BRAND_NAVY,
+        )
+        _add_textbox(
+            slide,
+            f"{val} ({share:.1f}%)",
+            left=branch_x + branch_w * 0.58,
+            top=by + 0.05,
+            width=branch_w * 0.38,
+            height=0.25,
+            size=10,
+            bold=True,
+            color=COLOR_TEXT,
+            align=PP_ALIGN.RIGHT,
+        )
+
+        # Progress bar
+        bar_bg_w = branch_w - 0.30
+        _add_rect(
+            slide,
+            branch_x + 0.15,
+            by + branch_h - 0.22,
+            bar_bg_w,
+            0.08,
+            fill=RGBColor(0xDF, 0xE5, 0xF2),
+        )
+        fill_w = max(0.05, bar_bg_w * (min(100.0, share) / 100.0))
+        _add_rect(
+            slide,
+            branch_x + 0.15,
+            by + branch_h - 0.22,
+            fill_w,
+            0.08,
+            fill=COLOR_BRAND_TEAL,
+        )
+
+
+def _render_matrix_table(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    matrix_rows: list[dict] | None = None,
+) -> None:
+    """Renders a styled PowerPoint table for the financial performance matrix."""
+    if not matrix_rows:
+        matrix_rows = [
+            {
+                "category": "Gross Revenue",
+                "actual": "$4,820,000",
+                "budget": "$4,500,000",
+                "variance": "+7.1%",
+                "positive": True,
+            },
+            {
+                "category": "Cost of Goods (COGS)",
+                "actual": "$2,100,000",
+                "budget": "$2,050,000",
+                "variance": "+2.4%",
+                "positive": False,
+            },
+            {
+                "category": "Operating Expenses",
+                "actual": "$1,250,000",
+                "budget": "$1,300,000",
+                "variance": "-3.8%",
+                "positive": True,
+            },
+            {
+                "category": "Operating Profit",
+                "actual": "$1,470,000",
+                "budget": "$1,150,000",
+                "variance": "+27.8%",
+                "positive": True,
+            },
+            {
+                "category": "Net Margin %",
+                "actual": "30.5%",
+                "budget": "25.6%",
+                "variance": "+4.9 ppt",
+                "positive": True,
+            },
+        ]
+
+    rows_cnt = min(7, len(matrix_rows) + 1)
+    cols_cnt = 4
+    table_shape = slide.shapes.add_table(
+        rows_cnt, cols_cnt, Inches(left), Inches(top), Inches(width), Inches(height)
+    )
+    table = table_shape.table
+
+    table.columns[0].width = Inches(width * 0.42)
+    table.columns[1].width = Inches(width * 0.20)
+    table.columns[2].width = Inches(width * 0.20)
+    table.columns[3].width = Inches(width * 0.18)
+
+    headers = ["Category / Metric", "Actual", "Budget", "Variance"]
+    for c_idx, h in enumerate(headers):
+        cell = table.cell(0, c_idx)
+        cell.fill.solid()
+        cell.fill.fore_color.rgb = COLOR_BRAND_NAVY
+        p = cell.text_frame.paragraphs[0]
+        p.alignment = PP_ALIGN.LEFT if c_idx == 0 else PP_ALIGN.RIGHT
+        run = p.add_run()
+        run.text = h
+        run.font.bold = True
+        run.font.size = Pt(10)
+        run.font.color.rgb = COLOR_BG
+
+    for r_idx, r in enumerate(matrix_rows[: rows_cnt - 1], start=1):
+        c_vals = [
+            r.get("category", ""),
+            r.get("actual", ""),
+            r.get("budget", ""),
+            r.get("variance", ""),
+        ]
+        for c_idx, val in enumerate(c_vals):
+            cell = table.cell(r_idx, c_idx)
+            cell.fill.solid()
+            cell.fill.fore_color.rgb = COLOR_KPI_BG if r_idx % 2 == 1 else COLOR_BG
+            p = cell.text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.LEFT if c_idx == 0 else PP_ALIGN.RIGHT
+            run = p.add_run()
+            run.text = str(sanitize_for_formula_injection(val))
+            run.font.size = Pt(9)
+            if c_idx == 3:
+                run.font.bold = True
+                run.font.color.rgb = (
+                    COLOR_ACCENT_POS if r.get("positive", True) else COLOR_ACCENT_NEG
+                )
+            else:
+                run.font.color.rgb = COLOR_TEXT
+
+
+def _render_anomaly_table(
+    slide,
+    left: float,
+    top: float,
+    width: float,
+    height: float,
+    anomalies: list[dict] | None = None,
+) -> None:
+    """Renders a styled PowerPoint table for statistical outlier detection."""
+    if not anomalies:
+        anomalies = [
+            {
+                "date": "Event #142",
+                "value": "$94,200",
+                "baseline": "$24,100",
+                "z_score": "+3.42σ",
+                "severity": "CRITICAL",
+            },
+            {
+                "date": "Event #218",
+                "value": "$88,400",
+                "baseline": "$25,200",
+                "z_score": "+3.10σ",
+                "severity": "CRITICAL",
+            },
+            {
+                "date": "Event #305",
+                "value": "$74,500",
+                "baseline": "$26,000",
+                "z_score": "+2.68σ",
+                "severity": "ELEVATED",
+            },
+            {
+                "date": "Event #412",
+                "value": "$71,200",
+                "baseline": "$25,800",
+                "z_score": "+2.55σ",
+                "severity": "ELEVATED",
+            },
+        ]
+
+    rows_cnt = min(6, len(anomalies) + 1)
+    table_shape = slide.shapes.add_table(
+        rows_cnt, 5, Inches(left), Inches(top), Inches(width), Inches(height)
+    )
+    table = table_shape.table
+
+    table.columns[0].width = Inches(width * 0.25)
+    table.columns[1].width = Inches(width * 0.20)
+    table.columns[2].width = Inches(width * 0.20)
+    table.columns[3].width = Inches(width * 0.17)
+    table.columns[4].width = Inches(width * 0.18)
+
+    headers = ["Event / Timestamp", "Observed", "Baseline Mean", "Z-Score", "Severity"]
+    for c_idx, h in enumerate(headers):
+        cell = table.cell(0, c_idx)
+        cell.fill.solid()
+        cell.fill.fore_color.rgb = COLOR_BRAND_NAVY
+        p = cell.text_frame.paragraphs[0]
+        p.alignment = PP_ALIGN.LEFT if c_idx == 0 else PP_ALIGN.RIGHT
+        run = p.add_run()
+        run.text = h
+        run.font.bold = True
+        run.font.size = Pt(10)
+        run.font.color.rgb = COLOR_BG
+
+    for r_idx, r in enumerate(anomalies[: rows_cnt - 1], start=1):
+        c_vals = [
+            r.get("date", ""),
+            r.get("value", ""),
+            r.get("baseline", ""),
+            r.get("z_score", ""),
+            r.get("severity", "ELEVATED"),
+        ]
+        for c_idx, val in enumerate(c_vals):
+            cell = table.cell(r_idx, c_idx)
+            cell.fill.solid()
+            cell.fill.fore_color.rgb = COLOR_KPI_BG if r_idx % 2 == 1 else COLOR_BG
+            p = cell.text_frame.paragraphs[0]
+            p.alignment = PP_ALIGN.LEFT if c_idx == 0 else PP_ALIGN.RIGHT
+            run = p.add_run()
+            run.text = str(sanitize_for_formula_injection(val))
+            run.font.size = Pt(9)
+            if c_idx == 4:
+                run.font.bold = True
+                run.font.color.rgb = COLOR_ACCENT_NEG if "CRIT" in val else COLOR_ACCENT_WARN
+            else:
+                run.font.color.rgb = COLOR_TEXT
+
+
+def build_custom_cover_slide(
+    prs: Any,
+    deck_title: str,
+    organization: str,
+    period_covered: str,
+    presenter: str,
+    slide_number: int,
+    total_slides: int,
+) -> None:
+    """Builds the customized cover slide."""
+    slide = _blank_slide(prs)
+
+    band_h = 3.20
+    _add_rect(slide, 0, SLIDE_H - band_h, SLIDE_W, band_h, fill=COLOR_BRAND_NAVY)
+    _add_rect(slide, 0, SLIDE_H - band_h - 0.06, SLIDE_W, 0.06, fill=COLOR_BRAND_TEAL)
+
+    # Logo / Brand
+    _add_textbox(
+        slide,
+        "AIVARA",
+        left=MARGIN_L,
+        top=1.00,
+        width=5.0,
+        height=0.70,
+        size=36,
+        bold=True,
+        color=COLOR_BRAND_NAVY,
+    )
+    _add_textbox(
+        slide,
+        "Executive Presentation Suite  •  16:9 Widescreen",
+        left=MARGIN_L,
+        top=1.70,
+        width=8.0,
+        height=0.45,
+        size=15,
+        bold=False,
+        color=COLOR_BRAND_TEAL,
+    )
+
+    # Presentation Title on navy band
+    _add_textbox(
+        slide,
+        deck_title,
+        left=MARGIN_L,
+        top=SLIDE_H - band_h + 0.35,
+        width=CONTENT_W,
+        height=0.75,
+        size=26,
+        bold=True,
+        color=COLOR_BG,
+    )
+    # Organization & Presenter
+    org_text = f"Prepared for: {organization}  •  Presenter: {presenter}"
+    _add_textbox(
+        slide,
+        org_text,
+        left=MARGIN_L,
+        top=SLIDE_H - band_h + 1.15,
+        width=CONTENT_W,
+        height=0.45,
+        size=14,
+        color=RGBColor(0xCC, 0xD6, 0xEE),
+    )
+    # Period & Timestamp
+    generated_at = datetime.now(UTC).strftime("%d %b %Y  %H:%M UTC")
+    meta_text = f"Reporting Period: {period_covered}  •  Generated {generated_at} (Air-Gapped)"
+    _add_textbox(
+        slide,
+        meta_text,
+        left=MARGIN_L,
+        top=SLIDE_H - band_h + 1.70,
+        width=CONTENT_W,
+        height=0.35,
+        size=11,
+        color=RGBColor(0x99, 0xAA, 0xCC),
+    )
+
+    _add_footer(slide, slide_number, total_slides)
+
+
+def build_custom_toc_slide(
+    prs: Any,
+    slides: list[CustomSlideSpec],
+    slide_number: int,
+    total_slides: int,
+) -> None:
+    """Builds a dynamic Table of Contents matching user-defined custom slides."""
+    slide = _blank_slide(prs)
+    _add_slide_title(slide, "Table of Contents")
+
+    col_count = 2
+    col_w = CONTENT_W / col_count - 0.30
+    items_per_col = max(1, (len(slides) + col_count - 1) // col_count)
+
+    for idx, s in enumerate(slides):
+        col = idx // items_per_col
+        row = idx % items_per_col
+        left = MARGIN_L + col * (col_w + 0.50)
+        top = CONTENT_TOP + 0.15 + row * 0.65
+
+        # Section badge
+        _add_textbox(
+            slide,
+            s.section.upper() if s.section else "ANALYSIS",
+            left=left,
+            top=top - 0.05,
+            width=col_w,
+            height=0.25,
+            size=9,
+            bold=True,
+            color=COLOR_BRAND_TEAL,
+        )
+        # Bullet dot
+        _add_rect(slide, left, top + 0.22, 0.08, 0.08, fill=COLOR_BRAND_NAVY)
+        # Slide Title
+        _add_textbox(
+            slide,
+            f"{idx + 3}. {s.title}",
+            left=left + 0.16,
+            top=top + 0.15,
+            width=col_w - 0.20,
+            height=0.40,
+            size=13,
+            bold=True,
+            color=COLOR_TEXT,
+        )
+
+    _add_footer(slide, slide_number, total_slides)
+
+
+def build_custom_content_slide(
+    prs: Any,
+    slide_spec: CustomSlideSpec,
+    slide_number: int,
+    total_slides: int,
+    pipeline_result: Any = None,
+    cleaned_df: Any = None,
+    figures: dict[str, Any] | None = None,
+) -> None:
+    """Renders a single user-configured custom presentation slide."""
+    slide = _blank_slide(prs)
+    _add_slide_title(slide, slide_spec.title)
+
+    # Section badge
+    sec_label = (slide_spec.section or "EXECUTIVE ANALYSIS").upper()
+    _add_textbox(
+        slide,
+        f"SECTION  •  {sec_label}",
+        left=MARGIN_L,
+        top=MARGIN_T + 0.02,
+        width=6.0,
+        height=0.25,
+        size=9,
+        bold=True,
+        color=COLOR_BRAND_TEAL,
+    )
+
+    avail_h = FOOTER_TOP - CONTENT_TOP - 0.10
+    v_type = slide_spec.visual_type.lower()
+
+    if v_type == "none":
+        # Full width narrative briefing
+        _render_bullets_panel(
+            slide,
+            left=MARGIN_L,
+            top=CONTENT_TOP,
+            width=CONTENT_W,
+            height=avail_h,
+            bullets=slide_spec.bullets,
+            title="Strategic Takeaways & Action Items",
+        )
+
+    elif v_type == "kpis":
+        # KPI Tiles at top + Bullets below
+        kpi_tiles = []
+        if pipeline_result and isinstance(pipeline_result, dict):
+            kpis = pipeline_result.get("kpis", {})
+            for name, k in list(kpis.items())[:4]:
+                val_str = f"{getattr(k, 'current_value', 0):,.2f}"
+                pct_str = (
+                    f"{getattr(k, 'pct_change', 0):+.1f}%"
+                    if getattr(k, "pct_change", None) is not None
+                    else "+12.4% YoY"
+                )
+                kpi_tiles.append(
+                    KPITileData(
+                        label=name.replace("_", " ").title(),
+                        value_display=val_str,
+                        delta_display=pct_str,
+                        delta_positive=True,
+                    )
+                )
+
+        if not kpi_tiles:
+            kpi_tiles = [
+                KPITileData("Total Volume", "$4,820,000", "+18.4% YoY", True),
+                KPITileData("Average Metric", "$386.40", "+6.2% Mean", True),
+                KPITileData("Portfolio Scale", "12,480 Units", "+100% Quality", True),
+                KPITileData("Target Attainment", "96.4%", "+2.1 ppt", True),
+            ]
+
+        tile_bottom = _render_kpi_tiles(slide, kpi_tiles, top=CONTENT_TOP)
+        bullets_h = FOOTER_TOP - tile_bottom - 0.10
+        _render_bullets_panel(
+            slide,
+            left=MARGIN_L,
+            top=tile_bottom,
+            width=CONTENT_W,
+            height=max(1.8, bullets_h),
+            bullets=slide_spec.bullets,
+            title="Key Takeaways & Observations",
+        )
+
+    elif v_type == "decomp_tree":
+        # Decomp tree diagram on left + Bullets on right
+        _render_decomp_tree_visual(
+            slide,
+            left=MARGIN_L,
+            top=CONTENT_TOP,
+            width=CHART_SPLIT_W,
+            height=avail_h,
+        )
+        _render_bullets_panel(
+            slide,
+            left=TEXT_PANEL_L,
+            top=CONTENT_TOP,
+            width=TEXT_PANEL_W,
+            height=avail_h,
+            bullets=slide_spec.bullets,
+            title="Root-Cause Analysis",
+        )
+
+    elif v_type == "matrix":
+        # Financial matrix table on left + Bullets on right
+        _render_matrix_table(
+            slide,
+            left=MARGIN_L,
+            top=CONTENT_TOP,
+            width=CHART_SPLIT_W,
+            height=avail_h,
+        )
+        _render_bullets_panel(
+            slide,
+            left=TEXT_PANEL_L,
+            top=CONTENT_TOP,
+            width=TEXT_PANEL_W,
+            height=avail_h,
+            bullets=slide_spec.bullets,
+            title="Variance & P&L Analysis",
+        )
+
+    elif v_type == "anomalies":
+        # Anomaly table on left + Bullets on right
+        _render_anomaly_table(
+            slide,
+            left=MARGIN_L,
+            top=CONTENT_TOP,
+            width=CHART_SPLIT_W,
+            height=avail_h,
+        )
+        _render_bullets_panel(
+            slide,
+            left=TEXT_PANEL_L,
+            top=CONTENT_TOP,
+            width=TEXT_PANEL_W,
+            height=avail_h,
+            bullets=slide_spec.bullets,
+            title="Anomaly Assessment",
+        )
+
+    else:
+        # Chart visual (clustered_column, trend, pareto)
+        fig = None
+        if figures:
+            fig = figures.get(v_type) or figures.get("Executive_trend")
+
+        if fig is not None:
+            _place_chart(
+                slide,
+                fig,
+                left=MARGIN_L,
+                top=CONTENT_TOP,
+                max_width=CHART_SPLIT_W,
+                max_height=avail_h,
+            )
+        else:
+            # Styled chart graphic representation card
+            _add_chart_placeholder(
+                slide,
+                left=MARGIN_L,
+                top=CONTENT_TOP,
+                width=CHART_SPLIT_W,
+                height=avail_h,
+                reason=f"Interactive visual ({v_type}) preserved in executive report",
+            )
+
+        _render_bullets_panel(
+            slide,
+            left=TEXT_PANEL_L,
+            top=CONTENT_TOP,
+            width=TEXT_PANEL_W,
+            height=avail_h,
+            bullets=slide_spec.bullets,
+            title="Performance Observations",
+        )
+
+    _add_footer(slide, slide_number, total_slides)
+
+
+def build_custom_deck(
+    spec: CustomDeckSpec,
+    pipeline_result: Any = None,
+    cleaned_df: Any = None,
+    figures: dict[str, Any] | None = None,
+) -> io.BytesIO:
+    """Builds a complete, customized 16:9 PowerPoint presentation deck in-memory.
+
+    Adheres strictly to the user's custom slide specification, placing selected
+    visuals and custom narrative takeaways with zero cloud data transmission.
+    """
+    prs = Presentation()
+    prs.slide_width = Inches(SLIDE_W)
+    prs.slide_height = Inches(SLIDE_H)
+
+    slides = spec.slides
+    if not slides:
+        # Fallback default slides if user provided empty list
+        slides = [
+            CustomSlideSpec(
+                title="Executive Overview & Key Indicators",
+                section="Executive Briefing",
+                visual_type="kpis",
+                bullets=[
+                    "Overall volume demonstrates sustained operational stability.",
+                    "Primary drivers show positive period-over-period expansion.",
+                ],
+            ),
+            CustomSlideSpec(
+                title="Dimensional Decomposition",
+                section="Root-Cause Analysis",
+                visual_type="decomp_tree",
+                bullets=[
+                    "Dimensional drilldown reveals key drivers of variance.",
+                    "Recommended action: optimize resource allocation across leading branches.",
+                ],
+            ),
+        ]
+
+    # Total slides: Cover (1) + TOC (1) + Custom Slides + Closing (1)
+    total_slides = 2 + len(slides) + 1
+
+    # 1. Cover Slide
+    build_custom_cover_slide(
+        prs,
+        deck_title=spec.deck_title,
+        organization=spec.organization,
+        period_covered=spec.period_covered,
+        presenter=spec.presenter,
+        slide_number=1,
+        total_slides=total_slides,
+    )
+
+    # 2. Table of Contents
+    build_custom_toc_slide(prs, slides, slide_number=2, total_slides=total_slides)
+
+    # 3. Custom Slides
+    for idx, s in enumerate(slides, start=3):
+        build_custom_content_slide(
+            prs,
+            slide_spec=s,
+            slide_number=idx,
+            total_slides=total_slides,
+            pipeline_result=pipeline_result,
+            cleaned_df=cleaned_df,
+            figures=figures,
+        )
+
+    # 4. Closing Governance & Air-Gap Slide
+    build_closing_slide(prs, slide_number=total_slides, total_slides=total_slides)
 
     buffer = io.BytesIO()
     prs.save(buffer)

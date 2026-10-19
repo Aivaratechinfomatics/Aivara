@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aivara Insight — Power BI Executive Canvas</title>
+  <title>Aivara Insight — Business Intelligence Executive Canvas</title>
   <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Segoe+UI:wght@400;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
@@ -37,7 +37,7 @@
       font-family: 'JetBrains Mono', monospace;
     }
 
-    /* Power BI visual icon grid buttons */
+    /* Executive BI visual icon grid buttons */
     .pbi-visual-icon {
       width: 26px;
       height: 26px;
@@ -61,7 +61,7 @@
       color: #B45309;
     }
 
-    /* Prominent, accessible Power BI Desktop vertical and horizontal scrollbars */
+    /* Prominent, accessible Executive Canvas vertical and horizontal scrollbars */
     ::-webkit-scrollbar {
       width: 10px;
       height: 10px;
@@ -85,7 +85,7 @@
       background-color: rgba(17, 141, 255, 0.05) !important;
     }
 
-    /* Power BI Interactive Floating Toast Notification */
+    /* Interactive Floating Toast Notification */
     .pbi-toast {
       animation: toastSlideIn 0.25s ease-out forwards;
     }
@@ -97,11 +97,11 @@
 </head>
 <body class="bg-[#242424] text-slate-900 h-screen overflow-hidden flex flex-col antialiased text-xs">
 
-  <!-- Power BI Interactive Floating Toast Container -->
+  <!-- Interactive Floating Toast Container -->
   <div id="pbiToastContainer" class="fixed top-20 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- ========================================================================= -->
-  <!-- 1. POWER BI TOP SHELL: TITLE BAR & RIBBON                                  -->
+  <!-- 1. BUSINESS INTELLIGENCE TOP SHELL: TITLE BAR & RIBBON                     -->
   <!-- ========================================================================= -->
   <header class="bg-[#181818] text-white flex-shrink-0 border-b border-[#333333] z-40">
     <!-- Top Most Window Bar -->
@@ -112,7 +112,7 @@
         </div>
         <span class="font-semibold text-slate-200">Aivara Insight</span>
         <span class="text-slate-400">―</span>
-        <span id="pbiReportTitle" class="text-slate-300 font-normal">Aivara_Enterprise_Master.csv (12,480 rows) • Power BI Engine Active</span>
+        <span id="pbiReportTitle" class="text-slate-300 font-normal">Aivara_Enterprise_Master.csv (12,480 rows) • Executive BI Engine Active</span>
       </div>
 
       <div class="flex items-center gap-4 text-[11px] text-slate-400">
@@ -123,12 +123,12 @@
         <span class="hidden md:inline">Air-Gapped: <strong class="text-slate-300">CWE-1236 Sanitized</strong></span>
         <div class="flex items-center gap-1 bg-[#2C2C2C] px-2 py-0.5 rounded text-slate-300">
           <span>Mode:</span>
-          <strong class="text-[#F2C811]">Interactive Canvas</strong>
+          <strong class="text-[#F2C811]">Business Intelligence Executive Canvas</strong>
         </div>
       </div>
     </div>
 
-    <!-- Power BI Action Ribbon -->
+    <!-- Executive Action Ribbon -->
     <div class="bg-[#222222] px-3 py-1.5 flex items-center justify-between gap-4 border-b border-[#333333]">
       <div class="flex items-center gap-1">
         <!-- File / Get Data Group -->
@@ -167,7 +167,7 @@
           </select>
         </div>
 
-        <!-- Power BI AI Visuals Group -->
+        <!-- Executive BI Visuals Group -->
         <div class="hidden md:flex items-center gap-1 pl-2">
           <button onclick="switchPage('decomp')" class="flex items-center gap-1.5 px-2.5 py-1 rounded bg-[#2E2E2E] hover:bg-[#3A3A3A] text-slate-200 border border-[#444] transition-colors">
             <span class="text-[#F2C811] font-bold">⑂</span>
@@ -199,14 +199,14 @@
   </header>
 
   <!-- ========================================================================= -->
-  <!-- 2. POWER BI WORKSPACE: CANVAS + RIGHT DOCKABLE PANES                       -->
+  <!-- 2. BUSINESS INTELLIGENCE WORKSPACE: CANVAS + RIGHT DOCKABLE PANES         -->
   <!-- ========================================================================= -->
   <div class="flex-1 flex min-h-0 overflow-hidden" style="flex: 1 1 0%; min-height: 0; overflow: hidden;">
     
     <!-- MAIN REPORT CANVAS WITH INDEPENDENT VERTICAL SCROLLING -->
     <main id="mainDropZone" class="flex-1 bg-[#EAEAEA] p-4 overflow-y-auto h-full pb-8">
       
-      <!-- Power BI Slicers Bar (Horizontal Filter Controls) -->
+      <!-- Executive BI Slicers Bar (Horizontal Filter Controls) -->
       <div class="bg-white rounded border border-[#D1D5DB] p-3 mb-4 shadow-xs flex flex-wrap items-center justify-between gap-3 text-xs">
         
         <!-- Slicer 1: Date Range Preset Slicer -->
@@ -256,13 +256,13 @@
       </div>
 
       <!-- ===================================================================== -->
-      <!-- CANVAS PAGES (SWITCHED BY BOTTOM POWER BI PAGE TABS)                  -->
+      <!-- CANVAS PAGES (SWITCHED BY BOTTOM EXECUTIVE PAGE TABS)                 -->
       <!-- ===================================================================== -->
 
       <!-- PAGE 1: EXECUTIVE OVERVIEW CANVAS -->
       <div id="pbiPage-overview" class="pbi-page-container space-y-4">
         
-        <!-- Power BI Multi-Row KPI Callout Cards -->
+        <!-- Executive Multi-Row KPI Callout Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
           
           <!-- Card 1: Primary Volumetric Metric -->
@@ -370,7 +370,7 @@
 
         </div>
 
-        <!-- Power BI Dual-Visual Grid: Clustered Column & Pareto 80/20 -->
+        <!-- Executive Dual-Visual Grid: Clustered Column & Pareto 80/20 -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
           
           <!-- Visual 1: Line and Clustered Column Chart (2 Cols) -->
@@ -426,7 +426,7 @@
               </div>
             </div>
 
-            <!-- Mini Power BI Key Influencer Callout -->
+            <!-- Mini Key Influencer Callout -->
             <div class="mt-4 p-2.5 rounded bg-amber-50/70 border border-amber-200 text-[10px] text-amber-900">
               <span class="font-bold">Key Influencer:</span> <span id="keyDriverText">Primary segment accounts for <strong>64.2%</strong> of overall model variance with Average Order Value of <strong>$1,420</strong>.</span>
             </div>
@@ -443,7 +443,7 @@
             <div>
               <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <span class="text-[#F2C811] text-base font-black">⑂</span>
-                Power BI Decomposition Tree — Interactive Root Cause Explorer
+                Executive Decomposition Tree — Interactive Root Cause Explorer
               </h3>
               <p class="text-[11px] text-slate-500">Click on any plus node (<code class="bg-slate-100 px-1 py-0.5 rounded text-indigo-600 font-bold">+</code>) to dynamically drill down into dimensions by high value or variance</p>
             </div>
@@ -507,7 +507,7 @@
             <div>
               <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <span class="text-amber-600 text-base font-black">⚡</span>
-                Power BI Anomaly Detection & Statistical Outlier Alerts
+                Statistical Anomaly Detection & Operational Outlier Alerts
               </h3>
               <p class="text-[11px] text-slate-500">Rolling standard deviation bands (|z| ≥ 2.50σ) detecting statistical deviations</p>
             </div>
@@ -536,14 +536,14 @@
         </div>
       </div>
 
-      <!-- PAGE 5: TRANSFORM DATA / POWER QUERY SCHEMA GATE -->
+      <!-- PAGE 5: TRANSFORM DATA / DATA SCHEMA & QUERY GATE -->
       <div id="pbiPage-transform" class="pbi-page-container hidden space-y-4">
         <div class="bg-white rounded border border-[#D1D5DB] p-4 shadow-xs">
           <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-3">
             <div>
               <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <span class="text-blue-600 text-base font-black">⚙</span>
-                Power Query Editor & Semantic Schema Review Gate
+                Data Schema & Query Gate — Semantic Column Review
               </h3>
               <p class="text-[11px] text-slate-500">Verify inferred column roles, change aggregation behaviors, and inspect null profiles</p>
             </div>
@@ -573,76 +573,108 @@
         </div>
       </div>
 
-      <!-- PAGE 6: 16:9 PPTX EXPORT PRESENTATION SUITE -->
+      <!-- PAGE 6: 16:9 PPTX EXPORT PRESENTATION STUDIO & CUSTOMIZER -->
       <div id="pbiPage-export" class="pbi-page-container hidden space-y-4">
         <div class="bg-white rounded border border-[#D1D5DB] p-4 shadow-xs">
-          <div class="flex items-center justify-between border-b border-slate-200 pb-2 mb-3">
+          <!-- Top Studio Bar -->
+          <div class="flex flex-wrap items-center justify-between border-b border-slate-200 pb-3 mb-4 gap-3">
             <div>
               <h3 class="font-bold text-slate-900 text-sm flex items-center gap-2">
                 <span class="text-[#F2C811] text-base font-black">▲</span>
-                Boardroom 16:9 PowerPoint (.pptx) Deck Builder
+                Boardroom 16:9 Presentation Studio & Deck Customizer
               </h3>
-              <p class="text-[11px] text-slate-500">Natively compiled with local vector graphics, zero cloud egress, and formula sanitization</p>
+              <p class="text-[11px] text-slate-500">Customize presentation metadata, assign dashboard graphs, edit executive narrative takeaways, and export boardroom-ready slides</p>
             </div>
-            <button onclick="triggerPptxDownload()" class="px-5 py-2.5 bg-[#F2C811] hover:bg-[#e0b808] text-[#181818] font-black rounded text-xs shadow-md flex items-center gap-2 transition-transform active:scale-95">
-              <svg class="w-4 h-4 text-[#181818]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
-              </svg>
-              Download 8-Slide PowerPoint Presentation (.pptx)
-            </button>
+            <div class="flex items-center gap-2">
+              <button onclick="deckStudioResetDefaults()" class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded text-xs border border-slate-300 transition-colors">
+                ↺ Reset to Defaults
+              </button>
+              <button onclick="deckStudioAddSlide()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded text-xs transition-colors flex items-center gap-1">
+                <span>+</span> Add Custom Slide
+              </button>
+              <button onclick="deckStudioDownloadPptx()" class="px-4 py-1.5 bg-[#F2C811] hover:bg-[#e0b808] text-[#181818] font-black rounded text-xs shadow-md flex items-center gap-2 transition-transform active:scale-95">
+                <svg class="w-4 h-4 text-[#181818]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                </svg>
+                Download Customized Presentation (.pptx)
+              </button>
+            </div>
           </div>
 
-          <!-- Slide Carousel Preview -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 pt-2">
-            <div class="border border-slate-300 rounded overflow-hidden shadow-xs hover:border-[#118DFF] transition-all">
-              <div class="aspect-video bg-slate-900 text-white p-3 flex flex-col justify-between">
-                <div class="text-[9px] text-[#F2C811] font-bold">AIVARA INSIGHT • SLIDE 1</div>
-                <div>
-                  <div class="text-xs font-bold" id="pptxPreviewTitle">Executive Boardroom Report</div>
-                  <div class="text-[9px] text-slate-400">Time-Series Q3 Analysis</div>
-                </div>
-                <div class="text-[8px] text-slate-500 font-mono">Confidential Air-Gapped</div>
+          <!-- Global Deck Metadata Header Panel -->
+          <div class="bg-slate-50 border border-slate-200 rounded p-3 mb-4">
+            <div class="text-[11px] font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+              <span class="text-[#118DFF]">⚙</span> Presentation Metadata & Cover Branding
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-1">Presentation Deck Title</label>
+                <input id="deckStudioTitle" type="text" oninput="deckStudioUpdateMeta()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 text-xs text-slate-800 font-medium focus:ring-1 focus:ring-[#118DFF] focus:outline-none" value="Executive Boardroom Report">
               </div>
-              <div class="p-2 bg-slate-50 text-[10px] font-semibold text-slate-700">Slide 1: Cover Title & Metadata</div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-1">Organization / Enterprise</label>
+                <input id="deckStudioOrg" type="text" oninput="deckStudioUpdateMeta()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 text-xs text-slate-800 font-medium focus:ring-1 focus:ring-[#118DFF] focus:outline-none" value="Aivara Enterprise">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-1">Reporting Period / Subtitle</label>
+                <input id="deckStudioPeriod" type="text" oninput="deckStudioUpdateMeta()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 text-xs text-slate-800 font-medium focus:ring-1 focus:ring-[#118DFF] focus:outline-none" value="FY2026 Comprehensive Analysis">
+              </div>
+              <div>
+                <label class="block text-[10px] font-semibold text-slate-600 mb-1">Presenter / Lead</label>
+                <input id="deckStudioPresenter" type="text" oninput="deckStudioUpdateMeta()" class="w-full bg-white border border-slate-300 rounded px-2.5 py-1 text-xs text-slate-800 font-medium focus:ring-1 focus:ring-[#118DFF] focus:outline-none" value="Executive Analytics Team">
+              </div>
+            </div>
+          </div>
+
+          <!-- Split Workspace: Slide Editor on Left, Live 16:9 Preview on Right -->
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            
+            <!-- Left Panel: Slide List & Customizer (7 cols) -->
+            <div class="lg:col-span-7 space-y-3">
+              <div class="flex items-center justify-between text-xs font-bold text-slate-700 pb-1 border-b border-slate-200">
+                <span class="flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#118DFF]"></span>
+                  Slide Sequence & Graph Placement (<span id="deckStudioSlideCount">0</span> slides)
+                </span>
+                <span class="text-[11px] text-slate-500 font-normal">Click a slide to edit and preview</span>
+              </div>
+
+              <!-- Scrollable Slide Cards Container -->
+              <div id="deckStudioSlideList" class="space-y-3 max-h-[580px] overflow-y-auto pr-1">
+                <!-- Dynamically generated slide cards -->
+              </div>
             </div>
 
-            <div class="border border-slate-300 rounded overflow-hidden shadow-xs hover:border-[#118DFF] transition-all">
-              <div class="aspect-video bg-slate-800 text-white p-3 flex flex-col justify-between">
-                <div class="text-[9px] text-[#F2C811] font-bold">TAKEAWAYS • SLIDE 2</div>
-                <div class="space-y-1">
-                  <div class="h-2 w-3/4 bg-slate-600 rounded"></div>
-                  <div class="h-2 w-full bg-slate-700 rounded"></div>
-                  <div class="h-2 w-5/6 bg-slate-700 rounded"></div>
+            <!-- Right Panel: Live 16:9 Presentation Preview (5 cols) -->
+            <div class="lg:col-span-5 flex flex-col">
+              <div class="sticky top-2 space-y-2">
+                <div class="flex items-center justify-between text-xs font-bold text-slate-700 pb-1 border-b border-slate-200">
+                  <span class="flex items-center gap-1.5">
+                    <span class="text-[#F2C811]">▶</span>
+                    Live 16:9 Slide Preview
+                  </span>
+                  <div class="flex items-center gap-1">
+                    <button onclick="deckStudioNavSlide(-1)" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-[11px] font-bold">◀ Prev</button>
+                    <span id="deckStudioPreviewIndex" class="text-[11px] font-mono text-slate-600 px-1.5">1 / 5</span>
+                    <button onclick="deckStudioNavSlide(1)" class="px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 border border-slate-300 text-slate-700 text-[11px] font-bold">Next ▶</button>
+                  </div>
                 </div>
-                <div class="text-[8px] text-slate-500 font-mono">Synthesized Takeaways</div>
+
+                <!-- 16:9 Aspect Ratio Presentation Screen -->
+                <div class="border-2 border-slate-700 rounded-lg overflow-hidden shadow-lg bg-[#0D2B5C] text-white">
+                  <div class="aspect-video w-full p-4 flex flex-col justify-between" id="deckLivePreviewCanvas">
+                    <!-- Live slide content dynamically rendered by renderLiveSlidePreview() -->
+                  </div>
+                </div>
+
+                <!-- Preview Guidance / Tips -->
+                <div class="bg-amber-50 border border-amber-200 rounded p-2 text-[11px] text-amber-800 flex items-start gap-2">
+                  <span class="font-bold">💡 Tip:</span>
+                  <span>Select any dashboard graph (KPIs, Clustered Column, Pareto, Decomposition Tree, Matrix Table, Anomaly Radar) to embed into the slide. All bullet points in the left editor update this preview in real time.</span>
+                </div>
               </div>
-              <div class="p-2 bg-slate-50 text-[10px] font-semibold text-slate-700">Slide 2: Strategic Takeaways</div>
             </div>
 
-            <div class="border border-slate-300 rounded overflow-hidden shadow-xs hover:border-[#118DFF] transition-all">
-              <div class="aspect-video bg-slate-800 text-white p-3 flex flex-col justify-between">
-                <div class="text-[9px] text-[#F2C811] font-bold">KPI SCORECARD • SLIDE 3</div>
-                <div class="grid grid-cols-2 gap-1 text-[10px] font-mono">
-                  <div id="pptxKpi1" class="bg-slate-900 p-1.5 rounded">$4.82M</div>
-                  <div id="pptxKpi2" class="bg-slate-900 p-1.5 rounded">$386 AOV</div>
-                </div>
-                <div class="text-[8px] text-slate-500 font-mono">Primary Key Indicators</div>
-              </div>
-              <div class="p-2 bg-slate-50 text-[10px] font-semibold text-slate-700">Slide 3: Executive Scorecards</div>
-            </div>
-
-            <div class="border border-slate-300 rounded overflow-hidden shadow-xs hover:border-[#118DFF] transition-all">
-              <div class="aspect-video bg-slate-800 text-white p-3 flex flex-col justify-between">
-                <div class="text-[9px] text-[#F2C811] font-bold">TRENDS • SLIDE 4</div>
-                <div class="h-10 flex items-end">
-                  <svg class="w-full h-full" viewBox="0 0 100 24">
-                    <path d="M0,20 Q30,10 60,15 T100,2" fill="none" stroke="#118DFF" stroke-width="2"/>
-                  </svg>
-                </div>
-                <div class="text-[8px] text-slate-500 font-mono">Time-Series Vector Chart</div>
-              </div>
-              <div class="p-2 bg-slate-50 text-[10px] font-semibold text-slate-700">Slide 4: Trend Trajectory</div>
-            </div>
           </div>
         </div>
       </div>
@@ -650,7 +682,7 @@
     </main>
 
     <!-- ======================================================================= -->
-    <!-- RIGHT POWER BI DOCKABLE PANES: FILTERS, VISUALIZATIONS, DATA            -->
+    <!-- RIGHT EXECUTIVE BI DOCKABLE PANES: FILTERS, VISUALIZATIONS, DATA        -->
     <!-- ======================================================================= -->
     <aside class="w-72 bg-[#F3F3F3] border-l border-[#D1D5DB] flex flex-col flex-shrink-0 text-slate-800 overflow-y-auto">
       
@@ -749,7 +781,7 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- 3. POWER BI BOTTOM PAGE TAB BAR (Signature Page Switcher)                  -->
+  <!-- 3. BOTTOM PAGE TAB BAR (Signature Page Switcher)                           -->
   <!-- ========================================================================= -->
   <footer class="h-9 bg-[#E5E5E5] border-t border-[#D1D5DB] flex items-center justify-between px-3 text-xs flex-shrink-0 z-40">
     <!-- Left: Page Tabs List -->
@@ -771,11 +803,11 @@
       </button>
 
       <button onclick="switchPage('transform')" id="pbiTabBtn-transform" class="pbi-page-tab px-3 py-1 hover:bg-slate-200 text-slate-600 font-medium rounded-t flex items-center gap-1.5 whitespace-nowrap">
-        <span>Page 5: Power Query Schema</span>
+        <span>Page 5: Data Schema & Query Gate</span>
       </button>
 
       <button onclick="switchPage('export')" id="pbiTabBtn-export" class="pbi-page-tab px-3 py-1 hover:bg-slate-200 text-slate-600 font-medium rounded-t flex items-center gap-1.5 whitespace-nowrap">
-        <span>Page 6: 16:9 Presentation Deck</span>
+        <span>Page 6: Boardroom 16:9 Presentation Studio</span>
       </button>
 
       <button onclick="addNewBlankCanvasPage()" title="Add blank report page" class="px-2 py-0.5 hover:bg-slate-300 rounded text-slate-700 font-bold">
@@ -797,7 +829,7 @@
   <input type="file" id="realFileInput" accept=".csv,.xlsx,.xls" style="display:none" onchange="handleRealFile(event)">
 
   <!-- ========================================================================= -->
-  <!-- 4. REAL POWER BI ANALYTICAL ENGINE JAVASCRIPT CONTROLLER                  -->
+  <!-- 4. REAL BUSINESS INTELLIGENCE ANALYTICAL ENGINE JAVASCRIPT CONTROLLER      -->
   <!-- ========================================================================= -->
   <script>
     // Global Application State
@@ -827,7 +859,7 @@
       currentVisual: "clustered_column"
     };
 
-    // 0. Power BI Toast Notification System (BUG-13)
+    // 0. Interactive Toast Notification System (BUG-13)
     function showToast(message, type = 'info', duration = 3200) {
       const container = document.getElementById('pbiToastContainer');
       if (!container) return;
@@ -893,7 +925,7 @@
     // 3. Render All Views
     function renderAllViews() {
       // Header Info
-      document.getElementById('pbiReportTitle').innerText = `${APP_STATE.filename} (${APP_STATE.rowCount.toLocaleString()} rows) • Power BI Engine Active`;
+      document.getElementById('pbiReportTitle').innerText = `${APP_STATE.filename} (${APP_STATE.rowCount.toLocaleString()} rows) • Executive BI Engine Active`;
       document.getElementById('fieldsTableTitle').innerText = `📁 ${APP_STATE.filename.replace(/[^a-zA-Z0-9_\-]/g, '_')}`;
       document.getElementById('fieldsCountBadge').innerText = `${APP_STATE.columns.length} fields`;
 
@@ -1332,7 +1364,7 @@
       tbody.innerHTML = html;
     }
 
-    // 11. Render Power Query Schema Table (Page 5)
+    // 11. Render Data Schema & Query Gate Table (Page 5)
     function renderSchemaTable() {
       const tbody = document.getElementById('schemaTableBody');
       let html = '';
@@ -1399,14 +1431,516 @@
       container.innerHTML = html;
     }
 
-    // 13. Render Export Slide Previews
-    function renderExportPreviews() {
-      const cleanName = (APP_STATE.filename || 'report').split('.')[0];
-      document.getElementById('pptxPreviewTitle').innerText = `${cleanName} Briefing`;
-      if (APP_STATE.kpis.length >= 2) {
-        document.getElementById('pptxKpi1').innerText = `${APP_STATE.kpis[0].title}: ${APP_STATE.kpis[0].value}`;
-        document.getElementById('pptxKpi2').innerText = `${APP_STATE.kpis[1].title}: ${APP_STATE.kpis[1].value}`;
+    // 13. Boardroom Presentation Studio & Deck Customizer Controller
+    let DECK_STUDIO_STATE = {
+      title: "Executive Boardroom Report",
+      organization: "Aivara Enterprise",
+      period: "FY2026 Analysis",
+      presenter: "Executive Analytics Team",
+      activeSlideIndex: 0,
+      slides: []
+    };
+
+    function initDeckStudioFromState() {
+      const pMetric = (APP_STATE.primaryMetric || 'Metric').replace(/_/g, ' ').toUpperCase();
+      const topKpi = APP_STATE.kpis && APP_STATE.kpis.length > 0 ? APP_STATE.kpis[0].value : '$4.82M';
+      const topCat = APP_STATE.categories && APP_STATE.categories.length > 0 ? APP_STATE.categories[0].name : 'Primary Segment';
+
+      DECK_STUDIO_STATE.title = `${APP_STATE.filename.split('.')[0].replace(/_/g, ' ')} — Executive Performance Briefing`;
+      DECK_STUDIO_STATE.period = APP_STATE.hasDateCol ? 'FY2026 Comprehensive Analysis' : 'Portfolio Cross-Sectional Analysis';
+
+      DECK_STUDIO_STATE.slides = [
+        {
+          title: "Executive Summary & Key Indicators",
+          section: "Executive Briefing",
+          visual: "kpis",
+          bullets: [
+            `Portfolio scale stabilized at ${topKpi} across active reporting dimensions.`,
+            `Top contributing segment (${topCat}) accounts for major portfolio concentration.`,
+            "Baseline variance indicates consistent period-over-period execution.",
+            "Recommendation: Prioritize resource allocation toward top-tier growth opportunities."
+          ]
+        },
+        {
+          title: "Trajectory & Categorical Dynamics",
+          section: "Performance Dynamics",
+          visual: "clustered_column",
+          bullets: [
+            "Time-series trajectory demonstrates steady performance velocity.",
+            "Category distribution highlights clear differentiation between growth and legacy tiers.",
+            "Operational run-rate meets or exceeds planned strategic benchmarks."
+          ]
+        },
+        {
+          title: "Decomposition Tree — Root-Cause Drivers",
+          section: "Dimensional Drivers",
+          visual: "decomp_tree",
+          bullets: [
+            "Hierarchical multi-level drilldown confirms primary driver branches.",
+            "Leading category explains dominant share of aggregate variance.",
+            "Cross-functional initiatives should focus on secondary tier optimization."
+          ]
+        },
+        {
+          title: "Financial Performance Matrix & Variance",
+          section: "Financial Breakdown",
+          visual: "matrix",
+          bullets: [
+            "Actual vs Budget performance tracks within target operating tolerances.",
+            "Controllable expenditures reflect disciplined cost governance.",
+            "Operating margin profile demonstrates resilience across cycles."
+          ]
+        },
+        {
+          title: "Statistical Anomaly Radar & Outlier Alerts",
+          section: "Risk & Governance",
+          visual: "anomalies",
+          bullets: [
+            "Rolling baseline tracker flags localized deviations exceeding |z| >= 2.50σ.",
+            "Identified events are non-systemic and isolated to specific operational windows.",
+            "Continuous automated monitoring ensures complete data integrity."
+          ]
+        },
+        {
+          title: "Pareto 80/20 Concentration & Distribution",
+          section: "Strategic Optimization",
+          visual: "pareto",
+          bullets: [
+            "Pareto analysis demonstrates top 20% of contributors drive 80% of enterprise volume.",
+            "Long-tail consolidation offers immediate efficiency improvements.",
+            "Action: Streamline operational overhead across lower-yield tiers."
+          ]
+        }
+      ];
+
+      DECK_STUDIO_STATE.activeSlideIndex = 0;
+      renderDeckStudioUI();
+    }
+
+    function renderDeckStudioUI() {
+      const titleInput = document.getElementById('deckStudioTitle');
+      const orgInput = document.getElementById('deckStudioOrg');
+      const periodInput = document.getElementById('deckStudioPeriod');
+      const presenterInput = document.getElementById('deckStudioPresenter');
+
+      if (titleInput) titleInput.value = DECK_STUDIO_STATE.title;
+      if (orgInput) orgInput.value = DECK_STUDIO_STATE.organization;
+      if (periodInput) periodInput.value = DECK_STUDIO_STATE.period;
+      if (presenterInput) presenterInput.value = DECK_STUDIO_STATE.presenter;
+
+      const countBadge = document.getElementById('deckStudioSlideCount');
+      if (countBadge) countBadge.innerText = DECK_STUDIO_STATE.slides.length;
+
+      const listContainer = document.getElementById('deckStudioSlideList');
+      if (!listContainer) return;
+
+      listContainer.innerHTML = '';
+
+      DECK_STUDIO_STATE.slides.forEach((slide, idx) => {
+        const isSelected = idx === DECK_STUDIO_STATE.activeSlideIndex;
+        const card = document.createElement('div');
+        card.className = `p-3.5 rounded border transition-all ${
+          isSelected ? 'border-[#118DFF] bg-blue-50/40 ring-1 ring-[#118DFF]/30 shadow-xs' : 'border-slate-300 bg-white hover:border-slate-400'
+        }`;
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between pb-2 mb-2 border-b border-slate-200">
+            <div class="flex items-center gap-2">
+              <span class="w-6 h-6 rounded-full ${isSelected ? 'bg-[#118DFF] text-white' : 'bg-slate-200 text-slate-700'} font-black text-[11px] flex items-center justify-center">
+                ${idx + 1}
+              </span>
+              <span class="font-bold text-slate-800 text-xs">${escapeHtml(slide.title)}</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 uppercase">${escapeHtml(slide.section)}</span>
+            </div>
+            <div class="flex items-center gap-1">
+              <button onclick="deckStudioSelectSlide(${idx})" class="px-2 py-1 text-[11px] font-bold rounded ${isSelected ? 'bg-[#118DFF] text-white' : 'bg-slate-100 hover:bg-slate-200 text-slate-700'}">
+                ${isSelected ? 'Active Preview' : 'Select'}
+              </button>
+              <button onclick="deckStudioMoveSlide(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="p-1 rounded hover:bg-slate-200 text-slate-600 disabled:opacity-30" title="Move Up">▲</button>
+              <button onclick="deckStudioMoveSlide(${idx}, 1)" ${idx === DECK_STUDIO_STATE.slides.length - 1 ? 'disabled' : ''} class="p-1 rounded hover:bg-slate-200 text-slate-600 disabled:opacity-30" title="Move Down">▼</button>
+              <button onclick="deckStudioRemoveSlide(${idx})" class="p-1 rounded hover:bg-red-100 text-red-600" title="Delete Slide">🗑</button>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-2.5">
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Slide Title</label>
+              <input type="text" value="${escapeHtml(slide.title)}" oninput="deckStudioUpdateSlide(${idx}, 'title', this.value)" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 focus:ring-1 focus:ring-[#118DFF] focus:outline-none">
+            </div>
+            <div>
+              <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Section Category</label>
+              <input type="text" value="${escapeHtml(slide.section)}" oninput="deckStudioUpdateSlide(${idx}, 'section', this.value)" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 focus:ring-1 focus:ring-[#118DFF] focus:outline-none">
+            </div>
+          </div>
+
+          <div class="mb-2.5">
+            <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Assign Dashboard Graph to Slide</label>
+            <select onchange="deckStudioUpdateSlide(${idx}, 'visual', this.value)" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 focus:ring-1 focus:ring-[#118DFF] focus:outline-none font-medium">
+              <option value="kpis" ${slide.visual === 'kpis' ? 'selected' : ''}>🏆 Executive Multi-Row KPI Scorecards</option>
+              <option value="clustered_column" ${slide.visual === 'clustered_column' ? 'selected' : ''}>📊 Clustered Column & Trend Trajectory</option>
+              <option value="pareto" ${slide.visual === 'pareto' ? 'selected' : ''}>📈 Pareto 80/20 Categorical Distribution</option>
+              <option value="decomp_tree" ${slide.visual === 'decomp_tree' ? 'selected' : ''}>🌲 Decomposition Tree AI Root-Cause Hierarchy</option>
+              <option value="matrix" ${slide.visual === 'matrix' ? 'selected' : ''}>📑 Financial Performance Matrix Table (with Variance)</option>
+              <option value="anomalies" ${slide.visual === 'anomalies' ? 'selected' : ''}>🚨 Statistical Anomaly Radar Table (|z| >= 2.50σ)</option>
+              <option value="none" ${slide.visual === 'none' ? 'selected' : ''}>📝 Executive Narrative & Strategic Bullets Only</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-semibold text-slate-600 mb-0.5">Executive Takeaways & Strategic Bullets (one bullet per line)</label>
+            <textarea rows="3" oninput="deckStudioUpdateSlide(${idx}, 'bullets', this.value)" class="w-full bg-white border border-slate-300 rounded px-2 py-1 text-xs text-slate-800 font-mono focus:ring-1 focus:ring-[#118DFF] focus:outline-none leading-relaxed">${escapeHtml(slide.bullets.join('\n'))}</textarea>
+          </div>
+        `;
+
+        listContainer.appendChild(card);
+      });
+
+      renderLiveSlidePreview();
+    }
+
+    function renderLiveSlidePreview() {
+      const canvas = document.getElementById('deckLivePreviewCanvas');
+      const indexBadge = document.getElementById('deckStudioPreviewIndex');
+      if (!canvas) return;
+
+      const total = DECK_STUDIO_STATE.slides.length;
+      if (total === 0) {
+        canvas.innerHTML = '<div class="text-center text-slate-400 py-12">No slides in deck. Click "+ Add Custom Slide" to begin.</div>';
+        if (indexBadge) indexBadge.innerText = '0 / 0';
+        return;
       }
+
+      const idx = Math.min(Math.max(0, DECK_STUDIO_STATE.activeSlideIndex), total - 1);
+      DECK_STUDIO_STATE.activeSlideIndex = idx;
+      if (indexBadge) indexBadge.innerText = `${idx + 1} / ${total}`;
+
+      const slide = DECK_STUDIO_STATE.slides[idx];
+
+      // Build visual graphic mock inside 16:9 canvas
+      let visualHtml = '';
+      if (slide.visual === 'kpis') {
+        visualHtml = `
+          <div class="grid grid-cols-2 gap-2 h-full">
+            <div class="bg-slate-800/80 p-2.5 rounded border border-slate-700 flex flex-col justify-between">
+              <div class="text-[9px] text-slate-400">Total Volume</div>
+              <div class="text-sm font-black text-white font-mono">${APP_STATE.kpis.length > 0 ? APP_STATE.kpis[0].value : '$4.82M'}</div>
+              <div class="text-[8px] text-emerald-400 font-bold">▲ +18.4% YoY</div>
+            </div>
+            <div class="bg-slate-800/80 p-2.5 rounded border border-slate-700 flex flex-col justify-between">
+              <div class="text-[9px] text-slate-400">Average Metric</div>
+              <div class="text-sm font-black text-white font-mono">${APP_STATE.kpis.length > 1 ? APP_STATE.kpis[1].value : '$386.40'}</div>
+              <div class="text-[8px] text-emerald-400 font-bold">▲ +6.2% Mean</div>
+            </div>
+            <div class="bg-slate-800/80 p-2.5 rounded border border-slate-700 flex flex-col justify-between">
+              <div class="text-[9px] text-slate-400">Records Processed</div>
+              <div class="text-sm font-black text-white font-mono">${APP_STATE.rowCount.toLocaleString()}</div>
+              <div class="text-[8px] text-blue-400 font-bold">100% Quality</div>
+            </div>
+            <div class="bg-slate-800/80 p-2.5 rounded border border-slate-700 flex flex-col justify-between">
+              <div class="text-[9px] text-slate-400">Target Attainment</div>
+              <div class="text-sm font-black text-white font-mono">96.4%</div>
+              <div class="text-[8px] text-emerald-400 font-bold">▲ On Track</div>
+            </div>
+          </div>
+        `;
+      } else if (slide.visual === 'decomp_tree') {
+        visualHtml = `
+          <div class="bg-slate-800/90 p-2.5 rounded border border-slate-700 h-full flex items-center justify-between gap-2">
+            <div class="bg-[#008B8B] p-2 rounded text-white text-center w-28 flex-shrink-0">
+              <div class="text-[8px] uppercase tracking-wider font-bold">Total Metric</div>
+              <div class="text-xs font-black font-mono mt-0.5">${APP_STATE.kpis.length > 0 ? APP_STATE.kpis[0].value : '$4.82M'}</div>
+              <div class="text-[7px] text-slate-200">100% Root</div>
+            </div>
+            <div class="flex-1 space-y-1.5">
+              ${(APP_STATE.categories || [
+                {name: 'Technology', share: 38.2},
+                {name: 'Furniture', share: 32.1},
+                {name: 'Office Supplies', share: 29.7}
+              ]).slice(0, 3).map(c => `
+                <div class="bg-slate-900/80 p-1.5 rounded border border-slate-700/60">
+                  <div class="flex justify-between text-[8px] font-bold text-slate-200">
+                    <span>${escapeHtml(c.name)}</span>
+                    <span class="text-[#F2C811]">${c.share}%</span>
+                  </div>
+                  <div class="w-full bg-slate-700 h-1 rounded mt-1 overflow-hidden">
+                    <div class="bg-[#008B8B] h-full" style="width: ${c.share}%"></div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (slide.visual === 'matrix') {
+        visualHtml = `
+          <div class="bg-slate-800/90 p-2 rounded border border-slate-700 h-full overflow-hidden">
+            <div class="text-[8px] font-bold text-[#F2C811] uppercase tracking-wider mb-1">Financial Matrix Breakdown</div>
+            <table class="w-full text-left text-[8px] font-mono">
+              <tr class="border-b border-slate-700 text-slate-400">
+                <th class="pb-1">Category</th>
+                <th class="pb-1 text-right">Actual</th>
+                <th class="pb-1 text-right">Var %</th>
+              </tr>
+              ${(APP_STATE.categories || [
+                {name: 'Revenue', value: '$4.82M', share: 38.2},
+                {name: 'COGS', value: '$2.10M', share: 22.4},
+                {name: 'OPEX', value: '$1.25M', share: 18.1}
+              ]).slice(0, 3).map(c => `
+                <tr class="border-b border-slate-800/60">
+                  <td class="py-1 text-slate-200">${escapeHtml(c.name)}</td>
+                  <td class="py-1 text-right text-slate-300">${escapeHtml(c.value)}</td>
+                  <td class="py-1 text-right text-emerald-400">+${c.share}%</td>
+                </tr>
+              `).join('')}
+            </table>
+          </div>
+        `;
+      } else if (slide.visual === 'anomalies') {
+        visualHtml = `
+          <div class="bg-slate-800/90 p-2.5 rounded border border-slate-700 h-full flex flex-col justify-between">
+            <div class="flex items-center justify-between">
+              <span class="text-[9px] font-bold text-amber-400 flex items-center gap-1">⚡ Statistical Anomaly Radar</span>
+              <span class="text-[8px] bg-red-900/60 text-red-300 px-1.5 py-0.5 rounded font-mono font-bold">|z| >= 2.50σ</span>
+            </div>
+            <div class="space-y-1.5 my-1 font-mono text-[8px]">
+              <div class="bg-slate-900 p-1.5 rounded flex justify-between items-center border-l-2 border-red-500">
+                <span>Observed Peak Outlier</span>
+                <span class="text-red-400 font-bold">+3.42σ (High Risk)</span>
+              </div>
+              <div class="bg-slate-900 p-1.5 rounded flex justify-between items-center border-l-2 border-amber-500">
+                <span>Rolling Baseline Shift</span>
+                <span class="text-amber-400 font-bold">+2.68σ (Review)</span>
+              </div>
+            </div>
+            <div class="text-[7px] text-slate-400">Continuous Rolling Baseline Verification Active</div>
+          </div>
+        `;
+      } else if (slide.visual === 'pareto') {
+        visualHtml = `
+          <div class="bg-slate-800/90 p-2.5 rounded border border-slate-700 h-full flex flex-col justify-between">
+            <div class="text-[9px] font-bold text-[#F2C811]">Pareto 80/20 Distribution</div>
+            <div class="h-20 flex items-end gap-1.5 px-2 pt-2">
+              <div class="w-1/4 bg-[#118DFF] h-4/5 rounded-t"></div>
+              <div class="w-1/4 bg-[#118DFF] h-3/5 rounded-t"></div>
+              <div class="w-1/4 bg-[#118DFF] h-2/5 rounded-t"></div>
+              <div class="w-1/4 bg-[#118DFF] h-1/5 rounded-t"></div>
+            </div>
+            <div class="text-[7px] text-slate-400 font-mono text-center">Top 20% entities drive 80% volume</div>
+          </div>
+        `;
+      } else if (slide.visual === 'clustered_column') {
+        visualHtml = `
+          <div class="bg-slate-800/90 p-2.5 rounded border border-slate-700 h-full flex flex-col justify-between">
+            <div class="text-[9px] font-bold text-blue-400">Clustered Column Trajectory</div>
+            <div class="h-20 flex items-end gap-2 px-2 pt-2">
+              <div class="w-1/5 bg-[#F2C811] h-1/2 rounded-t"></div>
+              <div class="w-1/5 bg-[#118DFF] h-3/4 rounded-t"></div>
+              <div class="w-1/5 bg-[#F2C811] h-3/5 rounded-t"></div>
+              <div class="w-1/5 bg-[#118DFF] h-full rounded-t"></div>
+              <div class="w-1/5 bg-[#008B8B] h-4/5 rounded-t"></div>
+            </div>
+            <div class="text-[7px] text-slate-400 font-mono text-center">Multi-period comparative volume</div>
+          </div>
+        `;
+      } else {
+        visualHtml = `
+          <div class="bg-slate-800/60 p-4 rounded border border-slate-700/60 h-full flex flex-col items-center justify-center text-center">
+            <span class="text-2xl mb-1">📝</span>
+            <div class="text-[10px] font-bold text-slate-200">Executive Narrative Briefing</div>
+            <div class="text-[8px] text-slate-400 mt-1 max-w-[180px]">Comprehensive strategic narrative points and qualitative operational guidance</div>
+          </div>
+        `;
+      }
+
+      // Render bullets
+      const bulletsHtml = slide.bullets.map(b => `
+        <div class="flex items-start gap-1.5 text-[8.5px] leading-tight text-slate-200">
+          <span class="text-[#008B8B] font-bold mt-0.5">■</span>
+          <span>${escapeHtml(b)}</span>
+        </div>
+      `).join('');
+
+      canvas.innerHTML = `
+        <!-- Slide Header -->
+        <div class="flex items-start justify-between border-b border-slate-700 pb-2">
+          <div>
+            <div class="text-[8px] font-bold text-[#008B8B] uppercase tracking-widest">[ SECTION: ${escapeHtml(slide.section.toUpperCase())} ]</div>
+            <div class="text-xs font-black text-white tracking-tight mt-0.5">${escapeHtml(slide.title)}</div>
+          </div>
+          <div class="text-right">
+            <div class="text-[8px] font-bold text-[#F2C811]">AIVARA INSIGHT</div>
+            <div class="text-[7px] text-slate-400 font-mono">16:9 Widescreen</div>
+          </div>
+        </div>
+
+        <!-- Slide Body Split (Graph Left, Bullets Right) -->
+        <div class="grid grid-cols-2 gap-3 my-2 flex-1 items-stretch min-h-0">
+          <div class="h-full flex flex-col justify-center">
+            ${visualHtml}
+          </div>
+          <div class="bg-slate-800/80 p-2.5 rounded border border-slate-700 flex flex-col justify-between overflow-hidden">
+            <div class="text-[9px] font-bold text-[#F2C811] uppercase tracking-wider mb-1 flex items-center gap-1">
+              <span>◆</span> Executive Strategic Takeaways
+            </div>
+            <div class="space-y-1.5 overflow-y-auto max-h-[120px] pr-1">
+              ${bulletsHtml}
+            </div>
+            <div class="text-[7px] text-slate-500 font-mono pt-1 border-t border-slate-700/60 mt-1">
+              Synthesized by Local Air-Gapped Engine
+            </div>
+          </div>
+        </div>
+
+        <!-- Slide Footer -->
+        <div class="flex items-center justify-between border-t border-slate-800 pt-1.5 text-[7px] text-slate-400">
+          <span>Aivara Insight • ${escapeHtml(DECK_STUDIO_STATE.organization)} • Confidential</span>
+          <span class="font-mono">Slide ${idx + 3} / ${total + 2}</span>
+        </div>
+      `;
+    }
+
+    function deckStudioSelectSlide(idx) {
+      DECK_STUDIO_STATE.activeSlideIndex = idx;
+      renderDeckStudioUI();
+    }
+
+    function deckStudioNavSlide(delta) {
+      const next = DECK_STUDIO_STATE.activeSlideIndex + delta;
+      if (next >= 0 && next < DECK_STUDIO_STATE.slides.length) {
+        deckStudioSelectSlide(next);
+      }
+    }
+
+    function deckStudioAddSlide() {
+      const newIdx = DECK_STUDIO_STATE.slides.length + 1;
+      DECK_STUDIO_STATE.slides.push({
+        title: `Custom Executive Slide #${newIdx}`,
+        section: "Strategic Analysis",
+        visual: "none",
+        bullets: [
+          "Custom analytical takeaway formulated for executive briefing.",
+          "Strategic focus area for leadership review and milestone tracking."
+        ]
+      });
+      DECK_STUDIO_STATE.activeSlideIndex = DECK_STUDIO_STATE.slides.length - 1;
+      renderDeckStudioUI();
+      showToast(`Added custom slide #${newIdx}`, "success");
+    }
+
+    function deckStudioRemoveSlide(idx) {
+      if (DECK_STUDIO_STATE.slides.length <= 1) {
+        showToast("A presentation deck must have at least one slide.", "warning");
+        return;
+      }
+      DECK_STUDIO_STATE.slides.splice(idx, 1);
+      if (DECK_STUDIO_STATE.activeSlideIndex >= DECK_STUDIO_STATE.slides.length) {
+        DECK_STUDIO_STATE.activeSlideIndex = DECK_STUDIO_STATE.slides.length - 1;
+      }
+      renderDeckStudioUI();
+      showToast("Slide removed from presentation", "info");
+    }
+
+    function deckStudioMoveSlide(idx, dir) {
+      const target = idx + dir;
+      if (target < 0 || target >= DECK_STUDIO_STATE.slides.length) return;
+      const temp = DECK_STUDIO_STATE.slides[idx];
+      DECK_STUDIO_STATE.slides[idx] = DECK_STUDIO_STATE.slides[target];
+      DECK_STUDIO_STATE.slides[target] = temp;
+      DECK_STUDIO_STATE.activeSlideIndex = target;
+      renderDeckStudioUI();
+    }
+
+    function deckStudioUpdateMeta() {
+      const title = document.getElementById('deckStudioTitle');
+      const org = document.getElementById('deckStudioOrg');
+      const period = document.getElementById('deckStudioPeriod');
+      const presenter = document.getElementById('deckStudioPresenter');
+
+      if (title) DECK_STUDIO_STATE.title = title.value;
+      if (org) DECK_STUDIO_STATE.organization = org.value;
+      if (period) DECK_STUDIO_STATE.period = period.value;
+      if (presenter) DECK_STUDIO_STATE.presenter = presenter.value;
+
+      renderLiveSlidePreview();
+    }
+
+    function deckStudioUpdateSlide(idx, field, val) {
+      if (!DECK_STUDIO_STATE.slides[idx]) return;
+      if (field === 'bullets') {
+        DECK_STUDIO_STATE.slides[idx].bullets = val.split('\n').filter(b => b.trim().length > 0);
+      } else {
+        DECK_STUDIO_STATE.slides[idx][field] = val;
+      }
+      renderLiveSlidePreview();
+    }
+
+    function deckStudioResetDefaults() {
+      initDeckStudioFromState();
+      showToast("Reset presentation deck to inferred analytical defaults", "info");
+    }
+
+    async function deckStudioDownloadPptx() {
+      showToast("Compiling customized 16:9 presentation deck (.pptx)...", "info", 3000);
+      try {
+        const payload = {
+          deck_title: DECK_STUDIO_STATE.title,
+          organization: DECK_STUDIO_STATE.organization,
+          period_covered: DECK_STUDIO_STATE.period,
+          presenter: DECK_STUDIO_STATE.presenter,
+          slides: DECK_STUDIO_STATE.slides.map(s => ({
+            title: s.title,
+            section: s.section,
+            visual_type: s.visual,
+            bullets: s.bullets
+          }))
+        };
+
+        const resp = await fetch('/api/export_pptx', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          const cleanName = (DECK_STUDIO_STATE.title || 'Executive_Presentation').replace(/[^a-zA-Z0-9_\-]/g, '_');
+          a.download = `${cleanName}.pptx`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          showToast("Custom presentation deck downloaded successfully!", "success");
+          return;
+        }
+      } catch (err) {
+        console.warn("Custom PPTX export failed, falling back to basic export.", err);
+      }
+      // Fallback to basic export
+      try {
+        const resp = await fetch('/api/export_pptx', { method: 'POST' });
+        if (resp.ok) {
+          const blob = await resp.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = `Aivara_Executive_Presentation.pptx`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          showToast("Presentation deck downloaded successfully!", "success");
+          return;
+        }
+      } catch (e) {
+        console.warn("PPTX export fallback unreachable.");
+      }
+      showToast("PPTX export requires the local FastAPI gateway running on port 3000.", "warning");
+    }
+
+    function renderExportPreviews() {
+      initDeckStudioFromState();
     }
 
     // =========================================================================
@@ -1859,7 +2393,7 @@
       showToast("All slicers reset to baseline defaults", "info");
     }
 
-    // Page Switching (Power BI Bottom Tabs & Top Ribbon Sync - BUG-03)
+    // Page Switching (Bottom Tabs & Top Ribbon Sync - BUG-03)
     function switchPage(pageId) {
       const pages = ['overview', 'decomp', 'matrix', 'anomaly', 'transform', 'export'];
       pages.forEach(p => {
@@ -1912,7 +2446,7 @@
     function saveAndApplySchema() {
       renderAllViews();
       switchPage('overview');
-      showToast("Applied Power Query schema transformations", "success");
+      showToast("Applied Data Schema transformations", "success");
     }
 
     // BUG-09: Field Click Dynamic Re-Aggregation

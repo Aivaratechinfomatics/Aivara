@@ -1,11 +1,12 @@
 """
-dashboard_server.py — High-Performance Analytical Engine & FastAPI Gateway for Power BI Dashboard.
-Serves the Power BI Executive Canvas frontend and provides real-time tabular analysis,
-Power Query transformations, anomaly detection, and 16:9 PPTX deck generation.
+dashboard_server.py — High-Performance Analytical Engine & FastAPI Gateway for Business Intelligence Executive Canvas.
+Serves the Executive BI Canvas frontend and provides real-time tabular analysis,
+data schema transformations, anomaly detection, and 16:9 PPTX deck generation.
 """
 
 from __future__ import annotations
 
+import json
 import math
 import os
 import re
@@ -14,19 +15,19 @@ from typing import Any
 import numpy as np
 import pandas as pd
 import uvicorn
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import FastAPI, File, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 
 from analytics.pipeline import PipelineResult, run_pipeline
 from export.deck_assembly import assemble_deck_inputs
-from export.pptx_builder import build_deck
+from export.pptx_builder import CustomDeckSpec, CustomSlideSpec, build_custom_deck, build_deck
 from ingestion.classifier import ColumnClassification, classify_columns
 from ingestion.cleaner import clean_dataframe
 from ingestion.loader import load_file
 
-app = FastAPI(title="Aivara Power BI Analytical Gateway", version="1.0.0")
+app = FastAPI(title="Aivara Business Intelligence Executive Gateway", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -66,7 +67,7 @@ def build_dashboard_payload(
     filename: str,
     classifications: dict[str, ColumnClassification],
 ) -> dict[str, Any]:
-    """Transforms typed PipelineResult into Power BI dashboard JSON payload."""
+    """Transforms typed PipelineResult into Executive BI Canvas dashboard JSON payload."""
     primary_metric = res.primary_metric or (res.metric_cols[0] if res.metric_cols else None)
     date_col = res.date_col
     dimension_cols = res.dimension_cols
@@ -484,21 +485,61 @@ async def api_sample(type: str = Query("commerce")):
     return JSONResponse(content=payload)
 
 
+def parse_custom_deck_spec(data: dict) -> CustomDeckSpec:
+    slides_data = data.get("slides", [])
+    slides = []
+    for s in slides_data:
+        slides.append(
+            CustomSlideSpec(
+                title=str(s.get("title", "Executive Slide")),
+                section=str(s.get("section", "Executive Analysis")),
+                visual_type=str(s.get("visual_type", s.get("visual", "none"))),
+                bullets=[str(b) for b in s.get("bullets", []) if str(b).strip()],
+            )
+        )
+    return CustomDeckSpec(
+        deck_title=str(data.get("deck_title", data.get("title", "Executive Boardroom Report"))),
+        organization=str(data.get("organization", "Aivara Enterprise")),
+        period_covered=str(data.get("period_covered", data.get("period", "FY2026 Analysis"))),
+        presenter=str(data.get("presenter", "Executive Analytics Team")),
+        slides=slides,
+    )
+
+
 @app.post("/api/export_pptx")
-async def api_export_pptx():
-    """Generates a genuine 16:9 PowerPoint (.pptx) deck from the current active analytics."""
+async def api_export_pptx(request: Request):
+    """Generates a genuine 16:9 PowerPoint (.pptx) deck from active analytics,
+    optionally customized via user-edited deck studio specifications."""
     res = CURRENT_STATE.get("result")
     filename = CURRENT_STATE.get("filename", "Aivara_Executive_Master.csv")
+    cleaned_df = CURRENT_STATE.get("cleaned_df")
 
     if not res:
         # Load default sample
         await api_sample("commerce")
         res = CURRENT_STATE.get("result")
+        filename = CURRENT_STATE.get("filename", "clean.csv")
+        cleaned_df = CURRENT_STATE.get("cleaned_df")
 
-    deck_inputs = assemble_deck_inputs(res, filename, {})
-    buffer = build_deck(deck_inputs)
+    custom_spec = None
+    try:
+        body = await request.body()
+        if body:
+            parsed_json = json.loads(body.decode("utf-8"))
+            if isinstance(parsed_json, dict) and "slides" in parsed_json:
+                custom_spec = parse_custom_deck_spec(parsed_json)
+    except Exception:
+        custom_spec = None
 
-    clean_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", filename.rsplit(".", 1)[0])
+    if custom_spec:
+        buffer = build_custom_deck(custom_spec, pipeline_result=res, cleaned_df=cleaned_df)
+        deck_title = custom_spec.deck_title or filename.rsplit(".", 1)[0]
+    else:
+        deck_inputs = assemble_deck_inputs(res, filename, {})
+        buffer = build_deck(deck_inputs)
+        deck_title = filename.rsplit(".", 1)[0]
+
+    clean_name = re.sub(r"[^a-zA-Z0-9_\-]", "_", deck_title)
     download_filename = f"{clean_name}_Executive_Presentation.pptx"
 
     return Response(

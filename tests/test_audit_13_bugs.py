@@ -1,5 +1,5 @@
 """
-tests/test_audit_13_bugs.py — Verification of all 13 audited industrial-grade Power BI dashboard fixes.
+tests/test_audit_13_bugs.py — Verification of all 13 audited industrial-grade Executive BI Canvas dashboard fixes.
 """
 
 import os

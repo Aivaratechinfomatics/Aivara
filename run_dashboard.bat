@@ -2,13 +2,13 @@
 setlocal
 cd /d "%~dp0"
 
-title Aivara Insight - Power BI Executive Analytics Server
+title Aivara Insight - Business Intelligence Executive Analytics Server
 
 echo ======================================================
-echo       Aivara Insight - Power BI Executive Canvas
+echo   Aivara Insight - Business Intelligence Executive Canvas
 echo ======================================================
 echo.
-echo Starting Aivara Analytical Engine & Power BI Server...
+echo Starting Aivara Analytical Engine & Executive Server...
 echo Opening in default browser: http://localhost:3000
 echo.
 echo Press Ctrl+C in this window to stop the server.

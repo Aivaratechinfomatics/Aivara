@@ -8,9 +8,9 @@
 [![Security](https://img.shields.io/badge/security-hardened-brightgreen.svg)](docs/SECURITY.md)
 [![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Air--Gapped](https://img.shields.io/badge/privacy-100%25%20air--gapped-success.svg)](#-enterprise-data-privacy--air-gapping)
-[![Power BI Standard](https://img.shields.io/badge/UI%2FUX-Power%20BI%20Standard-F2C811.svg)](#-power-bi-executive-canvas-signature-pages)
+[![Executive BI Canvas](https://img.shields.io/badge/UI%2FUX-Business%20Intelligence%20Executive%20Canvas-0078D4.svg)](#-business-intelligence-executive-canvas-signature-pages)
 
-**Aivara Insight** is an autonomous Business Intelligence and tabular analytics platform designed to transform raw, messy business spreadsheets into interactive, Power BI-grade executive dashboards and branded 16:9 widescreen PowerPoint presentation decks — running **100% locally with zero cloud data egress**.
+**Aivara Insight** is an autonomous Business Intelligence and tabular analytics platform designed to transform raw, messy business spreadsheets into interactive, industrial-grade Business Intelligence Executive Canvases and branded 16:9 widescreen PowerPoint presentation decks — running **100% locally with zero cloud data egress**.
 
 Whether analyzing multimillion-dollar sales transactions, multi-facility warehouse inventory, corporate P&L balance sheets, or customer satisfaction surveys, Aivara automates the entire analytical lifecycle: from dirty file ingestion and semantic schema deduction to statistical anomaly detection, dimensional decomposition, and boardroom presentation generation.
 
@@ -21,9 +21,9 @@ Whether analyzing multimillion-dollar sales transactions, multi-facility warehou
 | Section | Description |
 | :--- | :--- |
 | 🚀 [Quickstart in 60 Seconds](#-quickstart-in-60-seconds) | One-command launcher for local development and testing |
-| 🖥️ [Dual Frontend Architecture](#-dual-frontend-architecture) | Side-by-side comparison of Power BI Canvas (:3000) vs Streamlit (:8501) |
+| 🖥️ [Dual Frontend Architecture](#-dual-frontend-architecture) | Side-by-side comparison of Executive BI Canvas (:3000) vs Streamlit (:8501) |
 | 🏗️ [System Architecture](#-system-architecture) | End-to-end pipeline from dirty spreadsheets to boardroom decks |
-| 📊 [Power BI Signature Pages](#-power-bi-executive-canvas-signature-pages) | Deep dive into Decomposition Tree, Financial Matrix, Anomaly Radar |
+| 📊 [Executive BI Canvas Pages](#-business-intelligence-executive-canvas-signature-pages) | Deep dive into Decomposition Tree, Financial Matrix, Boardroom Studio |
 | 📂 [Preloaded Industry Datasets](#-preloaded-industry-datasets) | 5 ready-to-use business archetypes (Commerce, Inventory, Finance, NPS) |
 | 🛡️ [Enterprise Privacy & Air-Gapping](#-enterprise-data-privacy--air-gapping) | Formula injection defense (CWE-1236), pseudonymization, zero raw egress |
 | 🛠️ [Internship Verification Guide](#-internship--developer-verification-guide-batch-starting-19-oct-2026) | Step-by-step testing checklist and automated regression commands |
@@ -33,7 +33,7 @@ Whether analyzing multimillion-dollar sales transactions, multi-facility warehou
 
 ## 🖥️ Dual Frontend Architecture
 
-Aivara provides two complementary analytical frontends engineered for distinct business personas: the **Power BI Executive Canvas** for interactive executive briefings and drill-downs, and the **Streamlit Analytical Dashboard** for exploratory data science and rapid ad-hoc reporting.
+Aivara provides two complementary analytical frontends engineered for distinct business personas: the **Business Intelligence Executive Canvas** for interactive executive briefings and drill-downs, and the **Streamlit Analytical Dashboard** for exploratory data science and rapid ad-hoc reporting.
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
@@ -44,9 +44,9 @@ Aivara provides two complementary analytical frontends engineered for distinct b
                     ┌──────────────────────┴──────────────────────┐
                     ▼                                             ▼
 ┌───────────────────────────────────────┐     ┌──────────────────────────────────────────┐
-│   POWER BI EXECUTIVE CANVAS (:3000)   │     │    STREAMLIT ANALYTICAL DASHBOARD (:8501)│
+│   EXECUTIVE BI CANVAS (:3000)         │     │    STREAMLIT ANALYTICAL DASHBOARD (:8501)│
 ├───────────────────────────────────────┤     ├──────────────────────────────────────────┤
-│ • Strict 100vh Power BI App Shell     │     │ • Responsive vertical analytical feed    │
+│ • Strict 100vh Desktop App Shell      │     │ • Responsive vertical analytical feed    │
 │ • Pinned 84px Ribbon & 36px Page Tabs │     │ • Dynamic Plotly interactive charts      │
 │ • Decomposition Tree & Matrix Table   │     │ • Correlation radar heatmap              │
 │ • Dynamic Slicers (7D/30D/90D/YTD)    │     │ • Rapid ad-hoc filtering and slicing     │
@@ -58,10 +58,10 @@ Aivara provides two complementary analytical frontends engineered for distinct b
 
 ### Side-by-Side Feature Matrix
 
-| Feature / Dimension | Power BI Executive Canvas (`:3000`) | Streamlit Analytical Dashboard (`:8501`) |
+| Feature / Dimension | Business Intelligence Executive Canvas (`:3000`) | Streamlit Analytical Dashboard (`:8501`) |
 | :--- | :--- | :--- |
 | **Primary Audience** | C-Suite Executives, Board Directors, BI Leads | Data Analysts, Analytics Engineers, Scientists |
-| **User Interface Style** | Power BI Desktop standard (strict 100vh app shell) | Modern vertical dashboard web application |
+| **User Interface Style** | Desktop Executive standard (strict 100vh app shell) | Modern vertical dashboard web application |
 | **Header / Ribbon** | Pinned `84px` ribbon with quick dataset actions | Collapsible sidebar with configuration controls |
 | **Page Navigation** | Pinned `36px` bottom tabs (6 dedicated pages) | Sidebar navigation and in-page analytical tabs |
 | **Canvas Viewport** | Independent `10px` vertical scrollbar, no outer jump | Standard responsive vertical page scrolling |
@@ -111,32 +111,32 @@ flowchart TD
     end
 
     subgraph FRONTENDS["4. Dual Presentation Interfaces"]
-        E2 & E3 & E4 & E5 --> F1["Power BI Executive Canvas\n(FastAPI :3000 • 100vh Shell)"]
+        E2 & E3 & E4 & E5 --> F1["Business Intelligence Executive Canvas\n(FastAPI :3000 • 100vh Shell)"]
         E2 & E3 & E4 & E5 --> F2["Streamlit Analytical Dashboard\n(Streamlit :8501 • Plotly)"]
     end
 
     subgraph EXPORT["5. Boardroom 16:9 Presentation Suite"]
         F1 & F2 --> G1["Native PPTX Builder\n(Zero External API Calls)"]
-        G1 --> G2["Branded 8-Slide 16:9 Deck\n(.pptx)"]
+        G1 --> G2["Branded 16:9 Custom Deck\n(.pptx)"]
         G1 --> G3["Interactive Slide Carousel\n(slide_viewer.html)"]
     end
 ```
 
 ---
 
-## 📊 Power BI Executive Canvas Signature Pages
+## 📊 Business Intelligence Executive Canvas Signature Pages
 
-The Power BI Executive Canvas (`http://localhost:3000`) replicates the precision, ergonomics, and visual hierarchy of **Microsoft Power BI Desktop**, structured into **6 signature analytical views**:
+The Business Intelligence Executive Canvas (`http://localhost:3000`) provides executive-grade analytical precision, desktop ergonomics, and multi-dimensional exploration, structured into **6 signature analytical views**:
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [FILE] [HOME] [INSERT] [MODELING] [VIEW]           AIVARA POWER BI EXECUTIVE CANVAS     │
+│ [FILE] [HOME] [INSERT] [MODELING] [VIEW]         BUSINESS INTELLIGENCE EXECUTIVE CANVAS│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
 │                                                                                        │
 │   PAGE 1           PAGE 2           PAGE 3          PAGE 4        PAGE 5      PAGE 6   │
 │ ┌──────────┐   ┌────────────┐   ┌────────────┐   ┌───────────┐  ┌──────────┐┌─────────┐│
-│ │Executive │   │Decomposi-  │   │ Financial  │   │Statistical│  │PowerQuery││Boardroom││
-│ │ Overview │   │ tion Tree  │   │Matrix Table│   │  Anomaly  │  │  Schema  ││16:9 PPT││
+│ │Executive │   │Decomposi-  │   │ Financial  │   │Statistical│  │DataSchema││Deck     ││
+│ │ Overview │   │ tion Tree  │   │Matrix Table│   │  Anomaly  │  │  & Query ││ Studio  ││
 │ └──────────┘   └────────────┘   └────────────┘   └───────────┘  └──────────┘└─────────┘│
 │                                                                                        │
 └────────────────────────────────────────────────────────────────────────────────────────┘
@@ -163,15 +163,25 @@ The Power BI Executive Canvas (`http://localhost:3000`) replicates the precision
 - **Risk Metrics**: Quantifies baseline mean, standard deviation, anomaly frequency count, and rolling volatility scores.
 - **Interactive Investigation Table**: Filterable anomaly log displaying exact timestamps, flagged values, deviations, and recommended investigation priorities.
 
-### 5. Page 5 — Power Query Schema Review Gate
+### 5. Page 5 — Data Schema & Query Gate
 - **Semantic Role Overrides**: Inspect and modify inferred column classifications (`metric`, `dimension`, `date`, `id`, `text`).
 - **Aggregation Policy Configuration**: Guardrail controls ensuring volumetric numbers aggregate via `sum` while rates, ratios, and satisfaction scores aggregate via `mean`.
 - **Data Quality Health Check**: Review total row count, column count, null percentage, and duplicate record audit before canvas rendering.
 
-### 6. Page 6 — Boardroom 16:9 Presentation Suite
-- **Interactive Slide Preview Carousel**: View all 8 generated slides directly within the canvas before downloading.
-- **One-Click Native PPTX Generation**: Compiles an 8-slide, 16:9 widescreen presentation deck (`.pptx`) with executive covers, scorecards, domain breakdowns, and security certificates.
-- **Zero External Network Dependencies**: Generated locally in milliseconds using `python-pptx` with zero cloud API dependencies.
+### 6. Page 6 — Boardroom Presentation Studio & Deck Customizer
+- **Executive Presentation Customizer**: Edit presentation title, enterprise/client name, reporting period, and presenter name in real time.
+- **Dynamic Slide Sequencing Manager**: Add custom slides, reorder slides with Move Up / Move Down controls, delete slides, or restore corporate standard defaults.
+- **Dashboard Graph Placement Selector**: Dynamically place any dashboard visualization onto each presentation slide:
+  - Multi-Metric KPI Scorecards
+  - Clustered Column & Trend Combination
+  - Pareto 80/20 Categorical Concentration Bar
+  - Hierarchical Decomposition Tree
+  - Multi-Level Financial Matrix Table
+  - Statistical Anomaly Radar & Outlier Log
+  - Boardroom Takeaways / Narrative Only
+- **Real-Time Executive Takeaways Editor**: Tailor slide-specific narrative bullet points and strategic commentary directly in an embedded editor.
+- **Live 16:9 Slide Preview Carousel**: Interactive in-canvas slide deck previewer that updates dynamically as you modify slides and metadata.
+- **Air-Gapped Custom PPTX Export**: Compiles customized `.pptx` decks natively using `python-pptx` with 100% offline generation and zero external network calls.
 
 ---
 
@@ -220,10 +230,10 @@ pip install -r requirements.txt
 Choose your preferred launcher:
 
 ```bash
-# Option 1: Launch BOTH Power BI Canvas (:3000) and Streamlit (:8501)
+# Option 1: Launch BOTH Executive BI Canvas (:3000) and Streamlit (:8501)
 run_all.bat
 
-# Option 2: Launch Power BI Executive Canvas only (:3000)
+# Option 2: Launch Business Intelligence Executive Canvas only (:3000)
 run_dashboard.bat
 # (Or direct: python dashboard_server.py)
 
@@ -233,7 +243,7 @@ run.bat
 ```
 
 Open your browser to:
-- **Power BI Executive Canvas**: [http://localhost:3000](http://localhost:3000)
+- **Business Intelligence Executive Canvas**: [http://localhost:3000](http://localhost:3000)
 - **Streamlit Analytical Dashboard**: [http://localhost:8501](http://localhost:8501)
 
 ---
@@ -320,7 +330,7 @@ Welcome to the **Aivara Engineering & Data Analytics Internship**. All interns a
 2. **Schema & Semantic Role Review**:
    - Verify that columns are classified accurately (`date`, `metric`, `dimension`, `id`).
    - Confirm volumetric metrics default to `sum` and rate/ratio metrics default to `mean`.
-3. **Power BI Executive Canvas Verification (`:3000`)**:
+3. **Business Intelligence Executive Canvas Verification (`:3000`)**:
    - Ensure the canvas maintains a **strict 100vh layout** with no whole-page scroll jump.
    - Verify that date slicers (`7D`, `30D`, `90D`, `YTD`, `ALL`) dynamically recalculate KPI scorecards and chart aggregates.
    - Switch between all 6 signature page tabs:
@@ -329,23 +339,23 @@ Welcome to the **Aivara Engineering & Data Analytics Internship**. All interns a
      - **Page 3**: Click row chevrons (`▼` / `▶`) in the Financial Matrix to expand child line items and inspect conditional data bars.
      - **Page 4**: Inspect the Anomaly Detector table for records with $|z| \ge 2.50\sigma$.
      - **Page 5**: Modify a column role and click **Apply Schema Changes**.
-     - **Page 6**: Click **Export PowerPoint Deck** and verify `.pptx` generation.
+     - **Page 6**: In the **Boardroom Deck Studio**, customize presentation metadata, add/reorder slides, select graph placements, edit narrative notes, and verify custom `.pptx` generation.
 4. **Streamlit Analytical Dashboard Verification (`:8501`)**:
    - Ingest a dataset, review schema, and click **Confirm schema and build dashboard**.
    - Confirm upload boxes collapse to elevate KPI scorecards and charts to the top of the viewport.
 
 ### Quality Gates & Automated Regression Battery
 
-All **323 automated tests** must pass without warnings before code changes are merged:
+All **324+ automated tests** must pass without warnings before code changes are merged:
 
 ```bash
-# 1. Run complete automated test suite (323 tests)
+# 1. Run complete automated test suite
 pytest tests/ -v
 
-# 2. Run Power BI 13-Defect Audit Regression Battery
+# 2. Run Executive Canvas 13-Defect Audit Regression Battery
 pytest tests/test_audit_13_bugs.py -v
 
-# 3. Run FastAPI Power BI Gateway and Asset Integrity Tests
+# 3. Run FastAPI Executive BI Gateway and Asset Integrity Tests
 pytest tests/test_dashboard_frontend.py -v
 
 # 4. Run Chromium Headless Playwright Interactive E2E Tests

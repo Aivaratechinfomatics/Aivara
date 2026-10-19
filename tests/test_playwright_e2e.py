@@ -1,5 +1,5 @@
 """
-tests/test_playwright_e2e.py — End-to-end browser verification of Power BI dashboard interactivity.
+tests/test_playwright_e2e.py — End-to-end browser verification of Executive BI Canvas interactivity.
 """
 
 import pytest
@@ -7,7 +7,7 @@ from playwright.async_api import async_playwright
 
 
 @pytest.mark.anyio
-async def test_full_powerbi_browser_interaction():
+async def test_full_bi_canvas_browser_interaction():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         # 1366x768 standard enterprise laptop screen

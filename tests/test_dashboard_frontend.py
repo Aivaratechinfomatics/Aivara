@@ -1,5 +1,5 @@
 """
-tests/test_dashboard_frontend.py — Automated verification for the Power BI executive dashboard frontend.
+tests/test_dashboard_frontend.py — Automated verification for the Business Intelligence Executive Canvas frontend.
 """
 
 from __future__ import annotations
@@ -21,18 +21,23 @@ def test_dashboard_file_exists():
     with open(dashboard_path, encoding="utf-8") as f:
         content = f.read()
 
-    # Verify key Power BI structural sections
+    # Verify key Business Intelligence Executive Canvas structural sections
     assert "Aivara Insight" in content
-    assert "Power BI" in content
+    assert "Business Intelligence Executive Canvas" in content
     assert "pbiPage-overview" in content, "Missing Executive Overview page"
     assert "pbiPage-decomp" in content, "Missing Decomposition Tree page"
     assert "pbiPage-matrix" in content, "Missing Financial Matrix page"
     assert "pbiPage-anomaly" in content, "Missing Anomaly Detector page"
-    assert "pbiPage-transform" in content, "Missing Power Query Schema page"
-    assert "pbiPage-export" in content, "Missing 16:9 PPTX Export page"
+    assert "pbiPage-transform" in content, "Missing Data Schema page"
+    assert "pbiPage-export" in content, "Missing Boardroom Presentation Studio page"
+
+    # Verify Boardroom PPTX Deck Studio components
+    assert "deckStudioTitle" in content, "Missing Presentation Title input"
+    assert "deckStudioSlideList" in content, "Missing Slide sequence manager"
+    assert "deckLivePreviewCanvas" in content, "Missing Live 16:9 presentation preview canvas"
 
 
-def test_dashboard_power_bi_visuals_and_panes():
+def test_dashboard_bi_visuals_and_panes():
     dashboard_path = os.path.join(
         os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html"
     )
@@ -89,5 +94,69 @@ def test_dashboard_api_endpoints():
     assert len(r_pptx.content) > 1000, "PPTX file size should be substantial"
     assert (
         r_pptx.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    )
+
+
+def test_dashboard_api_custom_deck_export():
+    client = TestClient(app)
+    custom_deck = {
+        "title": "Quarterly Performance Briefing",
+        "client": "Acme Global Industries",
+        "period": "FY 2026 Q3",
+        "author": "Antigravity Analytics",
+        "slides": [
+            {
+                "id": "slide_1",
+                "title": "Core KPI Performance Summary",
+                "category": "Executive Overview",
+                "graphType": "kpi_scorecards",
+                "narrative": (
+                    "Net revenue expanded 18.4% YoY driven by enterprise adoption.\n"
+                    "Operating margin reached historical high of 34.2%.\n"
+                    "Customer acquisition cost dropped by 12%."
+                ),
+            },
+            {
+                "id": "slide_2",
+                "title": "Decomposition Analysis",
+                "category": "Segment Analysis",
+                "graphType": "decomp_tree",
+                "narrative": (
+                    "Revenue breakdown across primary operating entities.\n"
+                    "Enterprise tier represents 62% of aggregate margin."
+                ),
+            },
+            {
+                "id": "slide_3",
+                "title": "Financial Multi-Level Matrix",
+                "category": "Financial Review",
+                "graphType": "matrix_table",
+                "narrative": "Detailed dimensional performance metrics across business units.",
+            },
+            {
+                "id": "slide_4",
+                "title": "Statistical Anomaly Review",
+                "category": "Risk Governance",
+                "graphType": "anomaly_radar",
+                "narrative": "Automated isolation forest identified 3 volumetric outliers.",
+            },
+            {
+                "id": "slide_5",
+                "title": "Strategic Recommendations",
+                "category": "Action Roadmap",
+                "graphType": "narrative_only",
+                "narrative": (
+                    "Consolidate Q4 cloud commitments to secure enterprise tier discounts.\n"
+                    "Initiate partner channel expansion in APAC region."
+                ),
+            },
+        ],
+    }
+    r = client.post("/api/export_pptx", json=custom_deck)
+    assert r.status_code == 200
+    assert len(r.content) > 5000
+    assert (
+        r.headers["content-type"]
         == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     )
