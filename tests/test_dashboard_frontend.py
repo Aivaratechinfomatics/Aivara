@@ -6,16 +6,19 @@ from __future__ import annotations
 
 import io
 import os
+
 from fastapi.testclient import TestClient
 
 from dashboard_server import app
 
 
 def test_dashboard_file_exists():
-    dashboard_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
+    dashboard_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html"
+    )
     assert os.path.exists(dashboard_path), f"Dashboard HTML not found at {dashboard_path}"
-    
-    with open(dashboard_path, "r", encoding="utf-8") as f:
+
+    with open(dashboard_path, encoding="utf-8") as f:
         content = f.read()
 
     # Verify key Power BI structural sections
@@ -30,8 +33,10 @@ def test_dashboard_file_exists():
 
 
 def test_dashboard_power_bi_visuals_and_panes():
-    dashboard_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(dashboard_path, "r", encoding="utf-8") as f:
+    dashboard_path = os.path.join(
+        os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html"
+    )
+    with open(dashboard_path, encoding="utf-8") as f:
         content = f.read()
 
     # Verify Visualizations and Fields Panes
@@ -49,7 +54,7 @@ def test_dashboard_launch_scripts():
     root = os.path.dirname(os.path.dirname(__file__))
     run_dash = os.path.join(root, "run_dashboard.bat")
     run_all = os.path.join(root, "run_all.bat")
-    
+
     assert os.path.exists(run_dash), "run_dashboard.bat must exist"
     assert os.path.exists(run_all), "run_all.bat must exist"
 
@@ -82,4 +87,7 @@ def test_dashboard_api_endpoints():
     r_pptx = client.post("/api/export_pptx")
     assert r_pptx.status_code == 200
     assert len(r_pptx.content) > 1000, "PPTX file size should be substantial"
-    assert r_pptx.headers["content-type"] == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    assert (
+        r_pptx.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    )

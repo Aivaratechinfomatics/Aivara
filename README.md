@@ -1,4 +1,4 @@
-# Aivara — Autonomous Tabular Analytics & Executive Deck Generation
+# Aivara Insight — Autonomous Tabular Intelligence & Boardroom Presentation Engine
 
 > 🎓 **Announcement**: **Internship Batch for this project starting 19 Oct 2026.** Apply online at [aivaratech.online/internships](https://aivaratech.online/internships).
 
@@ -6,81 +6,279 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-323%20passed-brightgreen.svg)](tests/)
 [![Security](https://img.shields.io/badge/security-hardened-brightgreen.svg)](docs/SECURITY.md)
+[![Python](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Air--Gapped](https://img.shields.io/badge/privacy-100%25%20air--gapped-success.svg)](#-enterprise-data-privacy--air-gapping)
+[![Power BI Standard](https://img.shields.io/badge/UI%2FUX-Power%20BI%20Standard-F2C811.svg)](#-power-bi-executive-canvas-signature-pages)
 
-**Aivara** is an autonomous business intelligence platform designed to transform raw, messy business spreadsheets into executive-ready dashboards and branded 16:9 widescreen PowerPoint presentation decks — with complete data privacy and local computation.
+**Aivara Insight** is an autonomous Business Intelligence and tabular analytics platform designed to transform raw, messy business spreadsheets into interactive, Power BI-grade executive dashboards and branded 16:9 widescreen PowerPoint presentation decks — running **100% locally with zero cloud data egress**.
 
----
-
-## 🚀 About Aivara Tech
-
-**Aivaratech Infomatics** ([aivaratech.online](https://aivaratech.online/)) builds practical technology across AI, data analytics, business intelligence, automation, RPA, and software engineering.
-
-Our flagship operational product, **Aivara Insight**, is dedicated to pioneering autonomous tabular reasoning engines and boardroom-ready presentation automation for modern enterprises. Built with a compute-first, privacy-by-design architecture, Aivara transforms raw tabular spreadsheets into executive-grade visual stories and verified analytical insights with zero cloud data leaks.
-
-### Connect & Opportunities with Aivara Tech
-- 🌐 **Official Website**: [aivaratech.online](https://aivaratech.online/)
-- 💼 **Apply for Internship**: [aivaratech.online/internships](https://aivaratech.online/internships)
-- 🎓 **Upcoming Internship Batch**: Starting **19 Oct 2026** (2-month structured live engineering & BI tracks, senior technical mentorship, verified GitHub contribution credits, and Certificate of Completion/LOR)
-- 🏛️ **DBERT AI Venture Studio**: [dbert.online](https://dbert.online/)
-- 📂 **Explore Enterprise Solutions**: [dbert.online/startups/portfolio](https://dbert.online/startups/portfolio)
+Whether analyzing multimillion-dollar sales transactions, multi-facility warehouse inventory, corporate P&L balance sheets, or customer satisfaction surveys, Aivara automates the entire analytical lifecycle: from dirty file ingestion and semantic schema deduction to statistical anomaly detection, dimensional decomposition, and boardroom presentation generation.
 
 ---
 
-## 🌟 Key Features
+## ⚡ Quick Navigation
 
-### 1. Universal Spreadsheet Ingestion & Smart Cleaning
-- **Tolerant File Loading**: Ingests raw CSV and Excel (`.xlsx`, `.xls`) files regardless of unformatted structures, mixed delimiters (comma, semicolon, tab, pipe), or legacy character encodings (UTF-8, UTF-16, Latin-1, CP1252).
-- **Auto-Header Detection**: Automatically detects and bypasses decorative banner rows, corporate title blocks, and metadata headers to identify the true tabular header row.
-- **Data Quality Audit Panel**: Provides an instant health check on every upload — highlighting row counts, column counts, flagged duplicate records, and normalized null values.
-
-### 2. Semantic Column Role Inference & Schema Gate
-- **Intelligent Classification**: Automatically assigns semantic roles to every column — distinguishing between `date`, `metric` (numeric KPIs), `dimension` (categorical breakdown), `id` (identifiers), and `text` (free-form feedback).
-- **Statistical Aggregation Guardrails**: Intelligently distinguishes volumetric metrics (aggregated via `sum`) from rates, ratios, percentages, and scores (aggregated via `mean`), preventing common statistical errors like summing NPS or conversion rates.
-- **Interactive Review Gate**: Operators can review, verify, or override inferred roles before generating the analytics dashboard.
-
-### 3. Elevated Executive Dashboard
-- **Top-of-Screen Focus**: Upon confirming the dataset schema, upload boxes and configuration forms automatically collapse, elevating the executive summaries, KPI scorecards, and interactive charts directly to the top of the viewport.
-- **Boardroom Executive Takeaways**: AI-synthesized strategic bullets highlighting overall portfolio scale, leading contributors, period-over-period performance swings, and distribution concentration.
-- **Dynamic KPI Scorecard**: High-impact metric tiles displaying total volume, averages, and period-over-period percentage variance badges with directional indicators.
-- **Interactive Trend Charts**: High-definition time series visualizations with hover tooltips, date-range selectors, and automatic daily, weekly, or monthly aggregation.
-
-### 4. Domain-Specific Intelligence Packs & Archetypes
-Aivara automatically classifies datasets into the optimal analytical archetype and business domain:
-- **Customer Feedback & Sentiment**: Net Promoter Score (NPS) breakdown, customer satisfaction (CSAT) ratings, sentiment distributions, and communication channel performance.
-- **Commerce & Sales Performance**: Gross merchandise value, Average Order Value (AOV), transaction volumes, and product breakdown.
-- **Financial Performance & Margin Analysis**: Revenue trends, operating expenditure (OPEX), operating margin %, and budget variance tracking.
-- **Workforce & Organizational Insights**: Headcount distributions, compensation bands, tenure metrics, and departmental summaries.
-- **Operations & Inventory Snapshots**: Cross-sectional analysis of warehouse stock, stockout risk indicators, and Pareto 80/20 concentration analysis.
-
-### 5. Key Explanatory Drivers & Correlation Radar
-- **Dimensional Decomposition**: Ranks categorical drivers by their mathematical explanatory power to reveal which factors drove performance gains or losses.
-- **Pearson Correlation Matrix**: Computes a statistical correlation heatmap across all numerical dimensions ($n \ge 5$) to uncover hidden operational dependencies.
-
-### 6. Statistical Risk Radar & Anomaly Detection
-- **Rolling-Baseline Anomaly Alerts**: Flags statistically significant anomalies ($|z| \ge 2.5$) using historical rolling averages to identify operational spikes or sudden drops.
-- **Concentration Risk Indicators**: Employs Herfindahl-Hirschman index algorithms to alert executives when revenue, inventory, or volume is excessively concentrated in too few entities.
-
-### 7. Branded 16:9 Executive PowerPoint Presentation Export
-- **One-Click Boardroom Deck Compilation**: Generates a complete 8-slide, 16:9 widescreen PowerPoint (`.pptx`) presentation ready for executive review.
-- **Spreadsheet Formula Injection Defense**: Implements strict CSV/formula sanitization (neutralizing characters like `=`, `+`, `-`, `@` with a leading `'`) to protect downstream presentation viewers from spreadsheet formula injection attacks (CWE-1236).
-
-### 8. Enterprise Data Privacy & Local Air-Gapping
-- **Zero Raw Data Egress**: Raw row data never leaves the server. All calculations, variance math, and statistical modeling are computed locally.
-- **Categorical Label Pseudonymization**: Entity names, customer identifiers, and categorical labels are pseudonymized before generating natural language summaries (`Category A`, `Entity B`), ensuring proprietary identifiers never touch external APIs.
-- **Daily Budget Monitor**: Built-in daily API quota tracking with visual progress indicators prevents unexpected cloud costs.
+| Section | Description |
+| :--- | :--- |
+| 🚀 [Quickstart in 60 Seconds](#-quickstart-in-60-seconds) | One-command launcher for local development and testing |
+| 🖥️ [Dual Frontend Architecture](#-dual-frontend-architecture) | Side-by-side comparison of Power BI Canvas (:3000) vs Streamlit (:8501) |
+| 🏗️ [System Architecture](#-system-architecture) | End-to-end pipeline from dirty spreadsheets to boardroom decks |
+| 📊 [Power BI Signature Pages](#-power-bi-executive-canvas-signature-pages) | Deep dive into Decomposition Tree, Financial Matrix, Anomaly Radar |
+| 📂 [Preloaded Industry Datasets](#-preloaded-industry-datasets) | 5 ready-to-use business archetypes (Commerce, Inventory, Finance, NPS) |
+| 🛡️ [Enterprise Privacy & Air-Gapping](#-enterprise-data-privacy--air-gapping) | Formula injection defense (CWE-1236), pseudonymization, zero raw egress |
+| 🛠️ [Internship Verification Guide](#-internship--developer-verification-guide-batch-starting-19-oct-2026) | Step-by-step testing checklist and automated regression commands |
+| 🏛️ [About Aivara & DBERT](#-built-by-aivara-technologies--dbert-ai-venture-studio) | Engineering squad, venture studio, mentorship, and fellowship |
 
 ---
 
-## 🎬 Live Demo Video, Presentation Deck & Visual Showcase
+## 🖥️ Dual Frontend Architecture
 
-Aivara includes an automated, high-definition **1080p Full HD live video demonstration** (101 seconds) showcasing real business dataset ingestion, elevated executive summaries, archetype switching, and the high-definition PowerPoint deck presentation:
+Aivara provides two complementary analytical frontends engineered for distinct business personas: the **Power BI Executive Canvas** for interactive executive briefings and drill-downs, and the **Streamlit Analytical Dashboard** for exploratory data science and rapid ad-hoc reporting.
 
-- 📹 **Universal Demo Video (1080p MP4)**: [demo_output/aivara_v1_demo.mp4](demo_output/aivara_v1_demo.mp4)
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 AIVARA CORE ENGINE                                     │
+│                     (Ingestion • Schema Gate • Anomaly • PPTX)                         │
+└──────────────────────────────────────────┬─────────────────────────────────────────────┘
+                                           │
+                    ┌──────────────────────┴──────────────────────┐
+                    ▼                                             ▼
+┌───────────────────────────────────────┐     ┌──────────────────────────────────────────┐
+│   POWER BI EXECUTIVE CANVAS (:3000)   │     │    STREAMLIT ANALYTICAL DASHBOARD (:8501)│
+├───────────────────────────────────────┤     ├──────────────────────────────────────────┤
+│ • Strict 100vh Power BI App Shell     │     │ • Responsive vertical analytical feed    │
+│ • Pinned 84px Ribbon & 36px Page Tabs │     │ • Dynamic Plotly interactive charts      │
+│ • Decomposition Tree & Matrix Table   │     │ • Correlation radar heatmap              │
+│ • Dynamic Slicers (7D/30D/90D/YTD)    │     │ • Rapid ad-hoc filtering and slicing     │
+│ • In-cell conditional data bars       │     │ • Markdown & chart export capabilities   │
+│ • RFC 4180 tolerant CSV parser        │     │ • Direct session-state data inspection   │
+│ • Run: run_dashboard.bat              │     │ • Run: run.bat                           │
+└───────────────────────────────────────┘     └──────────────────────────────────────────┘
+```
+
+### Side-by-Side Feature Matrix
+
+| Feature / Dimension | Power BI Executive Canvas (`:3000`) | Streamlit Analytical Dashboard (`:8501`) |
+| :--- | :--- | :--- |
+| **Primary Audience** | C-Suite Executives, Board Directors, BI Leads | Data Analysts, Analytics Engineers, Scientists |
+| **User Interface Style** | Power BI Desktop standard (strict 100vh app shell) | Modern vertical dashboard web application |
+| **Header / Ribbon** | Pinned `84px` ribbon with quick dataset actions | Collapsible sidebar with configuration controls |
+| **Page Navigation** | Pinned `36px` bottom tabs (6 dedicated pages) | Sidebar navigation and in-page analytical tabs |
+| **Canvas Viewport** | Independent `10px` vertical scrollbar, no outer jump | Standard responsive vertical page scrolling |
+| **Signature Visualizations**| Decomposition Tree, Hierarchical Matrix, Pareto Bars| Correlation Heatmap, Plotly Time Series, Boxplots |
+| **Hierarchical Tables** | Collapsible chevrons (`▼`/`▶`), in-cell data bars | Formatted pandas dataframe renderers |
+| **Dynamic Date Slicers** | Real-time buttons (`7D`, `30D`, `90D`, `YTD`, `ALL`) | Native Streamlit date input range picker |
+| **Dynamic Fields Tree** | Clickable metrics/dimensions with live re-aggregation| Sidebar selectboxes and radio buttons |
+| **24-Visual Icon Grid** | Docked visual picker with auto-nav to canvas | Tabular chart selector pills |
+| **Backend Gateway** | FastAPI async REST gateway (`dashboard_server.py`) | Python runtime engine (`app.py`) |
+| **Launch Script** | `run_dashboard.bat` | `run.bat` |
+
+> 💡 **Pro-Tip**: You can launch **both frontends simultaneously** with one command using `run_all.bat`.
+
+---
+
+## 🏗️ System Architecture
+
+Aivara is architected under the **Compute-First Principle**: raw user data never leaves your workstation or enterprise network. All statistical variance, anomaly scoring, and natural language executive takeaways are computed in-memory.
+
+```mermaid
+flowchart TD
+    subgraph INGESTION["1. Universal Spreadsheet Ingestion"]
+        A1["Raw CSV Files\n(RFC 4180 Tolerant)"] --> B1["Smart Ingestion Engine"]
+        A2["Excel Workbooks\n(.xlsx / .xls)"] --> B1
+        A3["Dirty Encodings\n(UTF-8, Latin-1, CP1252)"] --> B1
+        B1 --> B2["Auto-Header & Delimiter Detector\n(Commas, Semicolons, Tabs, Pipes)"]
+        B2 --> B3["Formula Sanitizer\n(CWE-1236 Defense)"]
+    end
+
+    subgraph SCHEMA["2. Semantic Schema & Quality Gate"]
+        B3 --> C1["Column Role Inference Engine"]
+        C1 --> C2{"Semantic Deduction"}
+        C2 -->|"Timestamps"| D1["Date Role"]
+        C2 -->|"Volume (Units, Sales)"| D2["Metric (sum)"]
+        C2 -->|"Rates, NPS, Margins"| D3["Metric (mean)"]
+        C2 -->|"Categories, Regions"| D4["Dimension"]
+        C2 -->|"Unique Keys"| D5["ID Role"]
+        D1 & D2 & D3 & D4 & D5 --> C3["Data Quality Audit Panel\n(Nulls, Dupes, Outliers)"]
+    end
+
+    subgraph COMPUTE["3. In-Memory Analytical Core (100% Offline)"]
+        C3 --> E1["Dynamic Slicer Engine\n(7D / 30D / 90D / YTD / Custom)"]
+        E1 --> E2["Rolling Anomaly Detector\n(|z| >= 2.50σ Baseline)"]
+        E1 --> E3["Dimensional Decomposition\n(Root-Cause Driver Engine)"]
+        E1 --> E4["Pareto 80/20 Analyzer\n(Categorical Concentration)"]
+        E1 --> E5["Pearson Correlation Heatmap\n(Multivariate Dependences)"]
+    end
+
+    subgraph FRONTENDS["4. Dual Presentation Interfaces"]
+        E2 & E3 & E4 & E5 --> F1["Power BI Executive Canvas\n(FastAPI :3000 • 100vh Shell)"]
+        E2 & E3 & E4 & E5 --> F2["Streamlit Analytical Dashboard\n(Streamlit :8501 • Plotly)"]
+    end
+
+    subgraph EXPORT["5. Boardroom 16:9 Presentation Suite"]
+        F1 & F2 --> G1["Native PPTX Builder\n(Zero External API Calls)"]
+        G1 --> G2["Branded 8-Slide 16:9 Deck\n(.pptx)"]
+        G1 --> G3["Interactive Slide Carousel\n(slide_viewer.html)"]
+    end
+```
+
+---
+
+## 📊 Power BI Executive Canvas Signature Pages
+
+The Power BI Executive Canvas (`http://localhost:3000`) replicates the precision, ergonomics, and visual hierarchy of **Microsoft Power BI Desktop**, structured into **6 signature analytical views**:
+
+```
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│ [FILE] [HOME] [INSERT] [MODELING] [VIEW]           AIVARA POWER BI EXECUTIVE CANVAS     │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                        │
+│   PAGE 1           PAGE 2           PAGE 3          PAGE 4        PAGE 5      PAGE 6   │
+│ ┌──────────┐   ┌────────────┐   ┌────────────┐   ┌───────────┐  ┌──────────┐┌─────────┐│
+│ │Executive │   │Decomposi-  │   │ Financial  │   │Statistical│  │PowerQuery││Boardroom││
+│ │ Overview │   │ tion Tree  │   │Matrix Table│   │  Anomaly  │  │  Schema  ││16:9 PPT││
+│ └──────────┘   └────────────┘   └────────────┘   └───────────┘  └──────────┘└─────────┘│
+│                                                                                        │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### 1. Page 1 — Executive Overview & KPI Cockpit
+- **Multi-Row KPI Scorecards**: Real-time KPI tiles with primary volumetric values, period-over-period percentage variance badges, and directional health indicators.
+- **AI Executive Narrative**: Bulleted boardroom takeaways highlighting top drivers, growth rates, leading segments, and portfolio scale.
+- **Dynamic Reactive Visuals**: Interactive Clustered Column, Line, Area, and Stacked Bar charts with rich hover tooltips and dynamic secondary-tier aggregation.
+- **Pareto 80/20 Concentration Bar**: Automatically switches between time-series trends and Pareto categorical bars for datasets without date columns.
+
+### 2. Page 2 — Decomposition Tree (AI Visual)
+- **Interactive Root-Cause Breakdown**: Explore the primary metric broken down across multiple categorical dimensions simultaneously.
+- **Multi-Level Drill Down**: Click any parent branch (e.g., `Category: Technology`) to dynamically expand Level 2 sub-branches (e.g., `Region: EMEA` or `Priority: High`) without alerts or stubs.
+- **Visual Progress Bars**: In-branch gradient bars displaying each sub-branch's exact percentage contribution to the parent total.
+
+### 3. Page 3 — Financial Matrix Table
+- **Collapsible Row Hierarchies**: Expand and collapse parent categorical rows using interactive chevrons (`▼` / `▶`) with indented child line items.
+- **In-Cell Conditional Data Bars**: Micro horizontal gradient bars embedded directly in cells to provide instant visual weight comparison across financial categories.
+- **Variance Tracking**: Automatic calculation of Actual vs Budget variance, along with Year-over-Year (YoY) percentage change badges.
+
+### 4. Page 4 — Statistical Anomaly Detector
+- **Rolling-Baseline Outlier Detection**: Identifies anomalies where metric values exceed $|z| \ge 2.50\sigma$ against a historical baseline.
+- **Risk Metrics**: Quantifies baseline mean, standard deviation, anomaly frequency count, and rolling volatility scores.
+- **Interactive Investigation Table**: Filterable anomaly log displaying exact timestamps, flagged values, deviations, and recommended investigation priorities.
+
+### 5. Page 5 — Power Query Schema Review Gate
+- **Semantic Role Overrides**: Inspect and modify inferred column classifications (`metric`, `dimension`, `date`, `id`, `text`).
+- **Aggregation Policy Configuration**: Guardrail controls ensuring volumetric numbers aggregate via `sum` while rates, ratios, and satisfaction scores aggregate via `mean`.
+- **Data Quality Health Check**: Review total row count, column count, null percentage, and duplicate record audit before canvas rendering.
+
+### 6. Page 6 — Boardroom 16:9 Presentation Suite
+- **Interactive Slide Preview Carousel**: View all 8 generated slides directly within the canvas before downloading.
+- **One-Click Native PPTX Generation**: Compiles an 8-slide, 16:9 widescreen presentation deck (`.pptx`) with executive covers, scorecards, domain breakdowns, and security certificates.
+- **Zero External Network Dependencies**: Generated locally in milliseconds using `python-pptx` with zero cloud API dependencies.
+
+---
+
+## 📂 Preloaded Industry Datasets
+
+Aivara includes **5 enterprise-grade sample datasets** covering key corporate archetypes. You can switch between them instantly using the **Preloaded Samples** ribbon dropdown or test them with custom uploads:
+
+| Dataset | Format | Domain Archetype | Key Metrics & Dimensions | Strategic Questions Answered |
+| :--- | :--- | :--- | :--- | :--- |
+| **`clean.csv`** | CSV | Commerce & Sales Performance | `Sales`, `Profit`, `Quantity`, `Discount`, `Category`, `Region` | Which product lines yield the highest margins? Which regions generate 80% of revenue? |
+| **`Inventory-Records...xlsx`** | Excel | Operations & Warehouse Inventory | `Quantity on Hand`, `Unit Cost`, `Stock Value`, `Warehouse`, `Category` | Where is capital tied up in stock? Which facilities face imminent stockout risks? |
+| **`Project-Management...xlsx`**| Excel | Project Portfolio & Resource Ops | `Budget`, `Actual Cost`, `Progress %`, `Owner`, `Priority`, `Status` | Which key initiatives are over budget? How are engineering resources allocated? |
+| **`sample_finance_pnl.csv`** | CSV | Corporate P&L & Operating Margin | `Revenue`, `OPEX`, `Operating Margin %`, `Department`, `Quarter` | What is our quarterly margin variance? Which departments drove budget overruns? |
+| **`sample_customer_nps.csv`**| CSV | Customer Experience & Feedback | `NPS Score`, `CSAT`, `Sentiment`, `Support Channel`, `Customer Tier` | How does customer satisfaction correlate with support channels across Enterprise tiers? |
+
+---
+
+## 🚀 Quickstart in 60 Seconds
+
+### Prerequisites
+- **Python 3.12+**
+- **Git**
+
+### Installation
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/Aivaratechinfomatics/Aivara.git
+cd Aivara
+
+# 2. Create and activate an isolated virtual environment
+python -m venv .venv
+
+# On Windows (PowerShell):
+.venv\Scripts\Activate.ps1
+# On macOS / Linux:
+source .venv/bin/activate
+
+# 3. Install pinned dependencies
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+### Launching the Application
+
+Choose your preferred launcher:
+
+```bash
+# Option 1: Launch BOTH Power BI Canvas (:3000) and Streamlit (:8501)
+run_all.bat
+
+# Option 2: Launch Power BI Executive Canvas only (:3000)
+run_dashboard.bat
+# (Or direct: python dashboard_server.py)
+
+# Option 3: Launch Streamlit Analytical Dashboard only (:8501)
+run.bat
+# (Or direct: streamlit run app.py)
+```
+
+Open your browser to:
+- **Power BI Executive Canvas**: [http://localhost:3000](http://localhost:3000)
+- **Streamlit Analytical Dashboard**: [http://localhost:8501](http://localhost:8501)
+
+---
+
+## 🛡️ Enterprise Data Privacy & Air-Gapping
+
+Aivara is engineered from the ground up to comply with stringent corporate security and data privacy mandates:
+
+```
+┌────────────────────────────────────────────────────────────────────────┐
+│                        AIR-GAPPED COMPUTE BOUNDARY                     │
+│                                                                        │
+│   [Raw Spreadsheets]                                                   │
+│           │                                                            │
+│           ▼                                                            │
+│   [In-Memory Sanitizer] ──> Formula Defense (CWE-1236 Neutralization)   │
+│           │                                                            │
+│           ▼                                                            │
+│   [Local Analytics Engine] ──> Variance, Outliers, Anomaly Math        │
+│           │                                                            │
+│           ▼                                                            │
+│   [Pseudonymizer] ──> Redacts entity names before any narrative prompt │
+│           │                                                            │
+│           ▼                                                            │
+│   [16:9 Presentation Deck] ──> Zero external HTTP requests (Air-Gapped)│
+└────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Zero Raw Data Egress**: Raw row-level records never leave your local machine or corporate intranet. All analytical modeling and variance computations are performed in-memory.
+2. **Spreadsheet Formula Injection Defense (CWE-1236)**: Untrusted string values starting with `=`, `+`, `-`, `@`, or tab characters are automatically prepended with a single quote (`'`), neutralizing potential Excel formula execution when opening generated reports.
+3. **Categorical Entity Pseudonymization**: Proprietary business entities, customer names, and employee identities are pseudonymized into deterministic tokens (e.g., `Category A`, `Entity B`) before generating executive summaries.
+4. **Offline Export Verification**: Continuous automated regression tests (`tests/test_export_no_network.py`) strictly guarantee that PowerPoint deck generation makes **0 outbound network calls**.
+5. **Daily Budget & Quota Protection**: Built-in daily API budget tracking with visual progress indicators prevents unexpected cloud costs when optional AI summaries are activated.
+
+---
+
+## 🎬 Live Demo Video & Presentation Showcase
+
+Aivara includes precompiled demo artifacts and video recordings showcasing end-to-end ingestion, archetype switching, and slide generation:
+
+- 📹 **Full HD Demo Video (1080p MP4)**: [demo_output/aivara_v1_demo.mp4](demo_output/aivara_v1_demo.mp4)
 - 📊 **Generated PowerPoint Presentation (.pptx)**: [demo_output/Aivara_Executive_Presentation.pptx](demo_output/Aivara_Executive_Presentation.pptx)
 - 🖥️ **Interactive Slide Deck Carousel**: [demo_output/slide_viewer.html](demo_output/slide_viewer.html)
 
-### Generated 16:9 Executive PowerPoint Presentation (.pptx) Slides
-The presentation engine generates boardroom-grade 16:9 slides natively with zero external dependencies:
+### Sample 16:9 Executive PowerPoint Presentation (.pptx) Slides
 
 | Slide 1: Cover Title & Metadata | Slide 3: Primary KPI Scorecard |
 | :---: | :---: |
@@ -90,11 +288,12 @@ The presentation engine generates boardroom-grade 16:9 slides natively with zero
 | :---: | :---: |
 | ![Domain Analytics](docs/assets/screenshots/11_slide_4_presentation.png) | ![Key Drivers](docs/assets/screenshots/11_slide_5_presentation.png) |
 
-| Slide 7: Enterprise Security & Sanitization | Export Completed Deck |
+| Slide 7: Enterprise Security & Sanitization | Export Ready Confirmation |
 | :---: | :---: |
 | ![Security Defense](docs/assets/screenshots/11_slide_7_presentation.png) | ![Export Ready](docs/assets/screenshots/08_pptx_export_ready.png) |
 
 ### Interactive Application Workflow
+
 | 1. Landing Page & Universal Ingestion | 2. Data Quality Audit Panel |
 | :---: | :---: |
 | ![Landing Page](docs/assets/screenshots/01_landing_page.png) | ![Data Quality](docs/assets/screenshots/02_data_quality_summary.png) |
@@ -109,148 +308,76 @@ The presentation engine generates boardroom-grade 16:9 slides natively with zero
 
 ---
 
-## 🛠️ Step-by-Step Local Testing Guide for Interns (Batch Starting 19 Oct 2026)
+## 🛠️ Internship & Developer Verification Guide (Batch Starting 19 Oct 2026)
 
-Welcome to the **Aivara Engineering & Data Analytics Internship**. Follow this step-by-step verification guide to set up your local development environment, run test datasets, and validate functional behavior.
+Welcome to the **Aivara Engineering & Data Analytics Internship**. All interns and contributors must follow this verification protocol to validate new features, test custom datasets, and ensure all quality gates pass before opening pull requests.
 
-### 1. Prerequisites
-- **Python**: Version **3.12+** installed on your workstation.
-- **Git**: Installed and configured with your name and email.
-- **OS**: Windows, macOS, or Linux supported.
+### Intern Verification Checklist
 
-### 2. Environment Setup
+1. **Universal File Ingestion**:
+   - Ingest multiple file types (CSV, `.xlsx`, `.xls`) with mixed encodings and delimiters.
+   - Confirm auto-header detection correctly identifies tabular headers past decorative title blocks.
+2. **Schema & Semantic Role Review**:
+   - Verify that columns are classified accurately (`date`, `metric`, `dimension`, `id`).
+   - Confirm volumetric metrics default to `sum` and rate/ratio metrics default to `mean`.
+3. **Power BI Executive Canvas Verification (`:3000`)**:
+   - Ensure the canvas maintains a **strict 100vh layout** with no whole-page scroll jump.
+   - Verify that date slicers (`7D`, `30D`, `90D`, `YTD`, `ALL`) dynamically recalculate KPI scorecards and chart aggregates.
+   - Switch between all 6 signature page tabs:
+     - **Page 1**: Verify chart tooltips, secondary tier grouping, and Pareto distribution fallback.
+     - **Page 2**: Click parent nodes in the Decomposition Tree and confirm Level 2 branches expand smoothly.
+     - **Page 3**: Click row chevrons (`▼` / `▶`) in the Financial Matrix to expand child line items and inspect conditional data bars.
+     - **Page 4**: Inspect the Anomaly Detector table for records with $|z| \ge 2.50\sigma$.
+     - **Page 5**: Modify a column role and click **Apply Schema Changes**.
+     - **Page 6**: Click **Export PowerPoint Deck** and verify `.pptx` generation.
+4. **Streamlit Analytical Dashboard Verification (`:8501`)**:
+   - Ingest a dataset, review schema, and click **Confirm schema and build dashboard**.
+   - Confirm upload boxes collapse to elevate KPI scorecards and charts to the top of the viewport.
+
+### Quality Gates & Automated Regression Battery
+
+All **323 automated tests** must pass without warnings before code changes are merged:
+
 ```bash
-# 1. Clone your assigned repository fork
-git clone https://github.com/Aivaratechinfomatics/Aivara.git
-cd Aivara
-
-# 2. Create and activate an isolated virtual environment
-python -m venv .venv
-
-# On Windows (PowerShell):
-.venv\Scripts\Activate.ps1
-# On macOS / Linux:
-source .venv/bin/activate
-
-# 3. Upgrade pip and install all pinned dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
-```
-
-### 3. Safe Offline Configuration
-Aivara is architected to run **100% offline** by default for local analytical computation and presentation deck generation without requiring external API keys:
-```bash
-# Create local environment file from example template
-cp .env.example .env
-
-# Verify default settings:
-# AIVARA_ENV=dev
-# AIVARA_DAILY_BUDGET=30
-# AIVARA_LLM_REDACT_LABELS=true
-```
-
-### 4. Running the Local Application
-
-Aivara features dual analytical frontends to suit different analytical and presentation workflows:
-
-#### Option A: Power BI Executive Canvas (Industrial BI Standard)
-```bash
-# Windows launcher:
-run_dashboard.bat
-
-# Or direct command (FastAPI analytical backend & static server):
-python dashboard_server.py
-```
-Open your browser to **`http://localhost:3000`** to experience:
-- **Industrial Power BI Viewport Shell**: Strict 100vh layout with a pinned top ribbon (`84px`), permanently pinned bottom signature page tabs (`36px`), and independent internal vertical canvas scrolling with 10px custom scrollbars.
-- **Dynamic Slicers**: Active date range slicers (`7D`, `30D`, `90D`, `YTD`, `ALL`) filtering against dataset timestamps, categorical dimension slicer pills, and secondary tier selector with dynamic row-level re-aggregation.
-- **Page 1 — Executive Overview**: Multi-row KPI cards, reactive SVG visuals (Clustered Column, Line, Area, Stacked Bar) with tooltip inspection, ranked Pareto distribution bars, and AI narrative takeaways.
-- **Page 2 — Decomposition Tree (AI Visual)**: Interactive multi-level dimensional drill down with expandable sub-branches and percentage share progress bars (zero alert stubs).
-- **Page 3 — Financial Matrix Table**: Hierarchical table with collapsible parent chevrons (`▼` / `▶`), in-cell conditional data bars, budget variance comparison, and YoY % indicators.
-- **Page 4 — Statistical Anomaly Detector**: Rolling-baseline outlier tracker flagging records with $|z| \ge 2.50\sigma$.
-- **Page 5 — Power Query Schema Review Gate**: Review and override inferred semantic roles (`metric`, `dimension`, `date`, `id`) and aggregation policies (`sum` vs `mean`).
-- **Page 6 — Boardroom 16:9 Presentation Suite**: Interactive slide carousel preview and one-click export of an 8-slide, 16:9 widescreen presentation deck (`.pptx`).
-- **Dockable Visualizations & Data Fields Panes**: 24-visual icon grid picker with automatic navigation to canvas, and Data Fields tree with dynamic metric/dimension re-aggregation upon click.
-- **Universal File Ingestion**: Drag-and-drop ingestion powered by an RFC 4180-compliant tolerant CSV parser (quoted strings, multiple delimiters) and server-side pandas/Excel parsing.
-- **Preloaded Domain Models**: Commerce (`clean.csv`), Operations (`Inventory-Records-Sample-Data.xlsx`), Project Portfolio (`Project-Management-Sample-Data.xlsx`), Finance (`sample_finance_pnl.csv`), and Feedback (`sample_customer_nps.csv`).
-- **Non-Blocking Toast System**: Instant visual feedback for file profiling, uploads, filters, and deck compilation.
-
-#### Option B: Streamlit Analytical Dashboard
-```bash
-# Windows
-run.bat
-
-# Or direct command:
-streamlit run app.py
-```
-Open your browser to **`http://localhost:8501`**.
-
-#### Option C: Launch Both Frontends Simultaneously
-```bash
-run_all.bat
-```
-Launches both the FastAPI Power BI Gateway (Port 3000) and Streamlit dashboard (Port 8501) with one click.
-
-### 5. Verification Checklist for Interns
-Follow this checklist when reviewing features and testing changes:
-1. **Universal File Upload**:
-   - Upload any sample dataset (e.g. `tests/fixtures/clean.csv`, `currency.csv`, or sample business Excel workbooks from your `Downloads` folder).
-   - Verify that the system automatically detects encoding and skips leading decorative title blocks.
-2. **Data Quality Audit**:
-   - Expand the **📊 Data Quality & Ingestion Summary** panel to verify row counts, column counts, and duplicate detection.
-3. **Schema Review Gate**:
-   - Verify semantic column roles (e.g., `date`, `metric`, `dimension`). Ensure volumetric metrics default to `sum` while rates/scores default to `mean`.
-   - Click **Confirm schema and build dashboard**.
-4. **Elevated Viewport Verification**:
-   - Confirm that the file upload form and schema table collapse, immediately bringing **Boardroom Executive Takeaways**, **KPI scorecards**, and **interactive Plotly charts** to the top of your screen.
-5. **Interactive Analytics Tabs**:
-   - Test date-range filtering and hover over chart points to verify reactive tooltips.
-   - Explore domain tabs (`Survey, NPS & Support`, `Correlations & Drivers`, `Risk & Outliers`).
-6. **Executive Presentation Deck Export**:
-   - In the sidebar, click **Prepare PPTX export**.
-   - Click **Download PPTX Deck** and open the resulting `.pptx` file in PowerPoint or Keynote to verify 16:9 layout formatting.
-7. **Dataset Switching**:
-   - Click **📂 Load New Dataset** in the sidebar to reset session state and upload a secondary dataset (e.g. `tests/fixtures/inventory_sample.csv`).
-
-### 6. Executing the Quality & Regression Battery
-Before submitting pull requests, interns must ensure all automated quality gates pass:
-```bash
-# Run complete test suite (all tests must pass)
+# 1. Run complete automated test suite (323 tests)
 pytest tests/ -v
 
-# Run Power BI dashboard audit verification (12 checks for all 13 audited defects)
+# 2. Run Power BI 13-Defect Audit Regression Battery
 pytest tests/test_audit_13_bugs.py -v
 
-# Run Power BI frontend assets and API gateway tests
+# 3. Run FastAPI Power BI Gateway and Asset Integrity Tests
 pytest tests/test_dashboard_frontend.py -v
 
-# Run Chromium headless browser Playwright end-to-end interactive verification
+# 4. Run Chromium Headless Playwright Interactive E2E Tests
 pytest tests/test_playwright_e2e.py -v
 
-# Run headless UI AppTest verification
+# 5. Run Headless Streamlit AppTest Suite
 pytest tests/test_ui_apptest.py -v
 
-# Run invariant number consistency tests
+# 6. Run Core Mathematical Invariant Consistency Tests
 pytest tests/test_core_correctness.py -v
 
-# Run code formatting and linter checks
+# 7. Run Air-Gapped Network Isolation Tests
+pytest tests/test_export_no_network.py -v
+
+# 8. Run Code Linter and Formatter Checks
 python -m ruff check .
 python -m ruff format --check .
 ```
 
 ---
 
-## 🛡️ Anti-Reverse Engineering & Intellectual Property (IP) Protection
+## 🛡️ Anti-Reverse Engineering & Intellectual Property Protection
 
 To safeguard core analytical algorithms, proprietary heuristic engines, and institutional client data against reverse engineering, unauthorized cloning, and IP exfiltration, all contributors, interns, and deployment engineers must strictly adhere to the following security protocols:
 
 ### 1. Proprietary Core IP & Trade Secrets
-- **Proprietary Heuristic Engines**: Aivara's core heuristic classifiers, automated semantic role deduction, dimensional variance decomposition, rolling-baseline anomaly algorithms ($|z| \ge 2.5$), and air-gapped facts synthesis are proprietary intellectual property of **Aivara Technologies** and **DBERT AI Venture Studio**.
+- **Proprietary Heuristic Engines**: Aivara's core heuristic classifiers, automated semantic role deduction, dimensional variance decomposition, rolling-baseline anomaly algorithms ($|z| \ge 2.50\sigma$), and air-gapped facts synthesis are proprietary intellectual property of **Aivara Technologies** and **DBERT AI Venture Studio**.
 - **Strict Prohibition on Public LLM Uploads**: Interns and developers must **NEVER** copy, upload, or paste internal algorithms, proprietary prompt templates, or raw business logic into public LLM interfaces (e.g., public ChatGPT, Claude, or Gemini chats). Doing so compromises trade secrets and violates your Non-Disclosure Agreement (NDA).
 
 ### 2. Zero Raw Data Egress & Network Air-Gapping
 - Under the **Compute-First Principle**, raw user rows and internal business datasets are **never transmitted over external networks**.
-- Regression tests in `tests/test_export_no_network.py` continuously enforce that the presentation export package contains zero external network dependencies and cannot be weaponized as an exfiltration vector.
+- Automated regression tests in `tests/test_export_no_network.py` continuously enforce that the presentation export package contains zero external network dependencies and cannot be weaponized as an exfiltration vector.
 
 ### 3. Code Hardening & Anti-Tamper Invariants
 - **Runtime Invariant Testing**: The test suite enforces strict mathematical regression invariants (`test_core_correctness.py`) ensuring that calculation engines cannot be modified, weakened, or silently tampered with.
@@ -277,6 +404,6 @@ DBERT (Digital Blinc Education Research & Technology) incubates transformative A
 
 ---
 
-## License
+## 📄 License
 
 Aivara is open-source software licensed under the [Apache License, Version 2.0](LICENSE).

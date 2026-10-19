@@ -3,11 +3,11 @@ tests/test_audit_13_bugs.py — Verification of all 13 audited industrial-grade 
 """
 
 import os
-import json
-import pytest
-from fastapi.testclient import TestClient
-from dashboard_server import app, build_dashboard_payload, format_number
+
 import pandas as pd
+from fastapi.testclient import TestClient
+
+from dashboard_server import app, build_dashboard_payload
 
 client = TestClient(app)
 
@@ -15,13 +15,16 @@ client = TestClient(app)
 def test_bug_01_and_02_viewport_and_scroll_shell():
     """Verify strict 100vh overflow hidden shell on html and body in index.html."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert "html, body {" in html
     assert "height: 100vh;" in html
     assert "overflow: hidden;" in html
-    assert 'class="bg-[#242424] text-slate-900 h-screen overflow-hidden flex flex-col antialiased text-xs"' in html
+    assert (
+        'class="bg-[#242424] text-slate-900 h-screen overflow-hidden flex flex-col antialiased text-xs"'
+        in html
+    )
     assert 'id="mainDropZone"' in html
     assert "overflow-y-auto" in html
 
@@ -29,19 +32,22 @@ def test_bug_01_and_02_viewport_and_scroll_shell():
 def test_bug_03_and_04_navigation_sync_and_visual_switching():
     """Verify navigation synchronization and visual type switching auto-navigates to Page 1."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert "switchPage('overview')" in html
     assert "setVisualType(type)" in html
     # Check that setVisualType starts by calling switchPage('overview')
-    assert "function setVisualType(type) {\n      switchPage('overview');" in html or "switchPage('overview');" in html
+    assert (
+        "function setVisualType(type) {\n      switchPage('overview');" in html
+        or "switchPage('overview');" in html
+    )
 
 
 def test_bug_05_filter_secondary_tier():
     """Verify filterSecondaryTier function exists and handles tier selection."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert "function filterSecondaryTier(tierName)" in html
@@ -51,7 +57,7 @@ def test_bug_05_filter_secondary_tier():
 def test_bug_06_date_slicer_filtering():
     """Verify setSlicerDate calculates temporal windows based on max timestamp."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert "function setSlicerDate(period)" in html
@@ -64,7 +70,7 @@ def test_bug_06_date_slicer_filtering():
 def test_bug_07_decomp_tree_dynamic_drilldown_no_alert():
     """Verify decomposition tree toggles active branch and renders Level 2 without alert()."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert "function toggleDecompBranch(idx)" in html
@@ -79,7 +85,7 @@ def test_bug_07_decomp_tree_dynamic_drilldown_no_alert():
 def test_bug_08_matrix_table_expand_collapse():
     """Verify matrix row toggle matches matrix-child-group class and flips chevron."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert "function toggleMatrixRow(idx)" in html
@@ -90,7 +96,7 @@ def test_bug_08_matrix_table_expand_collapse():
 def test_bug_09_field_click_dynamic_reaggregation():
     """Verify selectFieldForVisual re-aggregates KPI cards and categories from rawSample."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert "function selectFieldForVisual(fieldName)" in html
@@ -101,7 +107,7 @@ def test_bug_09_field_click_dynamic_reaggregation():
 def test_bug_10_rfc_4180_tolerant_csv_parser():
     """Verify parseCSVText handles quoted commas and multiple delimiters."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert "function parseCSVText(text)" in html
@@ -111,7 +117,7 @@ def test_bug_10_rfc_4180_tolerant_csv_parser():
 def test_bug_11_no_fake_dates_for_non_temporal_datasets():
     """Verify server and client do not fabricate fake Period 01 dates when dataset has no dates."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert "renderCategoricalChart" in html
@@ -122,11 +128,13 @@ def test_bug_11_no_fake_dates_for_non_temporal_datasets():
     from ingestion.classifier import classify_columns
     from ingestion.cleaner import clean_dataframe
 
-    df = pd.DataFrame({
-        "Department": ["Sales", "Engineering", "Marketing"],
-        "Budget": [100000, 250000, 80000],
-        "Headcount": [10, 20, 8]
-    })
+    df = pd.DataFrame(
+        {
+            "Department": ["Sales", "Engineering", "Marketing"],
+            "Budget": [100000, 250000, 80000],
+            "Headcount": [10, 20, 8],
+        }
+    )
     cleaned_df, _ = clean_dataframe(df)
     classes_list = classify_columns(cleaned_df)
     classifications = {c.name: c for c in classes_list}
@@ -134,7 +142,9 @@ def test_bug_11_no_fake_dates_for_non_temporal_datasets():
     payload = build_dashboard_payload(res, cleaned_df, "test_nontemporal.csv", classifications)
 
     assert payload["hasDateCol"] is False
-    assert len(payload["timeSeries"]) == 0, "Non-temporal dataset must not have synthetic Period 01 timeSeries"
+    assert len(payload["timeSeries"]) == 0, (
+        "Non-temporal dataset must not have synthetic Period 01 timeSeries"
+    )
 
 
 def test_bug_12_sample_datasets_routing():
@@ -159,7 +169,7 @@ def test_bug_12_sample_datasets_routing():
 def test_bug_13_toast_notification_system():
     """Verify showToast function and pbiToastContainer exist without blocking alerts."""
     html_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "dashboard", "index.html")
-    with open(html_path, "r", encoding="utf-8") as f:
+    with open(html_path, encoding="utf-8") as f:
         html = f.read()
 
     assert 'id="pbiToastContainer"' in html
@@ -171,5 +181,8 @@ def test_export_pptx_gateway():
     """Verify POST /api/export_pptx generates authentic 16:9 presentation deck bytes."""
     resp = client.post("/api/export_pptx")
     assert resp.status_code == 200
-    assert resp.headers["content-type"] == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    assert (
+        resp.headers["content-type"]
+        == "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+    )
     assert len(resp.content) > 10000  # Genuine .pptx presentation deck binary

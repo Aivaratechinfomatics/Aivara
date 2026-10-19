@@ -6,7 +6,6 @@ Power Query transformations, anomaly detection, and 16:9 PPTX deck generation.
 
 from __future__ import annotations
 
-import io
 import math
 import os
 import re
@@ -81,14 +80,16 @@ def build_dashboard_payload(
         null_pct = float(cleaned_df[col].isna().mean() * 100.0)
         unique_cnt = int(cleaned_df[col].nunique())
         confidence = float(getattr(cls, "confidence", 1.0))
-        col_meta.append({
-            "name": col,
-            "role": role,
-            "dtype": dtype,
-            "nullPct": round(null_pct, 1),
-            "uniqueCount": unique_cnt,
-            "confidence": round(confidence, 2),
-        })
+        col_meta.append(
+            {
+                "name": col,
+                "role": role,
+                "dtype": dtype,
+                "nullPct": round(null_pct, 1),
+                "uniqueCount": unique_cnt,
+                "confidence": round(confidence, 2),
+            }
+        )
 
     # 2. KPI Scorecards
     kpis = []
@@ -96,7 +97,6 @@ def build_dashboard_payload(
         metric_series = pd.to_numeric(cleaned_df[primary_metric], errors="coerce").dropna()
         tot_val = float(metric_series.sum())
         mean_val = float(metric_series.mean())
-        count_val = int(len(metric_series))
 
         # Check for delta in kpis
         primary_kpi = res.kpis.get(primary_metric)
@@ -106,83 +106,112 @@ def build_dashboard_payload(
 
         delta_str = f"▲ +{delta_pct:.1f}% YoY" if delta_pct >= 0 else f"▼ {delta_pct:.1f}% YoY"
 
-        kpis.append({
-            "title": f"Total {primary_metric.replace('_', ' ').title()}",
-            "value": format_number(tot_val),
-            "rawValue": tot_val,
-            "delta": delta_str,
-            "sub": f"Goal: {format_number(tot_val * 0.95)}",
-            "agg": "Sum",
-        })
-        kpis.append({
-            "title": f"Average {primary_metric.replace('_', ' ').title()}",
-            "value": f"${mean_val:,.2f}" if "price" in primary_metric.lower() or "sale" in primary_metric.lower() or "revenue" in primary_metric.lower() else f"{mean_val:,.2f}",
-            "rawValue": mean_val,
-            "delta": "▲ +6.2%",
-            "sub": "Mean Guardrail",
-            "agg": "Mean",
-        })
+        kpis.append(
+            {
+                "title": f"Total {primary_metric.replace('_', ' ').title()}",
+                "value": format_number(tot_val),
+                "rawValue": tot_val,
+                "delta": delta_str,
+                "sub": f"Goal: {format_number(tot_val * 0.95)}",
+                "agg": "Sum",
+            }
+        )
+        kpis.append(
+            {
+                "title": f"Average {primary_metric.replace('_', ' ').title()}",
+                "value": f"${mean_val:,.2f}"
+                if "price" in primary_metric.lower()
+                or "sale" in primary_metric.lower()
+                or "revenue" in primary_metric.lower()
+                else f"{mean_val:,.2f}",
+                "rawValue": mean_val,
+                "delta": "▲ +6.2%",
+                "sub": "Mean Guardrail",
+                "agg": "Mean",
+            }
+        )
     else:
-        kpis.append({
-            "title": "Total Records",
-            "value": f"{len(cleaned_df):,}",
-            "rawValue": len(cleaned_df),
-            "delta": "▲ Verified",
-            "sub": "Ingested Rows",
-            "agg": "Count",
-        })
-        kpis.append({
-            "title": "Data Columns",
-            "value": f"{len(cleaned_df.columns)}",
-            "rawValue": len(cleaned_df.columns),
-            "delta": "100% Quality",
-            "sub": "Inferred Schema",
-            "agg": "Schema",
-        })
+        kpis.append(
+            {
+                "title": "Total Records",
+                "value": f"{len(cleaned_df):,}",
+                "rawValue": len(cleaned_df),
+                "delta": "▲ Verified",
+                "sub": "Ingested Rows",
+                "agg": "Count",
+            }
+        )
+        kpis.append(
+            {
+                "title": "Data Columns",
+                "value": f"{len(cleaned_df.columns)}",
+                "rawValue": len(cleaned_df.columns),
+                "delta": "100% Quality",
+                "sub": "Inferred Schema",
+                "agg": "Schema",
+            }
+        )
 
     # Record Count KPI
-    kpis.append({
-        "title": "Active Volume / Rows",
-        "value": f"{len(cleaned_df):,}",
-        "rawValue": len(cleaned_df),
-        "delta": "▲ +11.5%",
-        "sub": f"{len(cleaned_df.columns)} Columns",
-        "agg": "Count",
-    })
+    kpis.append(
+        {
+            "title": "Active Volume / Rows",
+            "value": f"{len(cleaned_df):,}",
+            "rawValue": len(cleaned_df),
+            "delta": "▲ +11.5%",
+            "sub": f"{len(cleaned_df.columns)} Columns",
+            "agg": "Count",
+        }
+    )
 
     # Anomaly Count KPI
     risk_cnt = len(res.risk_signals) if res.risk_signals else 0
-    kpis.append({
-        "title": "Statistical Risk Watch",
-        "value": f"{risk_cnt} Outliers",
-        "rawValue": risk_cnt,
-        "delta": "2 Flagged" if risk_cnt > 0 else "Optimal",
-        "sub": "|z| ≥ 2.50σ",
-        "agg": "Risk",
-    })
+    kpis.append(
+        {
+            "title": "Statistical Risk Watch",
+            "value": f"{risk_cnt} Outliers",
+            "rawValue": risk_cnt,
+            "delta": "2 Flagged" if risk_cnt > 0 else "Optimal",
+            "sub": "|z| ≥ 2.50σ",
+            "agg": "Risk",
+        }
+    )
 
     # 3. Time Series Data Points
     time_series = []
-    if date_col and primary_metric and date_col in cleaned_df.columns and primary_metric in cleaned_df.columns:
+    if (
+        date_col
+        and primary_metric
+        and date_col in cleaned_df.columns
+        and primary_metric in cleaned_df.columns
+    ):
         try:
             ts_df = cleaned_df[[date_col, primary_metric]].copy()
             ts_df[date_col] = pd.to_datetime(ts_df[date_col], errors="coerce")
             ts_df = ts_df.dropna(subset=[date_col])
             ts_df[primary_metric] = pd.to_numeric(ts_df[primary_metric], errors="coerce").fillna(0)
-            daily = ts_df.groupby(ts_df[date_col].dt.strftime("%Y-%m-%d"))[primary_metric].sum().reset_index()
+            daily = (
+                ts_df.groupby(ts_df[date_col].dt.strftime("%Y-%m-%d"))[primary_metric]
+                .sum()
+                .reset_index()
+            )
             daily = daily.sort_values(by=date_col)
             # Rolling 7-period moving average
-            daily["ma7"] = daily[primary_metric].rolling(window=min(7, len(daily)), min_periods=1).mean()
+            daily["ma7"] = (
+                daily[primary_metric].rolling(window=min(7, len(daily)), min_periods=1).mean()
+            )
 
             # Limit to 30 points for smooth canvas rendering
             step = max(1, len(daily) // 30)
             sampled = daily.iloc[::step]
             for _, r in sampled.iterrows():
-                time_series.append({
-                    "date": str(r[date_col]),
-                    "value": round(float(r[primary_metric]), 2),
-                    "ma7": round(float(r["ma7"]), 2),
-                })
+                time_series.append(
+                    {
+                        "date": str(r[date_col]),
+                        "value": round(float(r[primary_metric]), 2),
+                        "ma7": round(float(r["ma7"]), 2),
+                    }
+                )
         except Exception:
             pass
 
@@ -191,29 +220,42 @@ def build_dashboard_payload(
     secondary_dim = dimension_cols[1] if len(dimension_cols) > 1 else None
     categories = []
 
-    if primary_dim and primary_dim in cleaned_df.columns and primary_metric and primary_metric in cleaned_df.columns:
+    if (
+        primary_dim
+        and primary_dim in cleaned_df.columns
+        and primary_metric
+        and primary_metric in cleaned_df.columns
+    ):
         try:
             cat_df = cleaned_df[[primary_dim, primary_metric]].copy()
-            cat_df[primary_metric] = pd.to_numeric(cat_df[primary_metric], errors="coerce").fillna(0)
-            grouped = cat_df.groupby(primary_dim)[primary_metric].agg(["sum", "count"]).reset_index()
+            cat_df[primary_metric] = pd.to_numeric(cat_df[primary_metric], errors="coerce").fillna(
+                0
+            )
+            grouped = (
+                cat_df.groupby(primary_dim)[primary_metric].agg(["sum", "count"]).reset_index()
+            )
             grouped = grouped.sort_values(by="sum", ascending=False)
             tot_sum = max(1.0, float(grouped["sum"].sum()))
 
             for _, r in grouped.head(6).iterrows():
                 cat_val = float(r["sum"])
                 share = (cat_val / tot_sum) * 100.0
-                categories.append({
-                    "name": str(r[primary_dim]),
-                    "value": format_number(cat_val),
-                    "rawValue": cat_val,
-                    "count": int(r["count"]),
-                    "share": round(share, 1),
-                })
+                categories.append(
+                    {
+                        "name": str(r[primary_dim]),
+                        "value": format_number(cat_val),
+                        "rawValue": cat_val,
+                        "count": int(r["count"]),
+                        "share": round(share, 1),
+                    }
+                )
         except Exception:
             pass
 
     if not categories and len(cleaned_df) > 0:
-        candidate_cols = [c for c in cleaned_df.columns if c != primary_metric and cleaned_df[c].nunique() <= 50]
+        candidate_cols = [
+            c for c in cleaned_df.columns if c != primary_metric and cleaned_df[c].nunique() <= 50
+        ]
         if not candidate_cols:
             candidate_cols = [c for c in cleaned_df.columns if c != primary_metric]
         if candidate_cols:
@@ -221,17 +263,21 @@ def build_dashboard_payload(
             val_counts = cleaned_df[primary_dim].value_counts().head(6)
             tot_rows = max(1, len(cleaned_df))
             for c_name, c_cnt in val_counts.items():
-                categories.append({
-                    "name": str(c_name),
-                    "value": f"{c_cnt:,} rows",
-                    "rawValue": float(c_cnt),
-                    "count": int(c_cnt),
-                    "share": round((c_cnt / tot_rows) * 100.0, 1),
-                })
+                categories.append(
+                    {
+                        "name": str(c_name),
+                        "value": f"{c_cnt:,} rows",
+                        "rawValue": float(c_cnt),
+                        "count": int(c_cnt),
+                        "share": round((c_cnt / tot_rows) * 100.0, 1),
+                    }
+                )
 
     # 5. Decomposition Tree Hierarchical Breakdown
     decomp_tree = {
-        "metricName": f"Total {primary_metric.replace('_', ' ').title()}" if primary_metric else "Total Volume",
+        "metricName": f"Total {primary_metric.replace('_', ' ').title()}"
+        if primary_metric
+        else "Total Volume",
         "metricValue": kpis[0]["value"],
         "primaryDim": primary_dim or "Category",
         "secondaryDim": secondary_dim or "Subcategory",
@@ -239,7 +285,9 @@ def build_dashboard_payload(
     }
 
     if not secondary_dim and len(cleaned_df.columns) > 1:
-        other_dims = [c for c in cleaned_df.columns if c not in [primary_dim, primary_metric, date_col]]
+        other_dims = [
+            c for c in cleaned_df.columns if c not in [primary_dim, primary_metric, date_col]
+        ]
         if other_dims:
             secondary_dim = other_dims[0]
             decomp_tree["secondaryDim"] = secondary_dim
@@ -254,27 +302,36 @@ def build_dashboard_payload(
                 sub_tot = max(1.0, float(sub_grouped[primary_metric].sum()))
                 for _, sr in sub_grouped.head(3).iterrows():
                     s_val = float(sr[primary_metric])
-                    sub_branches.append({
-                        "name": str(sr[secondary_dim]),
-                        "value": format_number(s_val),
-                        "rawValue": s_val,
-                        "share": round((s_val / sub_tot) * 100.0, 1),
-                    })
+                    sub_branches.append(
+                        {
+                            "name": str(sr[secondary_dim]),
+                            "value": format_number(s_val),
+                            "rawValue": s_val,
+                            "share": round((s_val / sub_tot) * 100.0, 1),
+                        }
+                    )
             except Exception:
                 pass
 
         if not sub_branches:
             sub_branches = [
-                {"name": f"{cat['name']} Direct Allocation", "value": cat["value"], "rawValue": cat["rawValue"], "share": 100.0}
+                {
+                    "name": f"{cat['name']} Direct Allocation",
+                    "value": cat["value"],
+                    "rawValue": cat["rawValue"],
+                    "share": 100.0,
+                }
             ]
 
-        decomp_tree["branches"].append({
-            "name": cat["name"],
-            "value": cat["value"],
-            "rawValue": cat["rawValue"],
-            "share": cat["share"],
-            "subBranches": sub_branches,
-        })
+        decomp_tree["branches"].append(
+            {
+                "name": cat["name"],
+                "value": cat["value"],
+                "rawValue": cat["rawValue"],
+                "share": cat["share"],
+                "subBranches": sub_branches,
+            }
+        )
 
     # 6. Real Anomalies (genuine statistical outliers without synthetic fabrications)
     anomalies = []
@@ -284,32 +341,43 @@ def build_dashboard_payload(
             mean = m_vals.mean()
             std = m_vals.std()
             if std > 0:
-                cleaned_df["_z_score"] = (pd.to_numeric(cleaned_df[primary_metric], errors="coerce") - mean) / std
+                cleaned_df["_z_score"] = (
+                    pd.to_numeric(cleaned_df[primary_metric], errors="coerce") - mean
+                ) / std
                 outliers = cleaned_df[cleaned_df["_z_score"].abs() >= 2.5].copy()
                 for _, o_row in outliers.head(10).iterrows():
                     z = float(o_row["_z_score"])
                     val = float(o_row[primary_metric])
                     ts_str = str(o_row[date_col]) if date_col and date_col in o_row else "Row Spike"
-                    anomalies.append({
-                        "timestamp": ts_str[:10],
-                        "metric": primary_metric.replace("_", " ").title(),
-                        "value": format_number(val),
-                        "baseline": format_number(mean),
-                        "zScore": f"{'+' if z >= 0 else ''}{z:.2f}σ",
-                        "severity": "Positive Outlier Spike" if z > 0 else "Critical Drop Outlier",
-                    })
+                    anomalies.append(
+                        {
+                            "timestamp": ts_str[:10],
+                            "metric": primary_metric.replace("_", " ").title(),
+                            "value": format_number(val),
+                            "baseline": format_number(mean),
+                            "zScore": f"{'+' if z >= 0 else ''}{z:.2f}σ",
+                            "severity": "Positive Outlier Spike"
+                            if z > 0
+                            else "Critical Drop Outlier",
+                        }
+                    )
         except Exception:
             pass
 
     # 7. Executive Takeaways
-    takeaways = res.executive_takeaways if res.executive_takeaways else [
-        f"**Portfolio Scale**: Analyzed {len(cleaned_df):,} records in {filename}.",
-        f"**Primary Driver**: {primary_dim or 'Leading dimension'} drives the highest statistical variance on {primary_metric or 'performance'}.",
-        "**Concentration Alert**: High Pareto concentration observed across leading contributors.",
-    ]
+    takeaways = (
+        res.executive_takeaways
+        if res.executive_takeaways
+        else [
+            f"**Portfolio Scale**: Analyzed {len(cleaned_df):,} records in {filename}.",
+            f"**Primary Driver**: {primary_dim or 'Leading dimension'} drives the highest statistical variance on {primary_metric or 'performance'}.",
+            "**Concentration Alert**: High Pareto concentration observed across leading contributors.",
+        ]
+    )
 
     # 8. Raw Rows sample for client-side instant filtering (first 100 rows)
     import json
+
     raw_sample = json.loads(cleaned_df.head(100).to_json(orient="records", date_format="iso"))
 
     payload = {

@@ -41,32 +41,40 @@ async def test_full_powerbi_browser_interaction():
         await page.click("button:has-text('30D')")
         await page.wait_for_timeout(300)
         kpi1_delta = await page.inner_text("#kpi1Delta")
-        assert "30D" in kpi1_delta or "Window" in kpi1_delta, "Date slicer must update KPI delta badge"
+        assert "30D" in kpi1_delta or "Window" in kpi1_delta, (
+            "Date slicer must update KPI delta badge"
+        )
 
         # 4. Test Secondary Tier Filter
         tier_select = await page.query_selector("#secondaryTierSelect")
-        options = await page.evaluate("() => Array.from(document.querySelectorAll('#secondaryTierSelect option')).map(o => o.value)")
+        options = await page.evaluate(
+            "() => Array.from(document.querySelectorAll('#secondaryTierSelect option')).map(o => o.value)"
+        )
         assert len(options) >= 2, "Secondary tier select must have options"
         if len(options) > 1 and options[1] != "ALL":
             await tier_select.select_option(options[1])
             await page.wait_for_timeout(300)
             kpi1_title = await page.inner_text("#kpi1Title")
-            assert options[1].lower() in kpi1_title.lower(), f"KPI1 title should reflect selected tier {options[1]}"
+            assert options[1].lower() in kpi1_title.lower(), (
+                f"KPI1 title should reflect selected tier {options[1]}"
+            )
 
         # 5. Test Matrix Table Expand / Collapse & Chevron Toggle
         await page.click("#pbiTabBtn-matrix")
         await page.wait_for_timeout(300)
-        
+
         # Click first parent row to collapse
         chevron_before = await page.inner_text("#chevron-0")
         assert chevron_before == "▼", "Initial chevron should be expanded (▼)"
-        
+
         await page.click("#matrixTableBody tr:first-child")
         await page.wait_for_timeout(300)
         chevron_after = await page.inner_text("#chevron-0")
         assert chevron_after == "▶", "Chevron must flip to collapsed (▶)"
-        
-        is_child_hidden = await page.evaluate("() => document.querySelector('.matrix-child-group-0').classList.contains('hidden')")
+
+        is_child_hidden = await page.evaluate(
+            "() => document.querySelector('.matrix-child-group-0').classList.contains('hidden')"
+        )
         assert is_child_hidden, "Child rows must be hidden when parent is toggled"
 
         # 6. Test Decomposition Tree Dynamic Drill-Down (No Alert!)
@@ -74,12 +82,16 @@ async def test_full_powerbi_browser_interaction():
         await page.wait_for_timeout(300)
 
         # Drill down on branch 1
-        branch_cards = await page.query_selector_all("#decompTreeContainer > div:nth-child(3) > div")
+        branch_cards = await page.query_selector_all(
+            "#decompTreeContainer > div:nth-child(3) > div"
+        )
         if len(branch_cards) > 1:
             await branch_cards[1].click()
             await page.wait_for_timeout(300)
             level2_title = await page.inner_text("#decompSubBranchesLevel2 > div:first-child")
-            assert "split for" in level2_title.lower(), "Drilling down must update Level 2 sub-branches dynamically"
+            assert "split for" in level2_title.lower(), (
+                "Drilling down must update Level 2 sub-branches dynamically"
+            )
 
         # 7. Test Visual switching auto-navigation to Page 1
         # Currently on Page 2 (decomp), click Clustered Column icon in Visualizations pane
